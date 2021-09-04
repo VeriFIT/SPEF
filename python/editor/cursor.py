@@ -32,13 +32,13 @@ class Cursor:
             self.col -= 1
         elif self.row > 0: # move left outside buffer => move to the end of prev line if there is one
             self.row -= 1
-            self.col = len(buffer[self.row]) - 1 # HERE +1
+            self.col = len(buffer[self.row]) # HERE +1
 
     def right(self, buffer):
-        if self.col < len(buffer[self.row]) - 1: # HERE +1
+        if self.col < len(buffer[self.row]): # HERE +1
             self.col += 1
         # elif self.row < buffer.bottom - 1: # HERE +1   move right oudside buffer => move to the start of next line if there is one
-        elif self.row < len(buffer) -1 - 1: # HERE +1   move right oudside buffer => move to the start of next line if there is one
+        elif self.row < len(buffer) - 1: # HERE +1   move right oudside buffer => move to the start of next line if there is one
             self.row += 1
             self.col = 0
 

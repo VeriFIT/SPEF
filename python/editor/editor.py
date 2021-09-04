@@ -6,7 +6,25 @@ from window import Window
 from buffer import Buffer
 
 
+def up(win, buffer, cursor):
+    cursor.up(buffer)
+    win.up(cursor)
+    win.horizontal_shift(cursor)
 
+def down(win, buffer, cursor):
+    cursor.down(buffer)
+    win.down(buffer,cursor)
+    win.horizontal_shift(cursor)
+
+def left(win, buffer, cursor):
+    cursor.left(buffer)
+    win.up(cursor)
+    win.horizontal_shift(cursor)
+
+def right(win, buffer, cursor):
+    cursor.right(buffer)
+    win.down(buffer,cursor)
+    win.horizontal_shift(cursor)
 
 def main(stdscr):
     """ parsing arguments """
@@ -16,9 +34,9 @@ def main(stdscr):
 
     """ read file from argument """
     with open(args.filename) as f:
-        # lines = f.read().splitlines()
-        # buffer = Buffer(lines)
-        buffer = f.readlines()
+        lines = f.read().splitlines()
+        buffer = Buffer(lines)
+        # buffer = f.readlines()
 
 
     win = Window(curses.LINES - 1, curses.COLS - 1)
@@ -43,24 +61,31 @@ def main(stdscr):
 
         key = stdscr.getkey()
 
-        if key == "q": # press 'q' to exit
+        if key == "q": # press ESC to exit
             break
         elif key == "KEY_UP":
-            cursor.up(buffer)
-            win.up(cursor)
-            win.horizontal_shift(cursor)
+            up(win,buffer, cursor)
         elif key == "KEY_DOWN":
-            cursor.down(buffer)
-            win.down(buffer,cursor)
-            win.horizontal_shift(cursor)
+            down(win,buffer, cursor)
         elif key == "KEY_LEFT":
-            cursor.left(buffer)
-            win.up(cursor)
-            win.horizontal_shift(cursor)
+            left(win,buffer, cursor)
         elif key == "KEY_RIGHT":
-            cursor.right(buffer)
-            win.down(buffer,cursor)
-            win.horizontal_shift(cursor)
+            right(win,buffer, cursor)
+        elif key == "\n":
+            buffer.split(cursor)
+            right(win, buffer, cursor)
+        elif key in ("KEY_DC","\x04"): # \x04 for MacOS which doesnt correctly decode delete key
+            buffer.delete(cursor)
+        elif key in ("KEY_BACKSPACE","\x7f"): # \x7f for MacOS
+            if (cursor.row, cursor.col) > (0,0):
+                left(win, buffer, cursor)
+                buffer.delete(cursor)
+        else:
+            str_key = str(key)
+            if str_key[:3] != "KEY":
+                buffer.insert(cursor, key)
+                for _ in key:
+                    right(win, buffer, cursor)
 
 
 
