@@ -1,4 +1,3 @@
-from buffer import Buffer
 
 
 class Window:
@@ -18,7 +17,6 @@ class Window:
             self.row_shift -= 1
 
     def down(self, buffer, cursor):
-        # if (cursor.row == self.bottom + 1) and (self.bottom < buffer.bottom):
         if (cursor.row == self.bottom + 1) and (self.bottom < len(buffer) - 1):
             self.row_shift += 1
 

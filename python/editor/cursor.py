@@ -22,23 +22,21 @@ class Cursor:
             self._restrict_col(buffer)
 
     def down(self, buffer):
-        # if self.row < buffer.bottom:
         if self.row < len(buffer) - 1:
             self.row += 1
             self._restrict_col(buffer)
 
     def left(self, buffer):
-        if self.col > 0:
+        if self.col > 0: # if not start of the line
             self.col -= 1
         elif self.row > 0: # move left outside buffer => move to the end of prev line if there is one
             self.row -= 1
-            self.col = len(buffer[self.row]) # HERE +1
+            self.col = len(buffer[self.row])
 
     def right(self, buffer):
-        if self.col < len(buffer[self.row]): # HERE +1
+        if self.col < len(buffer[self.row]): # if not end of the line
             self.col += 1
-        # elif self.row < buffer.bottom - 1: # HERE +1   move right oudside buffer => move to the start of next line if there is one
-        elif self.row < len(buffer) - 1: # HERE +1   move right oudside buffer => move to the start of next line if there is one
+        elif self.row < len(buffer) - 1: # move right outside buffer => move to the start of next line if there is one
             self.row += 1
             self.col = 0
 
