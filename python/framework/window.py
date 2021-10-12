@@ -8,6 +8,9 @@ koniec riadku   len(buffer[self.row - win.begin_y]) + win.begin_x
 
 """
 
+LEFT_EDGE = 2
+RIGHT_EDGE = 2
+
 class Cursor:
     def __init__(self, row=0, col=0, col_last=None):
         self.row = row
@@ -51,7 +54,8 @@ class Cursor:
 
     """ restrict the cursors column to be within the line we move to """
     def _restrict_col(self, buffer, win):
-        self._col = min(self._col_last, len(buffer[self.row - win.begin_y])+win.begin_x)
+        end_of_line = len(buffer[self.row - win.begin_y])+win.begin_x
+        self._col = min(self._col_last, end_of_line)
 
 
 class Window:
@@ -75,36 +79,63 @@ class Window:
         return self.end_y + self.row_shift - 1
 
     def up(self, buffer, use_restrictions=True):
-        self.cursor.up(buffer, self, use_restrictions) # cursor up
-        if (self.cursor.row - self.begin_y == self.row_shift - 1 ) and (self.row_shift > 0): # window shift
+        self.cursor.up(buffer, self, use_restrictions)
+
+        """ window shift """
+        self.horizontal_shift()
+        if (self.cursor.row - self.begin_y == self.row_shift - 1 ) and (self.row_shift > 0):
             self.row_shift -= 1
+
 
     def down(self, buffer, use_restrictions=True):
-        self.cursor.down(buffer, self, use_restrictions) # cursor down
-        if (self.cursor.row == self.bottom) and (self.cursor.row - self.begin_y < len(buffer)): # window shit
+        self.cursor.down(buffer, self, use_restrictions)
+
+        """ window shift """
+        self.horizontal_shift()
+        if (self.cursor.row == self.bottom) and (self.cursor.row - self.begin_y < len(buffer)):
             self.row_shift += 1
+
 
     def left(self, buffer):
-        self.cursor.left(buffer, self) # cursor left
-        if (self.cursor.row == self.row_shift + 1) and (self.row_shift > 0): # window shift
+        self.cursor.left(buffer, self)
+
+        """ window shift """
+        self.horizontal_shift()
+        if (self.cursor.row == self.row_shift + 1) and (self.row_shift > 0):
             self.row_shift -= 1
 
+        # _, col = self.get_cursor_position()
+        # shift = self.end_x - self.begin_x - RIGHT_EDGE - LEFT_EDGE
+        # if (col + 1 - LEFT_EDGE == self.begin_x) and (self.col_shift >= shift):
+            # self.col_shift -= shift
+
+
     def right(self, buffer):
-        self.cursor.right(buffer, self) # cursor right
-        if (self.cursor.row == self.bottom) and (self.cursor.row - self.begin_y < len(buffer)): # window shit
+        self.cursor.right(buffer, self)
+
+        """ window shift """
+        self.horizontal_shift()
+        if (self.cursor.row == self.bottom) and (self.cursor.row - self.begin_y < len(buffer)):
             self.row_shift += 1
 
-    def get_cursor_position(self):
+        # _, col = self.get_cursor_position()
+        # width = self.end_x - self.begin_x
+        # if ((col - self.begin_x) // (width - RIGHT_EDGE)) > 0:
+            # self.col_shift += width - RIGHT_EDGE - LEFT_EDGE
+
+
+    def horizontal_shift(self):
+        """ horizontal shift """
+        width = self.end_x - self.begin_x
+        shift = width - RIGHT_EDGE - LEFT_EDGE
+        pages = (self.cursor.col - self.begin_x) // (width - RIGHT_EDGE)
+        self.col_shift = pages * shift
+
+
+    def get_shifted_cursor_position(self):
+        new_col = self.cursor.col - self.col_shift - (1 if self.col_shift > 0 else 0)
         new_row = self.cursor.row - self.row_shift
-        new_col = self.cursor.col - self.col_shift
         return new_row, new_col
-
-
-    """ horizontal shift when cursor is on given left/right egde """
-    def horizontal_shift(self, left_edge=5, right_edge=2):
-        pages = self.cursor.col // (self.end_x - right_edge)
-        max_cols = self.end_x - self.begin_x - 2
-        self.col_shift = max(pages * max_cols - right_edge - left_edge, 0)
 
 
     def set_cursor(self, begin_y, begin_x):

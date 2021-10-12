@@ -71,7 +71,7 @@ def main(stdscr):
 
     while True:
         if config.mode == EXIT:
-            stdscr.getkey()
+            # stdscr.getkey()
             break
         elif config.mode == BROWSING:
             config = browsing(stdscr, config)
@@ -93,21 +93,22 @@ def browsing(stdscr, conf):
         """ print current directory structure """
         show_directory_content(screen, win, cwd, conf.highlight, conf.normal)
 
-        key = stdscr.getkey()
+        # key = stdscr.getkey()
+        key = stdscr.getch()
         try:
-            if key == "\x1B" : # ESC
+            if key == ESC : # ESC
                 conf = config_browsing(conf, win, cwd) # save browsing state before exit browsing
                 conf.set_exit_mode()
                 return conf
-            elif key == "\t": # change focus
+            elif key == ord('\t'): # change focus
                 conf = config_browsing(conf, win, cwd)
                 conf.set_editing_mode()
                 return conf
-            elif key == "KEY_UP":
+            elif key == curses.KEY_UP:
                 win.up(cwd, use_restrictions=False)
-            elif key == "KEY_DOWN":
+            elif key == curses.KEY_DOWN:
                 win.down(cwd, use_restrictions=False)
-            elif key == "KEY_RIGHT":
+            elif key == curses.KEY_RIGHT:
                 if win.cursor.row < len(cwd.dirs):
                     """ change current directory to subdirectory """
                     os.chdir(os.getcwd()+'/'+cwd.dirs[win.cursor.row])
@@ -117,7 +118,7 @@ def browsing(stdscr, conf):
                 else:
                     """ view file """
                     pass
-            elif key == "KEY_LEFT":
+            elif key == curses.KEY_LEFT:
                 """ change current directory to parent directory """
                 current_dir = os.path.basename(os.getcwd()) # get directory name
                 if current_dir: # if its not root
@@ -130,10 +131,10 @@ def browsing(stdscr, conf):
                     if dir_position:
                         for i in range(0, dir_position): # set cursor position to prev directory
                             win.down(cwd, use_restrictions=False)
-            elif key == "v": # F3
+            elif key == ord('v'): # F3
                 """ view file """
                 pass
-            elif key == "o": # F4
+            elif key == ord('o'): # F4
                 """ open file to edit and change focus """
                 if win.cursor.row >= len(cwd.dirs):
                     conf = config_browsing(conf, win, cwd)
@@ -216,6 +217,10 @@ def editing(stdscr, conf):
     screen = conf.right_screen
     win = conf.right_win
 
+    if not conf.file_to_open:
+        conf.set_browsing_mode()
+        return conf
+
     buffer = get_file_content(screen, conf.file_to_open)
     if not buffer:
         conf.set_exit_mode()
@@ -228,58 +233,104 @@ def editing(stdscr, conf):
         """
         screen.erase()
         screen.border(0)
-        new_row, new_col = win.get_cursor_position()
+        new_row, new_col = win.get_shifted_cursor_position()
         screen.addstr(1, 1, "cursor: "+str(win.cursor.row)+", "+str(win.cursor.col)+" - "+str(new_row)+", "+str(new_col), conf.normal) # with borders
         screen.addstr(2, 1, "shift:  "+str(win.row_shift)+", "+str(win.col_shift), conf.normal) # with borders
-        screen.addstr(3, 1, "begin:  "+str(win.begin_y)+", "+str(win.begin_x), conf.normal) # with borders
-        screen.addstr(4, 1, "end:    "+str(win.end_y)+", "+str(win.end_x), conf.normal) # with borders
-        screen.addstr(5, 1, "bottom: "+str(win.bottom), conf.normal) # with borders
-        screen.addstr(6, 1, "buffer: "+str(len(buffer)), conf.normal) # with borders
+        string = str(len(buffer[win.cursor.row - win.begin_y]) + win.begin_x)
+        shift = win.end_x - win.begin_x - 2 - 2
+        screen.addstr(3, 1, "len_row:"+string+" len_shift: "+str(shift), conf.normal) # with borders
+        screen.addstr(10, 1, "shift++ ... if "+str(new_col)+"+1-"+str(win.begin_x)+" // "+str(win.end_x - win.begin_x)+"-2 > 0", conf.normal) # with borders
+        screen.addstr(11, 1, "shift-- ... if "+str(new_col)+"-1+1-2 == "+str(win.begin_x)+" and "+str(win.col_shift)+">="+str(shift), conf.normal) # with borders
+
+        screen.addstr(5, 1, "begin:  "+str(win.begin_y)+", "+str(win.begin_x), conf.normal) # with borders
+        screen.addstr(6, 1, "end:    "+str(win.end_y)+", "+str(win.end_x), conf.normal) # with borders
+        screen.addstr(7, 1, "bottom: "+str(win.bottom), conf.normal) # with borders
+        screen.addstr(8, 1, "buffer: "+str(len(buffer)), conf.normal) # with borders
         screen.refresh()
         """
 
         """ move cursor """
-        new_row, new_col = win.get_cursor_position()
+        try:
+            new_row, new_col = win.get_shifted_cursor_position()
+            stdscr.move(new_row, new_col)
+        except:
+            screen.addstr(13, 1, str(new_row)+", "+str(new_col), conf.normal) # with borders
+            screen.refresh()
+            key = stdscr.getch()
         stdscr.move(new_row, new_col)
 
-        key = stdscr.getkey()
+        key = stdscr.getch()
         try:
-            if key == "\x1B" : # ESC
-                conf = config_editing(conf, win, buffer) # save browsing state before exit browsing
-                conf.set_exit_mode()
-                return conf
-            elif key == "\t": # change focus
+            if key == curses.ascii.ESC : # ESC
+                if buffer.is_saved:
+                    conf = config_editing(conf, win, buffer) # save browsing state before exit browsing
+                    conf.set_exit_mode()
+                    return conf
+                # elif buffer.original_buff == buffer.lines:
+                    # conf = config_editing(conf, win, buffer)
+                    # conf.set_exit_mode()
+                    # return conf
+                else:
+                    # TODO: warning for unsaved changes
+                    print_error_message(screen,"WARNING: Exit without saving.\n\
+    Press F2 to save and exit.\n\
+    Press ESC to force exiting without saving.\n\
+    Press any other key to continue editing your file.")
+                    exit_key = stdscr.getch()
+                    if exit_key == curses.ascii.ESC : # force exit
+                        conf = config_editing(conf, win, buffer)
+                        conf.set_exit_mode()
+                        return conf
+                    elif exit_key == curses.KEY_F2: # save file
+                        write_file(conf.file_to_open, buffer)
+                        conf = config_editing(conf, win, buffer)
+                        conf.set_exit_mode()
+                        return conf
+                    else:
+                        continue
+            elif key == ord('\t'): # change focus
                 conf = config_editing(conf, win, buffer) # save browsing state before exit browsing
                 conf.set_browsing_mode()
                 return conf
-            elif key == "KEY_UP":
+            elif key == curses.KEY_UP:
                 win.up(buffer, use_restrictions=True)
-                win.horizontal_shift()
-            elif key == "KEY_DOWN":
+            elif key == curses.KEY_DOWN:
                 win.down(buffer, use_restrictions=True)
-                win.horizontal_shift()
-            elif key == "KEY_LEFT":
+            elif key == curses.KEY_LEFT:
                 win.left(buffer)
-                win.horizontal_shift()
-            elif key == "KEY_RIGHT":
+            elif key == curses.KEY_RIGHT:
                 win.right(buffer)
-                win.horizontal_shift()
-            elif key in ("KEY_DC","\x04"): # \x04 for MacOS which doesnt correctly decode delete key
+            elif key == curses.KEY_DC: # \x04 for MacOS which doesnt correctly decode delete key
                 buffer.delete(win)
-            elif key in ("KEY_BACKSPACE","\x7f"): # \x7f for MacOS
+            elif key == curses.KEY_BACKSPACE: # \x7f for MacOS
                 if (win.cursor.row, win.cursor.col) > (win.begin_y, win.begin_x):
                     win.left(buffer)
                     buffer.delete(win)
-            elif key == "r":
-                pass
-            elif key == "s": # F2
-                """ save file """
-                pass
+            elif key == curses.KEY_F2: # save file
+                write_file(conf.file_to_open, buffer)
+            elif key == ord('\n'):
+                buffer.newline(win)
+                win.right(buffer)
+            else:
+                str_key = chr(key)
+                # if str_key[:3] != "KEY":
+                if True:
+                    buffer.insert(win, str_key)
+                    win.right(buffer)
+                    # for _ in str_key:
+                        # win.right(buffer)
+                        # win.horizontal_shift()
         except Exception as err:
             print_error_message(screen, str(err))
             conf.set_exit_mode()
             return conf
 
+
+def write_file(file_name, buffer):
+    with open(file_name, 'w') as f:
+        lines = '\n'.join(buffer.lines)
+        f.write(lines)
+    buffer.set_save_status(True)
 
 
 def get_file_content(screen, file_name):
@@ -296,7 +347,6 @@ def get_file_content(screen, file_name):
         print_error_message(screen, str(err))
     finally:
         return buffer
-
 
 """ print file content but only for max rows and cols of window """
 def show_file_content(screen, win, buffer, highlight, normal):
@@ -319,10 +369,11 @@ def show_file_content(screen, win, buffer, highlight, normal):
         screen.refresh()
 
 
+
 def print_error_message(screen, message, coloring=None):
     screen.erase()
-    screen.border(0)
     screen.addstr(1, 1, str(message), coloring if coloring else curses.A_BOLD)
+    screen.border(0)
     screen.refresh()
 
 
