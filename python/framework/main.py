@@ -203,9 +203,11 @@ def config_browsing(conf, win, cwd):
     conf.cwd = cwd
     return conf
 
-def config_editing(conf, win, buffer):
+def config_editing(conf, win, buffer, mode=None):
     conf.right_win = win
     conf.file_buffer = buffer
+    if mode:
+        conf.set_mode(mode)
     return conf
 
 
@@ -250,25 +252,46 @@ def editing(stdscr, conf):
         """
 
         """ move cursor """
-        try:
-            new_row, new_col = win.get_shifted_cursor_position()
-            stdscr.move(new_row, new_col)
-        except:
-            screen.addstr(13, 1, str(new_row)+", "+str(new_col), conf.normal) # with borders
-            screen.refresh()
-            key = stdscr.getch()
+        # try:
+        new_row, new_col = win.get_shifted_cursor_position()
         stdscr.move(new_row, new_col)
+        # except:
+        #     screen.addstr(13, 1, str(new_row)+", "+str(new_col), conf.normal) # with borders
+        #     screen.refresh()
+        #     key = stdscr.getch()
+        # stdscr.move(new_row, new_col)
 
         key = stdscr.getch()
         try:
             if key == curses.ascii.ESC : # ESC
                 if buffer.is_saved:
-                    conf = config_editing(conf, win, buffer) # save browsing state before exit browsing
-                    conf.set_exit_mode()
+                    conf = config_editing(conf, win, buffer, EXIT) # save browsing state before exit browsing
                     return conf
                 # elif buffer.original_buff == buffer.lines:
-                    # conf = config_editing(conf, win, buffer)
-                    # conf.set_exit_mode()
+                    # conf = config_editing(conf, win, buffer, EXIT)
+                    # return conf
+                else:
+                    # TODO: warning message for unsaved changes
+                    print_error_message(screen,"WARNING: Exit without saving.\n\
+    Press F2 to save and exit.\n\
+    Press ESC to force exiting without saving.\n\
+    Press any other key to continue editing your file.")
+                    exit_key = stdscr.getch()
+                    if exit_key == curses.ascii.ESC : # force exit
+                        conf = config_editing(conf, win, buffer, EXIT)
+                        return conf
+                    elif exit_key == curses.KEY_F2: # save file
+                        write_file(conf.file_to_open, buffer)
+                        conf = config_editing(conf, win, buffer, EXIT)
+                        return conf
+                    else:
+                        continue
+            elif key == ord('\t'): # change focus
+                if buffer.is_saved:
+                    conf = config_editing(conf, win, buffer, BROWSING)
+                    return conf
+                # elif buffer.original_buff == buffer.lines:
+                    # conf = config_editing(conf, win, buffer, BROWSING)
                     # return conf
                 else:
                     # TODO: warning for unsaved changes
@@ -278,19 +301,14 @@ def editing(stdscr, conf):
     Press any other key to continue editing your file.")
                     exit_key = stdscr.getch()
                     if exit_key == curses.ascii.ESC : # force exit
-                        conf = config_editing(conf, win, buffer)
-                        conf.set_exit_mode()
+                        conf = config_editing(conf, win, buffer, BROWSING)
                         return conf
                     elif exit_key == curses.KEY_F2: # save file
                         write_file(conf.file_to_open, buffer)
-                        conf = config_editing(conf, win, buffer)
-                        conf.set_exit_mode()
+                        conf = config_editing(conf, win, buffer, BROWSING)
                         return conf
                     else:
                         continue
-            elif key == ord('\t'): # change focus
-                conf = config_editing(conf, win, buffer) # save browsing state before exit browsing
-                conf.set_browsing_mode()
                 return conf
             elif key == curses.KEY_UP:
                 win.up(buffer, use_restrictions=True)
@@ -356,18 +374,13 @@ def show_file_content(screen, win, buffer, highlight, normal):
     max_cols = win.end_x - win.begin_x
     max_rows = win.end_y - win.begin_y
 
-    try:
-        for row, line in enumerate(buffer[win.row_shift : max_rows + win.row_shift - 1]):
-            if (row + win.begin_y == win.cursor.row - win.row_shift) and (win.col_shift > 0):
-                line = line[win.col_shift + 1:]
-            if len(line) > max_cols:
-                line = line[:max_cols - 1]
-            screen.addstr(row+1, 1, line, normal)
-    except:
-        pass
-    finally:
-        screen.refresh()
-
+    for row, line in enumerate(buffer[win.row_shift : max_rows + win.row_shift - 1]):
+        if (row + win.begin_y == win.cursor.row - win.row_shift) and (win.col_shift > 0):
+            line = line[win.col_shift + 1:]
+        if len(line) > max_cols:
+            line = line[:max_cols - 1]
+        screen.addstr(row+1, 1, line, normal)
+    screen.refresh()
 
 
 def print_error_message(screen, message, coloring=None):

@@ -43,3 +43,6 @@ class Config:
     
     def set_exit_mode(self):
         self.mode = EXIT
+
+    def set_mode(self, mode):
+        self.mode = mode

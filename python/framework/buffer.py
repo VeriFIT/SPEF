@@ -5,6 +5,7 @@
             -informaciu o tom ci bol obsah suboru zmeneny
             (aby sa nemusel zakazdym vykonavat diff)
 
+qwe
 """
 
 class Buffer:
