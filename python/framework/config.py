@@ -6,9 +6,11 @@ EDITING = 2
 EXIT = -1
 
 class Config:
-    def __init__(self, left_screen, right_screen):
+    def __init__(self, left_screen, right_screen, down_screen):
         self.left_screen = left_screen
         self.right_screen = right_screen
+        self.down_screen = down_screen # for hint
+
 
         self.mode = BROWSING # start with browsing directory
 

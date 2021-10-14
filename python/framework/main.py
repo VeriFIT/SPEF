@@ -1,6 +1,6 @@
-
 import curses
 import curses.ascii
+import datetime
 import os
 import sys
 
@@ -13,34 +13,81 @@ from window import Window, Cursor
 
 ESC = 27 # Esc key code is 27
 
-def clear_all(stdscr,left_screen,right_screen):
+LOG_FILE = "log"
+
+
+def clear_log_file():
+    with open(LOG_FILE, 'w+'):
+        pass
+
+def log(message):
+    day = datetime.date.today()
+    time = datetime.datetime.now().strftime("%X")
+    with open(LOG_FILE, 'a') as f:
+        f.write("{} {} | {}\n".format(day,time,message))
+
+
+def clear_all(stdscr,left_screen,right_screen,down_screen):
     stdscr.erase()
     left_screen.erase()
     right_screen.erase()
+    down_screen.erase()
 
-    stdscr.border(0)
+    # stdscr.border(0)
     left_screen.border(0)
     right_screen.border(0)
+    down_screen.border(0)
     
     stdscr.refresh()
     left_screen.refresh()
     right_screen.refresh()
+    down_screen.refresh()
+
+def resize_all(stdscr, conf):
+    log("resizing")
+
+    y,x = stdscr.getmaxyx()
+    """ get new size """
+    if curses.is_term_resized(y,x):
+        y,x = stdscr.getmaxyx()
+        stdscr.clear()
+        curses.resizeterm(y,x)
+        stdscr.refresh()
+
+        win_heigh = y - 2 - 2
+        win_width = int(x / 2)
+        # win_heigh = curses.LINES - 2 - 2
+        # win_width = int(curses.COLS / 2)
+
+        """ screen resize """
+        conf.left_screen = curses.newwin(win_heigh, win_width, 1, 1)
+        conf.right_screen = curses.newwin(win_heigh, win_width-1, 1, win_width+1)
+        conf.down_screen = curses.newwin(3, win_width*2-1, win_heigh+1, 1)
+
+        """ window resize """
+        conf.right_win = Window(win_heigh, win_width-1, 2, win_width+2)
+        conf.left_win = Window(win_heigh, win_width, 0, 1)
+        conf.left_win.set_cursor(0,0)
+
+        clear_all(stdscr, conf.left_screen, conf.right_screen, conf.down_screen)
+
+    return conf
 
 
-"""
-browsing in the directory structure
-"""
+""" ======================= START MAIN ========================= """
 def main(stdscr):
+    log("START")
     stdscr.clear()
 
     curses.set_escdelay(1)
 
     """ create win for browsing files and win for editing files """
-    win_heigh = curses.LINES - 2
+    win_heigh = curses.LINES - 2 - 2
     win_width = int(curses.COLS / 2)
     
     left_screen = curses.newwin(win_heigh, win_width, 1, 1) # for browsing (1,1) ... (h,w)
     right_screen = curses.newwin(win_heigh, win_width-1, 1, win_width+1) # for editing (1,w) ... (h,ww)
+    down_screen = curses.newwin(3, win_width*2-1, win_heigh+1, 1)
 
     """ set coloring """
     curses.start_color()
@@ -53,12 +100,13 @@ def main(stdscr):
     stdscr.bkgd(' ', curses.color_pair(2))
     left_screen.bkgd(' ', curses.color_pair(2))
     right_screen.bkgd(' ', curses.color_pair(2))
+    down_screen.bkgd(' ', curses.color_pair(2))
 
-    clear_all(stdscr,left_screen,right_screen)
+    clear_all(stdscr,left_screen,right_screen,down_screen)
 
 
     """ create config """
-    config = Config(left_screen, right_screen)
+    config = Config(left_screen, right_screen,down_screen)
     config.set_coloring(highlight, normal)
 
     config.right_win = Window(win_heigh, win_width-1, 2, win_width+2)
@@ -71,13 +119,45 @@ def main(stdscr):
 
     while True:
         if config.mode == EXIT:
-            # stdscr.getkey()
+            stdscr.getkey()
             break
         elif config.mode == BROWSING:
+            print_hint(down_screen,B_HELP)
             config = browsing(stdscr, config)
         elif config.mode == EDITING:
+            print_hint(down_screen,E_HELP)
             config = editing(stdscr, config)
             # break
+    
+    log("END")
+
+""" ======================= END MAIN ========================= """
+
+
+# browsing
+B_HELP = {"F1":"help", "F2":"menu", "F3":"view", 
+            "F4":"edit", "F5":"copy", "F6":"rename", 
+            "F8":"delete", "F9":"filter", "F10":"exit"} 
+# editing
+E_HELP = {"F1":"help", "F2":"save", "F3":"note",
+            "F9":"filter", "F10":"exit"}
+# viewing
+V_HELP = {"F1":"help", "F5":"goto", 
+            "F9":"filter", "F10":"exit"}
+
+def print_hint(screen, help_dict):
+    screen.erase()
+    screen.border(0)
+    size = screen.getmaxyx()
+
+    string = ""
+    for key in help_dict:
+        hint = " | " + str(key) + ":" + str(help_dict[key])
+        if len(string) + len(hint) <= size[1]:
+            string += hint
+
+    screen.addstr(1, 1, string[2:])
+    screen.refresh()
 
 
 """ **************************** BROWSING **************************** """
@@ -93,7 +173,6 @@ def browsing(stdscr, conf):
         """ print current directory structure """
         show_directory_content(screen, win, cwd, conf.highlight, conf.normal)
 
-        # key = stdscr.getkey()
         key = stdscr.getch()
         try:
             if key == ESC : # ESC
@@ -115,9 +194,6 @@ def browsing(stdscr, conf):
                     cwd = get_directory_content()
                     win.reset_shifts()
                     win.set_cursor(0,0) # set cursor on first position (first item)
-                else:
-                    """ view file """
-                    pass
             elif key == curses.KEY_LEFT:
                 """ change current directory to parent directory """
                 current_dir = os.path.basename(os.getcwd()) # get directory name
@@ -131,9 +207,9 @@ def browsing(stdscr, conf):
                     if dir_position:
                         for i in range(0, dir_position): # set cursor position to prev directory
                             win.down(cwd, use_restrictions=False)
-            elif key == ord('v'): # F3
-                """ view file """
-                pass
+            elif key == curses.KEY_RESIZE:
+                conf = resize_all(stdscr, conf)
+                
             elif key == ord('o'): # F4
                 """ open file to edit and change focus """
                 if win.cursor.row >= len(cwd.dirs):
@@ -265,10 +341,12 @@ def editing(stdscr, conf):
         try:
             if key == curses.ascii.ESC : # ESC
                 if buffer.is_saved:
-                    conf = config_editing(conf, win, buffer, EXIT) # save browsing state before exit browsing
+                    conf = config_editing(conf, win, buffer) # save browsing state before exit browsing
+                    conf.set_exit_mode()
                     return conf
                 # elif buffer.original_buff == buffer.lines:
-                    # conf = config_editing(conf, win, buffer, EXIT)
+                    # conf = config_editing(conf, win, buffer)
+                    # conf.set_exit_mode()
                     # return conf
                 else:
                     # TODO: warning message for unsaved changes
@@ -278,20 +356,24 @@ def editing(stdscr, conf):
     Press any other key to continue editing your file.")
                     exit_key = stdscr.getch()
                     if exit_key == curses.ascii.ESC : # force exit
-                        conf = config_editing(conf, win, buffer, EXIT)
+                        conf = config_editing(conf, win, buffer)
+                        conf.set_exit_mode()
                         return conf
                     elif exit_key == curses.KEY_F2: # save file
                         write_file(conf.file_to_open, buffer)
-                        conf = config_editing(conf, win, buffer, EXIT)
+                        conf = config_editing(conf, win, buffer)
+                        conf.set_exit_mode()
                         return conf
                     else:
                         continue
             elif key == ord('\t'): # change focus
                 if buffer.is_saved:
-                    conf = config_editing(conf, win, buffer, BROWSING)
+                    conf = config_editing(conf, win, buffer)
+                    conf.set_browsing_mode()
                     return conf
                 # elif buffer.original_buff == buffer.lines:
-                    # conf = config_editing(conf, win, buffer, BROWSING)
+                    # conf = config_editing(conf, win, buffer)
+                    # conf.set_browsing_mode()
                     # return conf
                 else:
                     # TODO: warning for unsaved changes
@@ -301,15 +383,16 @@ def editing(stdscr, conf):
     Press any other key to continue editing your file.")
                     exit_key = stdscr.getch()
                     if exit_key == curses.ascii.ESC : # force exit
-                        conf = config_editing(conf, win, buffer, BROWSING)
+                        conf = config_editing(conf, win, buffer)
+                        conf.set_browsing_mode()
                         return conf
                     elif exit_key == curses.KEY_F2: # save file
                         write_file(conf.file_to_open, buffer)
-                        conf = config_editing(conf, win, buffer, BROWSING)
+                        conf = config_editing(conf, win, buffer)
+                        conf.set_browsing_mode()
                         return conf
                     else:
                         continue
-                return conf
             elif key == curses.KEY_UP:
                 win.up(buffer, use_restrictions=True)
             elif key == curses.KEY_DOWN:
@@ -326,6 +409,8 @@ def editing(stdscr, conf):
                     buffer.delete(win)
             elif key == curses.KEY_F2: # save file
                 write_file(conf.file_to_open, buffer)
+            elif key == curses.KEY_RESIZE:
+                conf = resize_all(stdscr, conf)
             elif key == ord('\n'):
                 buffer.newline(win)
                 win.right(buffer)
@@ -370,6 +455,7 @@ def get_file_content(screen, file_name):
 def show_file_content(screen, win, buffer, highlight, normal):
     screen.erase()
     screen.border(0)
+    # screen.clear()
 
     max_cols = win.end_x - win.begin_x
     max_rows = win.end_y - win.begin_y
@@ -384,6 +470,7 @@ def show_file_content(screen, win, buffer, highlight, normal):
 
 
 def print_error_message(screen, message, coloring=None):
+    log(str(message))
     screen.erase()
     screen.addstr(1, 1, str(message), coloring if coloring else curses.A_BOLD)
     screen.border(0)
@@ -391,6 +478,8 @@ def print_error_message(screen, message, coloring=None):
 
 
 if __name__ == "__main__":
+    clear_log_file()
+
     stdscr = curses.initscr()
     stdscr.keypad(True) # enable read special keys
     curses.wrapper(main)
