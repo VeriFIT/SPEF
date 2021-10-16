@@ -11,7 +11,6 @@ class Config:
         self.right_screen = right_screen
         self.down_screen = down_screen # for hint
 
-
         self.mode = BROWSING # start with browsing directory
 
         """ view window """

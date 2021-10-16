@@ -4,16 +4,23 @@
             -obsah suboru (originalny a pripadne zmeneny)
             -informaciu o tom ci bol obsah suboru zmeneny
             (aby sa nemusel zakazdym vykonavat diff)
-
-qwe
 """
 
+import datetime
+LOG_FILE = "/home/naty/Others/ncurses/python/framework/log"
+def log(message):
+    day = datetime.date.today()
+    time = datetime.datetime.now().strftime("%X")
+    with open(LOG_FILE, 'a') as f:
+        f.write("{} {} | {}\n".format(day,time,message))
+
+
 class Buffer:
-    def __init__(self, file_name, lines=[]):
+    def __init__(self, file_name, lines):
         self.file_name = file_name
-        self.original_buff = lines
         self.lines = lines
 
+        self.original_buff = lines.copy()
         self.is_saved = True
 
     def __len__(self):

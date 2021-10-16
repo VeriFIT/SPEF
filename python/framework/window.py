@@ -11,6 +11,16 @@ koniec riadku   len(buffer[self.row - win.begin_y]) + win.begin_x
 LEFT_EDGE = 2
 RIGHT_EDGE = 2
 
+
+import datetime
+LOG_FILE = "/home/naty/Others/ncurses/python/framework/log"
+def log(message):
+    day = datetime.date.today()
+    time = datetime.datetime.now().strftime("%X")
+    with open(LOG_FILE, 'a') as f:
+        f.write("{} {} | {}\n".format(day,time,message))
+
+
 class Cursor:
     def __init__(self, row=0, col=0, col_last=None):
         self.row = row
@@ -132,7 +142,7 @@ class Window:
         self.col_shift = pages * shift
 
 
-    def get_shifted_cursor_position(self):
+    def get_cursor_position(self):
         new_col = self.cursor.col - self.col_shift - (1 if self.col_shift > 0 else 0)
         new_row = self.cursor.row - self.row_shift
         return new_row, new_col
