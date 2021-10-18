@@ -21,6 +21,8 @@ class Buffer:
         self.lines = lines
 
         self.original_buff = lines.copy()
+        self.last_save = lines.copy()
+
         self.is_saved = True
 
     def __len__(self):

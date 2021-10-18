@@ -30,7 +30,7 @@ class Cursor:
     @property
     def col(self):
         return self._col
-    
+
     @col.setter
     def col(self,col):
         self._col = col
@@ -154,6 +154,10 @@ class Window:
     def reset_shifts(self):
         self.row_shift = 0
         self.col_shift = 0
+
+    def reset_window(self):
+        self.reset_shifts()
+        self.set_cursor(self.begin_y, self.begin_x)
 
     def resize(self, width, height, begin_x, begin_y):
         self.begin_x = begin_x
