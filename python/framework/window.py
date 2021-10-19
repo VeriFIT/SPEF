@@ -135,11 +135,15 @@ class Window:
 
 
     def horizontal_shift(self):
-        """ horizontal shift """
         width = self.end_x - self.begin_x
         shift = width - RIGHT_EDGE - LEFT_EDGE
         pages = (self.cursor.col - self.begin_x) // (width - RIGHT_EDGE)
         self.col_shift = pages * shift
+
+    def vertical_shift(self):
+        shift = self.end_y - self.begin_y
+        pages = (self.cursor.row - self.begin_y) // (shift)
+        self.row_shift = pages * shift
 
 
     def get_cursor_position(self):

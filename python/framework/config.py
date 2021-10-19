@@ -26,11 +26,13 @@ class Config:
         
         self.mode = BROWS # start with browsing directory
         self.edit_allowed = False
+        self.note_highlight = True
 
         self.cwd = None # current working directory
         self.file_to_open = None
         self.file_buffer = None
         self.file_tags = None
+        self.file_report = None
 
 
     def set_coloring(self, highlight, normal):
@@ -42,6 +44,7 @@ class Config:
 
     def disable_file_edit(self):
         self.edit_allowed = False
+
 
 
     """ set mode """

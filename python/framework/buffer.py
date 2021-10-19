@@ -1,13 +1,7 @@
-"""
--Buffer reprezentuje zobrazovany subor
--obsahuje:  -nazov zobrazovaneho suboru
-            -obsah suboru (originalny a pripadne zmeneny)
-            -informaciu o tom ci bol obsah suboru zmeneny
-            (aby sa nemusel zakazdym vykonavat diff)
-"""
-
 import datetime
+
 LOG_FILE = "/home/naty/Others/ncurses/python/framework/log"
+
 def log(message):
     day = datetime.date.today()
     time = datetime.datetime.now().strftime("%X")
