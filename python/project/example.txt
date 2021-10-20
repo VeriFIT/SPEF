@@ -1,0 +1,69 @@
+asd qwdijnqwd
+In order to use the screen package, the routines must know about terminal characteristics, and the space for curscr and stdscr must be allocated. These function initscr() does both these things. Since it must allocate space for the windows, it can overflow memory when attempting to do so. On the rare occasions this happens, initscr() will terminate the program with an error message. initscr() must always be called before any of the routines which affect windows are used. If it is not, the program will core dump as soon as either curscr or stdscr are referenced. However, it is usually best to wait to call it until after you are sure you will need it, like after checking for startup errors. Terminal status changing routines like nl() and cbreak() should be called after initscr().
+
+u can set them up for your program. If you want to, say, allow a screen to scroll, use scrollok(). If you want the cursor to be left in place after the last change, use leaveok(). If this is not done, refresh() will move the cursor to the window's current (y, x) coordinates after updating it.
+asdf asdf
+asdf asdf
+You can create new windows of your own using the functions newwin(), derwin(), and subwin(). The routine delwin() will allow you to get rid of old windows. All the options described above can be applied to any window.
+
+
+
+
+if r_win_h % 2 == 0:
+        right_up_h = int(r_win_h / 2)
+        right_down_h = int(r_win_h / 2)
+    else:
+        right_up_h = int(r_win_h / 2) + 1
+        right_down_h = int(r_win_h / 2)
+
+    right_up_screen = curses.newwin(right_up_h, r_win_w, r_win_y, r_win_x)
+    right_down_screen = curses.newwin(right_down_h, r_win_w, r_win_y + right_up_h, r_win_x)
+
+    right_win = Window(r_win_h, r_win_w, r_win_y+1, r_win_x+1) # +1 stands for bordes at first line and col
+
+asdfasdf
+asdf
+asdf
+    left_win = Window(l_win_h, l_win_w, 0, 0)
+
+    screens = {"LS":left_screen, "RS":right_screen, "DS":down_screen,
+                "RUS":right_up_screen, "RDS":right_down_screen}
+    windows = {"LW":left_win, "RW":right_win}
+
+
+
+
+
+
+
+
+
+
+
+/* check if input message includes alphabet only and its not empty
+asdasdasd
+asd
+asd0 ok
+1 non-aplha
+2 empty
+3 only whitespace
+*/
+int process_input(char *mess){
+    bool includes_letter = false;
+    int mess_len = strlen(mess);
+    if(mess_len==0)
+        return 2;
+    for(int i=0;i<mess_len;i++){
+        if(!isalpha(mess[i]) && !isspace(mess[i]))
+            return 1;
+        else{
+
+   mess[i] = toupper(mess[i]);
+            if(isalpha(mess[i]))
+                includes_letter = true;
+        }
+    }
+    if(!includes_letter)
+        return 3;
+    return 
+ƚƚ}

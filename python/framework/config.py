@@ -32,7 +32,7 @@ class Config:
         self.file_to_open = None
         self.file_buffer = None
         self.file_tags = None
-        self.file_report = None
+        self.project_report = None
 
 
     def set_coloring(self, highlight, normal):

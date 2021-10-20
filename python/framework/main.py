@@ -8,13 +8,14 @@ import os
 import sys
 
 
-from buffer import Buffer
+from buffer import Buffer, Report
 from config import *
 from directory import Directory
 from window import Window, Cursor
 
 ESC = 27
 
+PROJECT_NAME = "project"
 PROJECT_DIR = "/home/naty/Others/ncurses/python/project"
 
 LOG_FILE = "/home/naty/Others/ncurses/python/framework/log"
@@ -443,11 +444,12 @@ def file_viewing(stdscr, conf):
     if not conf.file_to_open: # there is no file to open and edit
         conf.set_brows_mode()
         return conf
-    file_already_opened = False
+    file_already_loaded = False
+    report_already_loaded = False
 
     """ try load file content to buffer """
     if conf.file_buffer and conf.file_buffer.file_name == conf.file_to_open:
-        file_already_opened = True
+        file_already_loaded = True
         buffer = conf.file_buffer
     else:
         try:
@@ -461,7 +463,7 @@ def file_viewing(stdscr, conf):
             return conf
 
     """ try load file tags to config """
-    if not conf.edit_allowed and (not conf.file_tags or not file_already_opened):
+    if not conf.edit_allowed and (not conf.file_tags or not file_already_loaded):
         # tag file wasnt loaded yet
         try:
             file_name = os.path.basename(conf.file_to_open)
@@ -478,6 +480,28 @@ def file_viewing(stdscr, conf):
             log("load file tags | "+str(err))
             conf.set_exit_mode()
             return conf
+
+
+
+    conf.project_report = Report(PROJECT_DIR,"xlogin00")
+
+    """ try load file report to config """
+    prefix = "{}/{}".format(conf.project_report.project_name,conf.project_report.login)
+    report_already_loaded = buffer.file_name.startswith(prefix)
+    log(report_already_loaded)
+    if conf.project_report and report_already_loaded:
+        report = conf.project_report
+    else:
+        try:
+            file_name = os.path.basename(conf.file_to_open)
+            report_path = os.path.join(REPORT_DIR, str(file_name))
+            report_file = os.path.splitext(report_path)[0]
+
+        except Exception as err:
+            log("load file report | "+str(err))
+            conf.set_exit_mode()
+            return conf
+
 
 
     while True:

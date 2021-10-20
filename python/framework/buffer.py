@@ -8,6 +8,13 @@ def log(message):
     with open(LOG_FILE, 'a') as f:
         f.write("{} {} | {}\n".format(day,time,message))
 
+class Report:
+    def __init__(self, project_name, login):
+        self.project_name = project_name
+        self.login = login
+
+        self.notes = None
+
 
 class Buffer:
     def __init__(self, file_name, lines):
