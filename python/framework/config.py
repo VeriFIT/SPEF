@@ -1,4 +1,13 @@
 
+import datetime
+LOG_FILE = "/home/naty/Others/ncurses/python/framework/log"
+def log(message):
+    day = datetime.date.today()
+    time = datetime.datetime.now().strftime("%X")
+    with open(LOG_FILE, 'a') as f:
+        f.write("{} {} | {}\n".format(day,time,message))
+
+
 """ modes """
 BROWS = 1
 VIEW = 2
@@ -23,21 +32,41 @@ class Config:
         """ coloring """
         self.highlight = None
         self.normal = None
-        
-        self.mode = BROWS # start with browsing directory
-        self.edit_allowed = False
-        self.note_highlight = True
 
-        self.cwd = None # current working directory
+        self.mode = BROWS # start with browsing directory
+        self.edit_allowed = True
+        self.note_highlight = True
+        self.line_numbers = None # None or str(number_of_lines_in_buffer)
+
         self.file_to_open = None
-        self.file_buffer = None
-        self.file_tags = None
-        self.project_report = None
+        self.cwd = None # Directory(path, dirs, files)
+        self.buffer = None # Buffer(path, lines)
+        self.tags = None # Tags(path, data)
+        self.report = None # Report(path, code_review)
 
 
     def set_coloring(self, highlight, normal):
         self.highlight = highlight
         self.normal = normal
+
+
+    def update_browsing_data(self, win, cwd):
+        self.left_win = win
+        self.cwd = cwd
+
+    def update_viewing_data(self, win, buffer, report=None):
+        if self.edit_allowed:
+            self.right_win = win
+        else:
+            self.right_up_win = win
+        self.buffer = buffer
+        if report:
+            self.report = report
+
+    def update_tagging_data(self, win, tags):
+        self.right_down_win = win
+        self.tags = tags
+
 
     def enable_file_edit(self):
         self.edit_allowed = True
@@ -45,6 +74,11 @@ class Config:
     def disable_file_edit(self):
         self.edit_allowed = False
 
+    def disable_line_numbers(self):
+        self.line_numbers = None
+
+    def enable_line_numbers(self, buffer):
+        self.line_numbers = str(len(buffer))
 
 
     """ set mode """

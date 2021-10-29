@@ -11,20 +11,24 @@ class Request:
         self.loaded = False
         self.unloaded = False
 
-    def __str__(self):
-        return '%s: %s -> %s (%d) %s %s' % (self.content, self.src, self.dst, self.weight, 
+     def __str__(self):        return '%s: %s -> %s (%d) 
+%s %s' % (self.content, self.src, self.dst, self.weight, 
         "loaded on %s" %(self.slot) if self.slot >= 0 else "", "- to unload " if self.to_unload else "")
 
-    def loading(self,slot_id):
+   def loading(self,slot_id):
         self.slot = slot_id
         self.loaded = True
-
-    def unloading(self):
+abc 
+ 
+ 
+ 
+d
+asdasdasdasdasdeasd
+f
+ unloading(self):
         self.slot = -1
         self.to_unload = False
-        self.unloaded = True
-
-    def on_destination(self):
+        self.unloaded = True  ef on_destination(self):
         self.to_unload = True
 
 # ziadosti o presun
