@@ -1,12 +1,4 @@
-
-import datetime
-LOG_FILE = "/home/naty/Others/ncurses/python/framework/log"
-def log(message):
-    day = datetime.date.today()
-    time = datetime.datetime.now().strftime("%X")
-    with open(LOG_FILE, 'a') as f:
-        f.write("{} {} | {}\n".format(day,time,message))
-
+from logger import *
 
 """ modes """
 BROWS = 1
@@ -43,6 +35,13 @@ class Config:
         self.buffer = None # Buffer(path, lines)
         self.tags = None # Tags(path, data)
         self.report = None # Report(path, code_review)
+
+        """ filters """
+        self.filter_on = False
+        self.filtered_files = None # Directory(path, [], files)
+        self.path_filter = None
+        self.content_filter = None
+        self.tag_filter = None
 
 
     def set_coloring(self, highlight, normal):

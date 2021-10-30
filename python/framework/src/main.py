@@ -7,26 +7,30 @@ import json
 import os
 import re
 import sys
+import fnmatch
+import glob
 
 from buffer import Buffer, Report, Tags, UserInput
-from config import *
+from config import Config
 from directory import Directory
 from window import Window, Cursor
+from printing import *
+from logger import *
 
 ESC = 27
 
 """ hladanie cesty projektu v ktorom su odovzdane riesenia
-TODO: 1
--v aktualnej ceste buffer.file_name sa bude hladat cesta suboru s projektom
--hlada sa od definovaneho HOME az kym nenajde xlogin00 subor
--xlogin00 sa najde podla regexu x[a-z][a-z][a-z][a-z][a-z][0-9][0-9]
--teda z cesty HOME/.../.../xlogin00/dir/file bude subor projektu .../...
+    TODO: 1
+    -v aktualnej ceste buffer.file_name sa bude hladat cesta suboru s projektom
+    -hlada sa od definovaneho HOME az kym nenajde xlogin00 subor
+    -xlogin00 sa najde podla regexu x[a-z][a-z][a-z][a-z][a-z][0-9][0-9]
+    -teda z cesty HOME/.../.../xlogin00/dir/file bude subor projektu .../...
 
-TODO: 2
--kazdy projekt bude nejak reprezentovany
--nazvy/cesty projektovych suborov budu niekde ulozene
--prehlada sa zoznam projektov
--skontroluje sa ci aktualna cesta buffer.file_name ma prefix zhodny s niektorym projektom
+    TODO: 2
+    -kazdy projekt bude nejak reprezentovany
+    -nazvy/cesty projektovych suborov budu niekde ulozene
+    -prehlada sa zoznam projektov
+    -skontroluje sa ci aktualna cesta buffer.file_name ma prefix zhodny s niektorym projektom
 """
 
 HOME = "/home/naty/Others/ncurses/python"
@@ -42,13 +46,6 @@ BORDER = 2
 START_Y = 0
 START_X = 0
 
-
-def log(message):
-    day = datetime.date.today()
-    time = datetime.datetime.now().strftime("%X")
-    with open(LOG_FILE, 'a') as f:
-        f.write("{} {} | {}\n".format(day,time,message))
-
 def preparation():
     """ clear log file """
     with open(LOG_FILE, 'w+'): pass
@@ -58,62 +55,6 @@ def preparation():
         os.makedirs(TAG_DIR)
     if not os.path.exists(REPORT_DIR):
         os.makedirs(REPORT_DIR)
-
-
-# browsing
-B_HELP = {"F1":"help", "F2":"menu", "F3":"view/tag",
-            "F4":"edit", "F5":"copy", "F6":"rename",
-            "F8":"delete", "F9":"filter", "F10":"exit"}
-
-# editing = is_view_mode + edit_allowed
-E_HELP = {"F1":"help", "F2":"save", "F3":"view/tag",
-            "F4":"note", "F5":"goto", "F8":"reload",
-            "F9":"filter", "F10":"exit"}
-
-"""
-CTRL + L    hard reload (from original buff)
-CTRL + H    enable/disable note highlight
-
-CTRL + D    show notes detail
-CTRL + R    remove note
-CTRL + E    edit note
-CTRL + Down next note
-CTRL + Up   prev note
-
-CTRL + N    show/hide line numbers
-"""
-
-# viewing = is_view_mode + not edit_allowed
-V_HELP = {"F1":"help", "F4":"edit", "F5":"goto",
-            "F9":"filter", "F10":"exit"}
-
-# tagging
-T_HELP = {"F1":"help", "F4":"edit",
-            "F9":"filter", "F10":"exit"}
-
-
-def print_hint(conf):
-    screen = conf.down_screen
-    screen.erase()
-    screen.border(0)
-    size = screen.getmaxyx()
-
-    if conf.is_brows_mode():
-        help_dict = B_HELP
-    elif conf.is_view_mode():
-        help_dict = E_HELP if conf.edit_allowed else V_HELP
-    elif conf.is_tag_mode():
-        help_dict = T_HELP
-    else:
-        help_dict = {}
-
-    string = ""
-    for key in help_dict:
-        hint = " | " + str(key) + ":" + str(help_dict[key])
-        if len(string) + len(hint) <= size[1]:
-            string += hint
-    screen.addstr(1, 1, string[2:])
-    screen.refresh()
 
 
 def resize_all(stdscr, conf, force_resize=False):
@@ -143,7 +84,7 @@ def resize_all(stdscr, conf, force_resize=False):
 
             """ rewrite all screens """
             print_hint(conf)
-            show_directory_content(conf.left_screen, conf.left_win, conf.cwd, conf.highlight, conf.normal)
+            show_directory_content(conf.left_screen, conf.left_win, conf.cwd, conf)
             if conf.edit_allowed:
                 show_file_content(conf.right_screen, conf.right_win, conf.buffer, conf.report, conf)
             else:
@@ -281,6 +222,50 @@ def main(stdscr):
 """ ======================= END MAIN ========================= """
 
 
+# TODO: get current project dir
+def get_project_path():
+    return f"{HOME}/{PROJ_DIR}"
+
+def filter_mode(stdscr, conf):
+    curses.curs_set(0)
+
+    brows_screen = conf.left_screen
+    view_screen = conf.right_up_screen
+    tag_screen = conf.right_down_screen
+
+    brows_win = conf.left_win
+    view_win = conf.right_up_win
+    tag_win = conf.right_down_win
+
+
+    # cwd = files = conf.filtered_files
+    conf.filtered_files = get_filtered_files(conf)
+    buffer = None
+    report = None
+    tags = None
+
+    filter_mode = 0
+
+    while True:
+        show_directory_content(brows_screen, brows_win, conf.filtered_files, conf)
+        show_file_content(view_screen, view_win, buffer, report, conf)
+        show_tags(tag_screen, tag_win, tags)
+
+        key = stdscr.getch()
+
+        if key in (curses.ascii.ESC, curses.KEY_F10): # exit filter mode
+            conf.set_brows_mode()
+            return conf
+
+        if filter_mode == 0:
+            pass
+        elif filter_mode == 1:
+            pass
+        elif filter_mode == 2:
+            pass
+
+
+
 """ **************************** START BROWSING **************************** """
 def directory_browsing(stdscr, conf):
     curses.curs_set(0) # set cursor as invisible
@@ -289,11 +274,87 @@ def directory_browsing(stdscr, conf):
     win = conf.left_win
     cwd = conf.cwd
 
+    """ filter by path in current project directory """
+    filter_editing = False
+    user_input = UserInput()
+    if conf.path_filter:
+        user_input.text = list(conf.path_filter)
+
     while True:
         """ print current directory structure """
-        show_directory_content(screen, win, cwd, conf.highlight, conf.normal)
+        show_directory_content(screen, win, cwd, conf, user_input if filter_editing else None)
+
+        """ move cursor to correct position in user input """
+        if filter_editing:
+            try:
+                shifted_pointer = user_input.get_shifted_pointer()
+                new_row, new_col = win.end_y-1, win.begin_x+1+shifted_pointer
+                stdscr.move(new_row, new_col)
+            except Exception as err:
+                log("move cursor | "+str(err))
+                conf.set_exit_mode()
+                return conf
 
         key = stdscr.getch()
+
+        # ======================= FILTER MODE =======================
+        if conf.filter_on:
+            if key in (curses.ascii.ESC, curses.KEY_F10): # exit filter mode
+                conf.filter_on = False
+                curses.curs_set(0)
+                user_input.reset()
+            elif key == curses.ascii.TAB:
+                conf.update_browsing_data(win, cwd)
+                conf.set_view_mode()
+                return conf
+            elif key == curses.KEY_RESIZE:
+                conf = resize_all(stdscr, conf)
+                screen = conf.left_screen
+                win = conf.left_win
+            elif key == curses.KEY_F8: # clear filter
+                conf.path_filter = None
+                conf.filtered_files = get_filtered_files(conf)
+                win.reset_shifts()
+                win.set_cursor(0,0)
+                user_input.reset()
+                if not conf.filtered_files:
+                    conf.filter_on = False
+                    curses.curs_set(0)
+            elif key == curses.KEY_F9: # edit filter
+                user_input = UserInput()
+                if conf.path_filter:
+                    user_input.text = list(conf.path_filter)
+                filter_editing = True
+                curses.curs_set(1)
+            elif key == curses.KEY_UP and conf.filtered_files:
+                win.up(conf.filtered_files, use_restrictions=False)
+            elif key == curses.KEY_DOWN and conf.filtered_files:
+                win.down(conf.filtered_files, use_restrictions=False)
+
+            if filter_editing:
+                if key == curses.KEY_LEFT:
+                    user_input.left(win)
+                elif key == curses.KEY_RIGHT:
+                    user_input.right(win)
+                elif key == curses.KEY_DC:
+                    user_input.delete_symbol(win)
+                elif key == curses.KEY_BACKSPACE:
+                    user_input.left(win)
+                    user_input.delete_symbol(win)
+                elif curses.ascii.isprint(key):
+                    user_input.insert_symbol(win, chr(key))
+                
+                elif key == curses.ascii.NL: # enter filter
+                    text = ''.join(user_input.text)
+                    conf.path_filter = text
+                    conf.filtered_files = get_filtered_files(conf)
+                    win.reset_shifts()
+                    win.set_cursor(0,0)
+                    user_input.reset()
+                    filter_editing = False
+                    curses.curs_set(0)
+            continue
+
         try:
             # ======================= EXIT =======================
             if key in (curses.ascii.ESC, curses.KEY_F10): # if key F10 doesnt work, use alternative ALT+0
@@ -302,10 +363,9 @@ def directory_browsing(stdscr, conf):
                     conf.set_exit_mode()
                     return conf
                 else:
-                    show_directory_content(screen, win, cwd, conf.highlight, conf.normal)
                     continue
             # ======================= FOCUS =======================
-            elif key == curses.ascii.TAB: # ord('\t')
+            elif key == curses.ascii.TAB:
                 conf.update_browsing_data(win, cwd)
                 conf.set_view_mode()
                 return conf
@@ -341,30 +401,58 @@ def directory_browsing(stdscr, conf):
                 win = conf.left_win
             # ======================= F KEYS =======================
             elif key in (curses.KEY_F3, curses.KEY_F4):
-                if win.cursor.row >= len(cwd.dirs):
+                if win.cursor.row >= len(cwd.dirs): # cant open direcotry
                     conf.update_browsing_data(win, cwd)
                     dirs_and_files = cwd.get_all_items()
                     conf.file_to_open = os.getcwd()+'/'+dirs_and_files[win.cursor.row]
                     conf.set_view_mode()
-                    """ F3: view/tag """
-                    if key == curses.KEY_F3:
+                    if key == curses.KEY_F3: # change to view/tag mode
                         conf.disable_file_edit()
                         conf.right_up_win.reset_window()
-                    """ F4: edit """
-                    if key == curses.KEY_F4:
+                    if key == curses.KEY_F4: # change to edit mode
                         conf.enable_file_edit()
                         conf.right_win.reset_window()            
                     return conf
+            elif key == curses.KEY_F9: # start filter
+                conf.filtered_files = get_filtered_files(conf)
+                user_input = UserInput()
+                if conf.path_filter:
+                    user_input.text = list(conf.path_filter)
+                conf.filter_on = True
+                filter_editing = True
+                curses.curs_set(1)
+            # ======================= CTRL KEYS =======================
+            elif curses.ascii.iscntrl(key):
+                ctrl_key = curses.ascii.unctrl(key)
+                if ctrl_key == '^D':
+                    pass
         except Exception as err:
             log("browsing | "+str(err))
             conf.set_exit_mode()
             return conf
 
 
+def get_filtered_files(conf):
+    project_path = get_project_path()
+    if conf.path_filter:
+        try:
+            matches = []
+            for file_path in glob.glob(f"{project_path}/*/{conf.path_filter}", recursive=True):
+                file_name = os.path.relpath(file_path, project_path)
+                matches.append(file_name)
+            matches.sort()
+        except Exception as err:
+            log("Filter by path | "+str(err))
+            return None
+        return Directory(project_path, files=matches)
+    else:
+        return None
+
+
 def get_directory_content():
     path = os.getcwd() # current working directory
     files, dirs = [], []
-    for (dir_path,dir_names,file_names) in os.walk(path):
+    for dir_path, dir_names, file_names in os.walk(path):
         files.extend(file_names)
         dirs.extend(dir_names)
         break
@@ -372,54 +460,8 @@ def get_directory_content():
     files.sort()
     return Directory(path, dirs, files)
 
-def show_directory_content(screen, win, cwd, highlight, normal):
-    screen.erase()
-    screen.border(0)
-
-    shift = win.row_shift
-    if shift > 0:
-        dirs, files = cwd.get_shifted_dirs_and_files(shift)
-    else:
-        dirs = cwd.dirs
-        files = cwd.files
-
-    max_cols = win.end_x - win.begin_x
-    try:
-        """ show dir name """
-        show_path(screen, cwd.path, max_cols)
-
-        """ show dir content """
-        if cwd.is_empty():
-            screen.addstr(1, 1, "* This directory is empty *", normal | curses.A_BOLD)
-        else:
-            i=1
-            for dir_name in dirs:
-                if i > win.end_y - 1:
-                    break
-                coloring = (highlight if i+shift == win.cursor.row+1 else normal)
-                screen.addstr(i, 1, "/"+str(dir_name[:max_cols-2]), coloring | curses.A_BOLD)
-                i+=1
-            for file_name in files:
-                if i > win.end_y - 1:
-                    break
-                coloring = highlight if i+shift == win.cursor.row+1 else normal
-                screen.addstr(i, 1, str(file_name[:max_cols-1]), coloring)
-                i+=1
-    except Exception as err:
-        log("show directory | "+str(err))
-    finally:
-        screen.refresh()
-
-def show_path(screen, path, max_cols):
-    while len(path) > max_cols-2:
-        path = path.split(os.sep)[1:]
-        path = "/".join(path)
-    dir_name = str(path)
-    screen.addstr(0, int(max_cols/2-len(dir_name)/2), dir_name)
-    screen.refresh()
 
 """ **************************** END BROWSING **************************** """
-
 
 
 EXIT_WITHOUT_SAVING_MESSAGE = """WARNING: Exit without saving.\n\
@@ -459,20 +501,13 @@ def file_changes_are_saved(stdscr, conf, warning=None, exit_key=None):
         return True
 
 
-""" **************************** START VIEWING **************************** """
-def file_viewing(stdscr, conf):
-    curses.curs_set(1) # set cursor as visible
-
-    screen = conf.right_screen if conf.edit_allowed else conf.right_up_screen
-    win = conf.right_win if conf.edit_allowed else conf.right_up_win
-
-    if not conf.file_to_open: # there is no file to open and edit
-        conf.set_brows_mode()
-        return conf
-    file_already_loaded = False
-    report_already_loaded = False
-
+"""
+load file content to buffer and file tags to conf
+returns: config, buffer, succes
+"""
+def load_buffer_and_tags(conf):
     """ try load file content to buffer """
+    file_already_loaded = False
     if conf.buffer and conf.buffer.path == conf.file_to_open:
         file_already_loaded = True
         buffer = conf.buffer
@@ -485,8 +520,8 @@ def file_viewing(stdscr, conf):
         except Exception as err:
             log("load file content | "+str(err))
             conf.set_exit_mode()
-            return conf
-
+            return conf, None, False
+    
     """ try load file tags to config - only for view, tags will not change """
     if not conf.edit_allowed and (not conf.tags or not file_already_loaded): # tag file wasnt loaded yet
         file_name = os.path.basename(conf.file_to_open)
@@ -503,9 +538,30 @@ def file_viewing(stdscr, conf):
         except Exception as err:
             log("load file tags | "+str(err))
             conf.set_exit_mode()
-            return conf
+            return conf, None, False
+
+    return conf, buffer, True
+
+""" **************************** START VIEWING **************************** """
+def file_viewing(stdscr, conf):
+    curses.curs_set(1) # set cursor as visible
+
+    screen = conf.right_screen if conf.edit_allowed else conf.right_up_screen
+    win = conf.right_win if conf.edit_allowed else conf.right_up_win
+
+    if not conf.file_to_open: # there is no file to open and edit
+        conf.set_brows_mode()
+        return conf
+
+
+    """ try load file content and tags """
+    conf, buffer, succ = load_buffer_and_tags(conf)
+    if not succ:
+        return conf
+
 
     """ try load code review to report  """
+    report_already_loaded = False
     conf.note_highlight = False
     report = None
     if buffer.path.startswith(HOME): # opened file is some file from students projects
@@ -541,28 +597,28 @@ def file_viewing(stdscr, conf):
 
 
     while True:
-        try:
-            """ print current file content and move cursor to correct position """
-            show_file_content(screen, win, buffer, report, conf, user_input if note_entering else None)
-            if not conf.edit_allowed:
-                show_tags(conf.right_down_screen, conf.right_down_win, conf.tags)
+        """ print current file content """
+        show_file_content(screen, win, buffer, report, conf, user_input if note_entering else None)
+        if not conf.edit_allowed:
+            show_tags(conf.right_down_screen, conf.right_down_win, conf.tags)
 
+        try:
+            """ move cursor to correct position """
             if note_entering:
                 shifted_pointer = user_input.get_shifted_pointer()
-                new_col = win.begin_x + shifted_pointer
-                new_row = win.end_y-2
+                new_row, new_col = win.end_y-2, win.begin_x + shifted_pointer
                 stdscr.move(new_row, new_col)
             else:
                 new_row, new_col = win.get_cursor_position()
                 stdscr.move(new_row, new_col)
         except Exception as err:
-            log("viewing print file | "+str(err))
+            log("move cursor | "+str(err))
             conf.set_exit_mode()
             return conf
 
         key = stdscr.getch()
 
-        # ======================= NOTE INPUT =======================
+        # ======================= USER INPUT =======================
         if note_entering:
             if key in (curses.ascii.ESC, curses.KEY_F10): # exit note input
                 note_entering = False
@@ -579,7 +635,7 @@ def file_viewing(stdscr, conf):
             elif key == curses.ascii.NL:
                 text = ''.join(user_input.text)
                 file_name = os.path.basename(buffer.path)
-                report.add_note(file_name, win.cursor.row-1, win.cursor.col-win.begin_x, text)
+                report.add_note(file_name, win.cursor.row, win.cursor.col-win.begin_x, text)
                 note_entering = False
                 user_input.reset()
             elif curses.ascii.isprint(key):
@@ -595,7 +651,6 @@ def file_viewing(stdscr, conf):
                     conf.set_exit_mode()
                     return conf
                 else:
-                    # show_file_content(screen, win, buffer, report, conf)
                     continue
             # ======================= FOCUS =======================
             elif key == curses.ascii.TAB: # ord('\t')
@@ -641,27 +696,19 @@ def file_viewing(stdscr, conf):
                         # for _ in str_key:
                             # win.right(buffer)
                     # ======================= F KEYS =======================
-                    elif key == curses.KEY_F2:
-                        """ F2: save file """
+                    elif key == curses.KEY_F2: # save file
                         save_buffer(conf.file_to_open, buffer, report)
-                    elif key == curses.KEY_F3:
-                        """ F3: view/tag """
+                    elif key == curses.KEY_F3: # change to view/tag mode
                         conf.update_viewing_data(win, buffer, report)
                         if file_changes_are_saved(stdscr, conf):
                             conf.disable_file_edit()
                             return conf
                         else:
                             show_file_content(screen, win, buffer, report, conf)
-                    elif key == curses.KEY_F4:
-                        """ F4: note """
+                    elif key == curses.KEY_F4: # add note
                         if report:
                             note_entering = True
-                            # text = stdscr.getstr(win.end_y-win.begin_y, win.begin_x).decode(encoding="utf-8")
-                            # file_name = os.path.basename(buffer.path)
-                            # report.add_note(file_name, win.cursor.row-1, win.cursor.col-win.begin_x, text)
-
-                    elif key == curses.KEY_F8:
-                        """ F8: reload from last save """
+                    elif key == curses.KEY_F8: # reload from last save
                         conf.update_viewing_data(win, buffer, report)
                         exit_key = (curses.KEY_F8, "F8")
                         if file_changes_are_saved(stdscr, conf, RELOAD_FILE_WITHOUT_SAVING, exit_key):
@@ -672,7 +719,7 @@ def file_viewing(stdscr, conf):
                     elif curses.ascii.ismeta(key):
                         """ CTRL + UP / CTRL + DOWN """
                         ctrl_key = curses.ascii.unctrl(key)
-                        if ctrl_key == '7' or hex(key) == "0x237": # CTRL + UP
+                        if ctrl_key == '7' or hex(key) == "0x237": # CTRL + UP: jump to prev note
                             if report and conf.note_highlight:
                                 file_name = os.path.basename(buffer.path)
                                 prev_note = report.get_prev_line_with_note(file_name, win.cursor.row-1)
@@ -681,7 +728,7 @@ def file_viewing(stdscr, conf):
                                     while win.cursor.row != y:
                                         win.up(buffer, use_restrictions=True)
 
-                        if ctrl_key == '^N' or hex(key) == "0x20e": # CTRL + DOWN
+                        elif ctrl_key == '^N' or hex(key) == "0x20e": # CTRL + DOWN: jump to next note
                             if report and conf.note_highlight:
                                 file_name = os.path.basename(buffer.path)
                                 next_note = report.get_next_line_with_note(file_name, win.cursor.row)
@@ -692,28 +739,24 @@ def file_viewing(stdscr, conf):
 
                     elif curses.ascii.iscntrl(key):
                         ctrl_key = curses.ascii.unctrl(key)
-                        if ctrl_key == '^L':
-                            """ CTRL + L reaload from original buff """
+                        if ctrl_key == '^L': # reload from original buffer
                             buffer.lines = buffer.original_buff.copy()
                             if report:
                                 report.code_review = report.original_report.copy()
-                        elif ctrl_key == '^N':
-                            """ CTRL + N enable/disable line numbers """
+                        elif ctrl_key == '^N': # enable/disable line numbers
                             if conf.line_numbers:
                                 conf.disable_line_numbers()
                             else:
                                 conf.enable_line_numbers(buffer)
                             resize_all(stdscr, conf, True)
-                        elif ctrl_key == '^H':
-                            """ CTRL + H enable/disable note highlight """
+                        elif ctrl_key == '^H': # enable/disable note highlight
                             conf.note_highlight = not conf.note_highlight
-                        elif ctrl_key == '^R':
-                            """ CTRL + R remove notes on current line """
+                        elif ctrl_key == '^R': # remove all notes on current line
                             if report:
                                 file_name = os.path.basename(buffer.path)
                                 report.delete_notes_on_line(file_name, win.cursor.row-1)
-                        elif ctrl_key == '^E': # !!!!!!!!!!!!!! TODO : note management / note editing  in separate window !!!!!!!!!!!!!!!!!!!!!
-                            """ CTRL + E edit note """
+                        elif ctrl_key == '^E': # edit note
+                            # !!!!!!!!!!!!!! TODO : note management / note editing  in separate window !!!!!!!!!!!!!!!!!!!!!
                             if report:
                                 file_name = os.path.basename(buffer.path)
                                 line_notes = report.get_notes_on_line(file_name, win.cursor.row-1)
@@ -731,21 +774,19 @@ def file_viewing(stdscr, conf):
                 # ************************* V.I.E.W / T.A.G *************************
                 else:
                     # ======================= F KEYS =======================
-                    if key == curses.KEY_F2:
-                        pass # TODO F2: ???
-                    elif key == curses.KEY_F3:
-                        pass # TODO F3: ???
-                    elif key == curses.KEY_F4:
-                        """ F4: edit """
+                    if key == curses.KEY_F2: # TODO F2: ???
+                        pass
+                    elif key == curses.KEY_F3: # TODO F3: ???
+                        pass
+                    elif key == curses.KEY_F4: # change to edit mode
                         conf.enable_file_edit()
                         return conf
-                    elif key == curses.KEY_F8:
-                        pass # TODO F8: ???
+                    elif key == curses.KEY_F8: # TODO F8: ???
+                        pass
                     # ======================= CTRL KEYS =======================
                     elif curses.ascii.iscntrl(key):
                         ctrl_key = curses.ascii.unctrl(key)
-                        if ctrl_key == '^N':
-                            """ CTRL + N enable/disable line numbers """
+                        if ctrl_key == '^N': # enable/disable line numbers
                             if conf.line_numbers:
                                 conf.disable_line_numbers()
                             else:
@@ -769,62 +810,6 @@ def save_buffer(file_name, buffer, report=None):
         with open(report.path, 'w+') as f:
             f.write(notes)
         report.last_save = report.code_review.copy()
-
-
-def show_file_content(screen, win, buffer, report, conf, user_input=None):
-    screen.erase()
-    screen.border(0)
-    max_cols = win.end_x - win.begin_x
-    max_rows = win.end_y - win.begin_y
-    last_row = win.end_y-win.begin_y-1
-
-    if buffer is None:
-        screen.refresh()
-        return
-
-    """ highlight lines with notes """
-    colored_lines = []
-    if conf.note_highlight and report:
-        file_name = os.path.basename(buffer.path)
-        if file_name in report.code_review:
-            notes = report.code_review[file_name]
-            for note in notes:
-                row, col, text = note
-                colored_lines.append(row)
-
-    shift = len(conf.line_numbers)+1 if conf.line_numbers else 0
-    try:
-        """ show file name """
-        show_path(screen, buffer.path, max_cols+ (shift if conf.line_numbers else 1))
-
-        """ show file content """
-        if buffer:
-            for row, line in enumerate(buffer[win.row_shift : max_rows + win.row_shift - 1]):
-                if (user_input is not None) and (row == last_row-1):
-                    break
-                if (row + win.begin_y == win.cursor.row - win.row_shift) and (win.col_shift > 0):
-                    line = line[win.col_shift + 1:]
-                if len(line) > max_cols - shift:
-                    line = line[:max_cols - 1 - shift]
-                color = conf.highlight if (row+1+win.row_shift in colored_lines) else conf.normal
-                if conf.line_numbers:
-                    screen.addstr(row+1, 1, str(row+win.row_shift), conf.normal)
-                screen.addstr(row+1, 1+shift, line, color)
-
-
-        """ show user input from note entering """
-        if user_input:
-            user_input_str = ''.join(user_input.text)
-            if user_input.col_shift > 0:
-                user_input_str = user_input_str[user_input.col_shift + 1:]
-            if len(user_input_str) > max_cols - shift:
-                user_input_str = user_input_str[:max_cols - 1 - shift]
-            screen.addstr(last_row, 1+shift, user_input_str)
-
-    except Exception as err:
-        log("show file | "+str(err))
-    finally:
-        screen.refresh()
 
 
 def get_report_for_file(project, file_login):
@@ -874,7 +859,6 @@ def report_to_str(code_review):
     return str_rep
 
 
-
 """ **************************** END VIEWING **************************** """
 
 
@@ -908,14 +892,15 @@ def tag_management(stdscr, conf):
         conf.set_exit_mode()
         return conf
 
-    user_input = []
-    pointer = 0
+    user_input = UserInput()
 
     while True:
         show_tags(screen, win, tags, user_input)
 
-        row, col = win.end_y-2, win.begin_x
-        stdscr.move(row, col+pointer)
+        """ move cursor to correct position in user input """
+        shifted_pointer = user_input.get_shifted_pointer()
+        new_row, new_col = win.end_y-2, win.begin_x + shifted_pointer
+        stdscr.move(new_row, new_col)
 
         key = stdscr.getch()
         try:
@@ -924,12 +909,14 @@ def tag_management(stdscr, conf):
                 tags.save_to_file()
                 conf.update_tagging_data(win, tags)
                 conf.set_exit_mode()
+                user_input.reset()
                 return conf
             # ======================= FOCUS =======================
             elif key == curses.ascii.TAB:
                 tags.save_to_file()
                 conf.update_tagging_data(win, tags)
                 conf.set_brows_mode()
+                user_input.reset()
                 return conf
             # ======================= RESIZE =======================
             elif key == curses.KEY_RESIZE:
@@ -938,22 +925,17 @@ def tag_management(stdscr, conf):
                 win = conf.right_down_win
             # ======================= ARROWS =======================
             elif key == curses.KEY_LEFT:
-                if pointer > 0:
-                    pointer -= 1
+                user_input.left(win)
             elif key == curses.KEY_RIGHT:
-                if pointer < len(user_input):
-                    pointer += 1
+                user_input.right(win)
             # ======================= INPUT =======================
             elif key == curses.KEY_DC:
-                if pointer < len(user_input):
-                    del user_input[pointer]
+                user_input.delete_symbol(win)
             elif key == curses.KEY_BACKSPACE:
-                if pointer > 0:
-                    pointer -= 1
-                    if pointer < len(user_input):
-                        del user_input[pointer]
+                user_input.left(win)
+                user_input.delete_symbol(win)
             elif key == curses.ascii.NL:
-                command_parts = ''.join(user_input).split()
+                command_parts = ''.join(user_input.text).split()
                 if len(command_parts) < 2:
                     log("unknown command, press F1 to see help")
                 else:
@@ -966,11 +948,9 @@ def tag_management(stdscr, conf):
                         # TODO: unknown command, press F1 to see how to use command line utility for tag management
                         log("unknown command, press F1 to see help")
                 tags.save_to_file()
-                user_input = []
-                pointer = 0
+                user_input.reset()
             elif curses.ascii.isprint(key):
-                user_input.insert(pointer, chr(key))
-                pointer += 1
+                user_input.insert_symbol(win, chr(key))
             # ======================= F KEYS =======================
             elif key == curses.KEY_F4:
                 """ F4: edit """
@@ -984,39 +964,6 @@ def tag_management(stdscr, conf):
             log("tagging | "+str(err))
             conf.set_exit_mode()
             return conf
-
-
-def show_tags(screen, win, tags, command=None):
-    screen.erase()
-    screen.border(0)
-
-    last_row = win.end_y-win.begin_y-1
-    max_cols = win.end_x - win.begin_x
-    try:
-        """ show file name """
-        show_path(screen, tags.path, max_cols)
-
-        """ show tags """
-        if tags.data:
-            for row, name in enumerate(tags.data):
-                if row+2 > last_row:
-                    break
-                params = tags.data[name]
-                str_params = "(" + ",".join(map(str,params)) + ")"
-                line = "#"+str(name)+str_params
-                if len(line) > max_cols:
-                    line = line[:max_cols - 1]
-                screen.addstr(row+1, 1, line)
-    except Exception as err:
-        log("show tags | "+str(err))
-    finally:
-        screen.refresh()
-
-    if command:
-        command_str = ''.join(command)
-        screen.addstr(last_row, 1, command_str)
-        screen.refresh()
-
 
 """ **************************** END TAGGING **************************** """
 

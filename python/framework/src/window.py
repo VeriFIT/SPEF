@@ -1,3 +1,5 @@
+from logger import *
+
 
 """
 -Window reprezentuje zobrazovane okno (view win) v obrazovke (screen)
@@ -10,15 +12,6 @@ koniec riadku   len(buffer[self.row - win.begin_y]) + win.begin_x
 
 LEFT_EDGE = 2
 RIGHT_EDGE = 2
-
-
-import datetime
-LOG_FILE = "/home/naty/Others/ncurses/python/framework/log"
-def log(message):
-    day = datetime.date.today()
-    time = datetime.datetime.now().strftime("%X")
-    with open(LOG_FILE, 'a') as f:
-        f.write("{} {} | {}\n".format(day,time,message))
 
 
 class Cursor:

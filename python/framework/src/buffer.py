@@ -1,14 +1,8 @@
-import datetime
 import os
 import json
 
-LOG_FILE = "/home/naty/Others/ncurses/python/framework/log"
+from logger import *
 
-def log(message):
-    day = datetime.date.today()
-    time = datetime.datetime.now().strftime("%X")
-    with open(LOG_FILE, 'a') as f:
-        f.write("{} {} | {}\n".format(day,time,message))
 
 """
 data = {'documentation': ['ok'],
