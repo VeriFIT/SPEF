@@ -1,5 +1,5 @@
 from logger import *
-
+import time
 
 """
 -Window reprezentuje zobrazovane okno (view win) v obrazovke (screen)
@@ -36,7 +36,7 @@ class Cursor:
                 self._restrict_col(buffer, win)
 
     def down(self, buffer, win, use_restrictions=True):
-        if self.row - win.begin_y < len(buffer) - 1:
+        if self.row < len(buffer) - 1 + win.border:
             self.row += 1
             if use_restrictions:
                 self._restrict_col(buffer, win)
@@ -51,7 +51,7 @@ class Cursor:
     def right(self, buffer, win):
         if self.col < len(buffer[self.row - win.begin_y]) + win.begin_x: # if its not end of the line
             self.col += 1
-        elif self.row < len(buffer) - 1: # else go to the start of next line if there is one
+        elif self.row < len(buffer) - 1 + win.border: # else go to the start of next line if there is one
             self.row += 1
             self.col = win.begin_x
 
@@ -62,24 +62,30 @@ class Cursor:
 
 
 class Window:
-    def __init__(self, height, width, begin_y, begin_x):
+    def __init__(self, height, width, begin_y, begin_x, border=0, line_num_shift=None):
         """ position / location """
-        self.begin_y = begin_y # height (max_rows = end_y - begin_y)
-        self.begin_x = begin_x # width (max_cols = end_x - begin_x)
-        self.end_y = begin_y + height - 1
-        self.end_x = begin_x + width - 1
+        self.begin_y = begin_y+border # height (max_rows = end_y - begin_y)
+        self.begin_x = begin_x+border # width (max_cols = end_x - begin_x)
+        self.end_y = begin_y+border + height - 1
+        self.end_x = begin_x+border + width - 1
+
+        self.border = border
+        self.line_num_shift = line_num_shift
 
         """ shift position """
         self.row_shift = 0 # y
         self.col_shift = 0 # x
 
         """ cursor """
-        self.cursor = Cursor(row=begin_y,col=begin_x)
-
+        self.cursor = Cursor(self.begin_y,self.begin_x)
 
     @property
     def bottom(self):
         return self.end_y + self.row_shift - 1
+
+    @property
+    def last_row(self):
+        return self.end_y - self.border - 1
 
     def up(self, buffer, use_restrictions=True):
         self.cursor.up(buffer, self, use_restrictions)
@@ -90,12 +96,13 @@ class Window:
             self.row_shift -= 1
 
 
-    def down(self, buffer, use_restrictions=True):
+    def down(self, buffer, filter_on=False, use_restrictions=True):
         self.cursor.down(buffer, self, use_restrictions)
 
         """ window shift """
         self.horizontal_shift()
-        if (self.cursor.row == self.bottom) and (self.cursor.row - self.begin_y < len(buffer)):
+        bottom = self.bottom - (1 if filter_on else 0)
+        if (self.cursor.row == bottom) and (self.cursor.row - self.begin_y < len(buffer)):
             self.row_shift += 1
 
 
@@ -113,12 +120,13 @@ class Window:
             # self.col_shift -= shift
 
 
-    def right(self, buffer):
+    def right(self, buffer, filter_on=False):
         self.cursor.right(buffer, self)
 
         """ window shift """
         self.horizontal_shift()
-        if (self.cursor.row == self.bottom) and (self.cursor.row - self.begin_y < len(buffer)):
+        bottom = self.bottom - (1 if filter_on else 0)
+        if (self.cursor.row == bottom) and (self.cursor.row - self.begin_y < len(buffer)):
             self.row_shift += 1
 
         # _, col = self.get_cursor_position()
@@ -152,16 +160,6 @@ class Window:
         self.row_shift = 0
         self.col_shift = 0
 
-    def reset_window(self):
+    def reset(self):
         self.reset_shifts()
         self.set_cursor(self.begin_y, self.begin_x)
-
-    def resize(self, width, height, begin_x, begin_y):
-        self.begin_x = begin_x
-        self.begin_y = begin_y
-        self.end_x = begin_x + width
-        self.end_y = begin_y + height
-
-        self.cursor = Cursor(row=begin_y,col=begin_x)
-
-        # check for shifts (row and col)

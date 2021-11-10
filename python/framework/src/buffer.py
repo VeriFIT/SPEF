@@ -1,5 +1,6 @@
 import os
 import json
+import re
 
 from logger import *
 
@@ -31,6 +32,18 @@ class Tags:
             with open(self.path, 'w+') as f:
                 f.write(json_string)
 
+    def find(self, tag_name, args):
+        if tag_name in self.data:
+            return self.compare_args(self.data[tag_name], args)
+        return False
+
+    def compare_args(self, tag_args, compare_args):
+        if len(compare_args) > len(tag_args):
+            return False
+        for i in range(len(compare_args)):
+            if not re.search(str(compare_args[i]), str(tag_args[i])):
+                return False
+        return True
 
 """
 code_review = {'some_file.py': [(4, 5, 'my first note'),
@@ -140,13 +153,14 @@ class UserInput:
         self.horizontal_shift(win)
 
     def right(self, win):
-        if self.pointer < len(self)-1:
+        if self.pointer < len(self):
             self.pointer += 1
         self.horizontal_shift(win)
 
     def delete_symbol(self, win):
         if self.pointer < len(self):
             del self.text[self.pointer]
+            # self.text.pop(self.pointer)
         self.horizontal_shift(win)
 
     def insert_symbol(self, win, symbol):

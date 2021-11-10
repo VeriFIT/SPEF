@@ -1,3 +1,5 @@
+import os
+
 from logger import *
 
 """ modes """
@@ -6,6 +8,9 @@ VIEW = 2
 TAG = 3
 EXIT = -1
 
+HOME = "/home/naty/Others/ncurses/python"
+PROJ_DIR = "project"
+# PROJ_DIR = "subject1/2021/project"
 
 class Config:
     def __init__(self, left_screen, right_screen, down_screen):
@@ -21,12 +26,9 @@ class Config:
         self.right_up_win = None
         self.right_down_win = None
 
-        """ coloring """
-        self.highlight = None
-        self.normal = None
-
         self.mode = BROWS # start with browsing directory
-        self.edit_allowed = True
+        self.quick_view = True
+        self.edit_allowed = False
         self.note_highlight = True
         self.line_numbers = None # None or str(number_of_lines_in_buffer)
 
@@ -36,19 +38,66 @@ class Config:
         self.tags = None # Tags(path, data)
         self.report = None # Report(path, code_review)
 
-        """ filters """
-        self.filter_on = False
+        """ filter """
+        self.filter = None # Filter()
         self.filtered_files = None # Directory(path, [], files)
-        self.path_filter = None
-        self.content_filter = None
-        self.tag_filter = None
 
 
-    def set_coloring(self, highlight, normal):
-        self.highlight = highlight
-        self.normal = normal
+    # TODO: get current project dir
+    def get_project_path(self):
+        return os.path.join(HOME, PROJ_DIR)
 
+    def get_project_name(self):
+        return PROJ_DIR
 
+    def set_file_to_open(self, file_to_open):
+        if self.file_to_open != file_to_open:
+            self.file_to_open = file_to_open
+            if self.edit_allowed:
+                self.right_win.reset()
+            else:
+                self.right_up_win.reset()
+
+    def get_screen_for_current_mode(self):
+        if self.is_brows_mode():
+            return self.left_screen, self.left_win
+        if self.is_view_mode():
+            if self.edit_allowed:
+                return self.right_screen, self.right_win
+            else:
+                return self.right_up_screen, self.right_up_win
+        if self.is_tag_mode():
+            return self.right_down_screen, self.right_down_win
+
+    """ filter """
+    def filter_not_empty(self):
+        if self.filter is not None:
+            return not self.filter.is_empty()
+        else:
+            return False
+
+    def path_filter_on(self):
+        res = False
+        if self.filter is not None:
+            if self.filter.path:
+                res = True
+        return res
+
+    def content_filter_on(self):
+        res = False
+        if self.filter is not None:
+            if self.filter.content:
+                res = True
+        return res
+
+    def tag_filter_on(self):
+        res = False
+        if self.filter is not None:
+            if self.filter.tag:
+                res = True
+        return res
+
+    """ update data """
     def update_browsing_data(self, win, cwd):
         self.left_win = win
         self.cwd = cwd
@@ -69,6 +118,7 @@ class Config:
 
     def enable_file_edit(self):
         self.edit_allowed = True
+        self.quick_view = False
 
     def disable_file_edit(self):
         self.edit_allowed = False
