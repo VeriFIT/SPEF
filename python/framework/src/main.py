@@ -10,6 +10,7 @@ import sys
 import fnmatch
 import glob
 
+
 from buffer import Buffer, Report, Tags, UserInput
 from config import Config
 from directory import Directory, Filter
@@ -35,14 +36,10 @@ ESC = 27
     -skontroluje sa ci aktualna cesta buffer.file_name ma prefix zhodny s niektorym projektom
 """
 
-HOME = "/home/naty/Others/ncurses/python"
 
 # PROJ_DIR = "subject1/2021/project"
-PROJ_DIR = "project"
+# PROJ_DIR = "project"
 
-LOG_FILE = f"{HOME}/framework/log"
-TAG_DIR = f"{HOME}/framework/tags"
-REPORT_DIR = f"{HOME}/framework/reports"
 
 
 def preparation():
@@ -586,7 +583,7 @@ def file_viewing(stdscr, conf):
     while True:
         """ print current file content """
         show_file_content(screen, win, buffer, report, conf, user_input if note_entering else None)
-        if not conf.edit_allowed:
+        if not conf.edit_allowed and conf.tags:
             show_tags(conf.right_down_screen, conf.right_down_win, conf.tags, conf)
 
         try:

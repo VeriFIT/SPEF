@@ -1,6 +1,14 @@
 import datetime
+import os
+from pathlib import Path
 
-LOG_FILE = "/home/naty/Others/ncurses/python/framework/log"
+
+HOME = str(Path(__file__).parents[2])
+LOG_FILE = os.path.join(HOME,"framework","log")
+TAG_DIR = os.path.join(HOME,"framework","tags")
+REPORT_DIR = os.path.join(HOME,"framework","reports")
+
+
 
 def log(message):
     day = datetime.date.today()

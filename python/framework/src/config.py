@@ -1,5 +1,4 @@
 import os
-
 from logger import *
 
 """ modes """
@@ -8,7 +7,6 @@ VIEW = 2
 TAG = 3
 EXIT = -1
 
-HOME = "/home/naty/Others/ncurses/python"
 PROJ_DIR = "project"
 # PROJ_DIR = "subject1/2021/project"
 

@@ -6,8 +6,6 @@ import re
 
 from logger import *
 from buffer import Tags
-HOME = "/home/naty/Others/ncurses/python"
-TAG_DIR = f"{HOME}/framework/tags"
 
 
 """ represents content of current working directory """
