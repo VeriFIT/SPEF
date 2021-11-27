@@ -173,14 +173,9 @@ def show_file_content(screen, win, buffer, report, conf, user_input=None):
     """ highlight lines with notes """
     colored_lines = []
     if conf.note_highlight and report:
-        # file_name = os.path.basename(buffer.path)
-        sep_file_path = os.path.relpath(buffer.path, conf.get_project_path()).split(os.sep)
-        file_path = os.path.join(*sep_file_path[1:] if (len(sep_file_path) > 1) else sep_file_path)
-        if file_path in report.code_review:
-            notes = report.code_review[file_path]
-            for note in notes:
-                row, col, text = note
-                colored_lines.append(row)
+        for note in report.code_review:
+            row, col, text = note
+            colored_lines.append(row)
 
     shift = len(conf.line_numbers)+1 if conf.line_numbers else 0
     try:

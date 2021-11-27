@@ -46,15 +46,14 @@ class Tags:
         return True
 
 """
-code_review = {'some_file.py': [(4, 5, 'my first note'),
-                                (7, 25, 'another'),
-                                (11, 93, 'poznamka k voziku')],
-                'documentation.txt': [(2, 85, 'hello!')]}
+code_review = [ (4, 5, 'my first note'),
+                (7, 25, 'another'),
+                (11, 93, 'poznamka k voziku')]
 """
 class Report:
-    def __init__(self, path, code_review=None):
+    def __init__(self, path, code_review=[]):
         self.path = path
-        self.code_review = code_review
+        self.code_review = code_review # [(line, col, note)]
 
         self.original_report = code_review.copy()
         self.last_save = code_review.copy()
@@ -65,52 +64,50 @@ class Report:
     def __str__(self):
         return str(self.code_review)
 
-    def add_note(self, file_name, row, col, text):
+    def add_note(self, row, col, text):
         note = (row, col, text)
-        if file_name in self.code_review:
-            self.code_review[file_name].append(note)
-        else:
-            self.code_review[file_name] = [note]
+        self.code_review.append(note)
 
-    def delete_notes_on_line(self, file_name, row):
-        if file_name in self.code_review:
-            notes = self.code_review[file_name].copy()
-            for idx, note in enumerate(self.code_review[file_name]):
+
+    def delete_notes_on_line(self, row):
+        if self.code_review:
+            notes = self.code_review.copy()
+            for idx, note in enumerate(self.code_review):
                 y, x, _ = note
                 if y == row:
                     notes.pop(idx)
-            self.code_review[file_name] = notes
+            self.code_review = notes
 
-    def delete_note(self, file_name, row, col):
-        if file_name in self.code_review:
-            notes = self.code_review[file_name].copy()
-            for idx, note in enumerate(self.code_review[file_name]):
+    def delete_note(self, row, col):
+        if self.code_review:
+            notes = self.code_review.copy()
+            for idx, note in enumerate(self.code_review):
                 y, x, _ = note
                 if y == row and x == col:
                     notes.pop(idx)
-            self.code_review[file_name] = notes
+            self.code_review = notes
 
-    def get_notes_on_line(self, file_name, row):
+    def get_notes_on_line(self, row):
         notes = []
-        if file_name in self.code_review:
-            for note in self.code_review[file_name]:
+        if self.code_review:
+            for note in self.code_review:
                 y, x, text = note
                 if y == row:
                     notes.append(note)
         return notes
 
-    def get_next_line_with_note(self, file_name, row):
-        if file_name in self.code_review:
-            for note in sorted(self.code_review[file_name]):
+    def get_next_line_with_note(self, row):
+        if self.code_review:
+            for note in sorted(self.code_review):
                 y, x, _ = note
                 if y > row:
                     return note
         return None
 
-    def get_prev_line_with_note(self, file_name, row):
+    def get_prev_line_with_note(self, row):
         if file_name in self.code_review:
             prev_note = None
-            for note in sorted(self.code_review[file_name]):
+            for note in sorted(self.code_review):
                 y, x, _ = note
                 if y >= row:
                     return prev_note
@@ -119,17 +116,17 @@ class Report:
 
 
     """ move notes to correct line and col after adding/removing line in buffer """
-    def notes_lines_shift(self, file_name, row, col, row_shift=0, col_shift=0):
-        if file_name in self.code_review:
+    def notes_lines_shift(self, row, col, row_shift=0, col_shift=0):
+        if self.code_review:
             new_notes = []
-            for note in self.code_review[file_name]:
+            for note in self.code_review:
                 y, x, text = note
                 if y > row or (row_shift >= 0 and y == row and x > col):
                     new_note = (y+row_shift, x+col_shift, text)
                     new_notes.append(new_note)
                 elif not (y == row and x == col):
                     new_notes.append(note)
-            self.code_review[file_name] = new_notes
+            self.code_review = new_notes
 
 
 
@@ -216,8 +213,8 @@ class Buffer:
         self.set_save_status(False)
         """ shift notes """
         if report:
-            file_name = os.path.basename(self.path)
-            report.notes_lines_shift(file_name, row, col, col_shift=1)
+            # file_name = os.path.basename(self.path)
+            report.notes_lines_shift(row, col, col_shift=1)
         return report
 
     def delete(self, win, report=None):
@@ -237,11 +234,11 @@ class Buffer:
             self.set_save_status(False)
         """ shift notes """
         if report:
-            file_name = os.path.basename(self.path)
+            # file_name = os.path.basename(self.path)
             if len(self) < old_length:
-                report.notes_lines_shift(file_name, row+1, col, -1, old_line_len)
+                report.notes_lines_shift(row+1, col, -1, old_line_len)
             else:
-                report.notes_lines_shift(file_name, row+1, col, 0, -1)
+                report.notes_lines_shift(row+1, col, 0, -1)
             # row_shift, col_shift = -1, old_line_len if len(self) < old_length else 0, -1
             # report.notes_lines_shift(file_name, row+1, col, row_shift, col_shift)
         return report
@@ -260,8 +257,8 @@ class Buffer:
         self.set_save_status(False)
         """ shift notes """
         if report:
-            file_name = os.path.basename(self.path)
-            report.notes_lines_shift(file_name, row+1, col, 1, -col)
+            # file_name = os.path.basename(self.path)
+            report.notes_lines_shift(row+1, col, 1, -col)
         return report
 
 

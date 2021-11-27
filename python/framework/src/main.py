@@ -544,9 +544,12 @@ def file_viewing(stdscr, conf):
     report = None
     if buffer.path.startswith(HOME): # opened file is some file from students projects
         # ****************************************************************************************** conf + buffer.path -> proj_name + file_login
-        project_name = conf.get_project_name()
+        # project_name = conf.get_project_name()
         project_path = conf.get_project_path()
         file_login = os.path.relpath(buffer.path, project_path).split(os.sep)[0]
+
+        report_file = get_report_file_name(buffer.path)
+        # log(report_file)
         # ****************************************************************************************** conf + buffer.path -> proj_name + file_login
         login_match = bool(re.match("x[a-z]{5}[0-9]{2}", file_login))
         if login_match:
@@ -554,16 +557,16 @@ def file_viewing(stdscr, conf):
             if conf.report:
                 # check if loaded report is related to opened file in buffer
                 # ************************************************************************ proj_name + conf.report.path -> report_login
-                report_path = os.path.join(REPORT_DIR, project_name)
-                report_login = os.path.relpath(conf.report.path, report_path).split(os.sep)[0]
+                # report_path = os.path.join(REPORT_DIR, project_name)
+                # report_login = os.path.relpath(conf.report.path, report_path).split(os.sep)[0]
                 # ************************************************************************ proj_name + conf.report.path -> report_login
-                if report_login == file_login:
+                if conf.report.path == report_file:
                     report_already_loaded = True
                     report = conf.report
             if not conf.report or not report_already_loaded:
                 # try get report for file in buffer
                 try:
-                    report = get_report_for_file(project_name, file_login)
+                    report = get_report_for_file(buffer.path)
                     conf.report = report
                 except Exception as err:
                     log("load file report | "+str(err))
@@ -623,10 +626,10 @@ def file_viewing(stdscr, conf):
                 text = ''.join(user_input.text)
                 # file_name = os.path.basename(buffer.path)
                 # ************************************************************************************ report.file_name -> report.file_path
-                sep_file_path = os.path.relpath(buffer.path, conf.get_project_path()).split(os.sep)
-                file_path = os.path.join(*sep_file_path[1:] if (len(sep_file_path) > 1) else sep_file_path)
+                # sep_file_path = os.path.relpath(buffer.path, conf.get_project_path()).split(os.sep)
+                # file_path = os.path.join(*sep_file_path[1:] if (len(sep_file_path) > 1) else sep_file_path)
                 # ************************************************************************************ report.file_name -> report.file_path
-                report.add_note(file_path, win.cursor.row, win.cursor.col-win.begin_x, text)
+                report.add_note(win.cursor.row, win.cursor.col-win.begin_x, text)
                 note_entering = False
                 user_input.reset()
             elif curses.ascii.isprint(key):
@@ -729,10 +732,10 @@ def file_viewing(stdscr, conf):
                             if report and conf.note_highlight:
                                 # file_name = os.path.basename(buffer.path)
                                 # ******************************************************************** report.file_name -> report.file_path
-                                sep_file_path = os.path.relpath(buffer.path, conf.get_project_path()).split(os.sep)
-                                file_path = os.path.join(*sep_file_path[1:] if (len(sep_file_path) > 1) else sep_file_path)
+                                # sep_file_path = os.path.relpath(buffer.path, conf.get_project_path()).split(os.sep)
+                                # file_path = os.path.join(*sep_file_path[1:] if (len(sep_file_path) > 1) else sep_file_path)
                                 # ******************************************************************** report.file_name -> report.file_path
-                                prev_note = report.get_prev_line_with_note(file_path, win.cursor.row-1)
+                                prev_note = report.get_prev_line_with_note(win.cursor.row-1)
                                 if prev_note:
                                     y,x,_ = prev_note
                                     while win.cursor.row != y:
@@ -741,10 +744,10 @@ def file_viewing(stdscr, conf):
                             if report and conf.note_highlight:
                                 # file_name = os.path.basename(buffer.path)
                                 # ******************************************************************** report.file_name -> report.file_path
-                                sep_file_path = os.path.relpath(buffer.path, conf.get_project_path()).split(os.sep)
-                                file_path = os.path.join(*sep_file_path[1:] if (len(sep_file_path) > 1) else sep_file_path)
+                                # sep_file_path = os.path.relpath(buffer.path, conf.get_project_path()).split(os.sep)
+                                # file_path = os.path.join(*sep_file_path[1:] if (len(sep_file_path) > 1) else sep_file_path)
                                 # ******************************************************************** report.file_name -> report.file_path
-                                next_note = report.get_next_line_with_note(file_path, win.cursor.row)
+                                next_note = report.get_next_line_with_note(win.cursor.row)
                                 if next_note:
                                     y,x,_ = next_note
                                     while win.cursor.row != y:
@@ -768,23 +771,23 @@ def file_viewing(stdscr, conf):
                             if report:
                                 # file_name = os.path.basename(buffer.path)
                                 # ******************************************************************** report.file_name -> report.file_path
-                                sep_file_path = os.path.relpath(buffer.path, conf.get_project_path()).split(os.sep)
-                                file_path = os.path.join(*sep_file_path[1:] if (len(sep_file_path) > 1) else sep_file_path)
+                                # sep_file_path = os.path.relpath(buffer.path, conf.get_project_path()).split(os.sep)
+                                # file_path = os.path.join(*sep_file_path[1:] if (len(sep_file_path) > 1) else sep_file_path)
                                 # ******************************************************************** report.file_name -> report.file_path
-                                report.delete_notes_on_line(file_path, win.cursor.row-1)
+                                report.delete_notes_on_line(win.cursor.row-1)
                         elif ctrl_key == '^E': # edit note
                             # TODO : note management / note editing  in separate window
                             if report:
                                 # file_name = os.path.basename(buffer.path)
                                 # ******************************************************************** report.file_name -> report.file_path
-                                sep_file_path = os.path.relpath(buffer.path, conf.get_project_path()).split(os.sep)
-                                file_path = os.path.join(*sep_file_path[1:] if (len(sep_file_path) > 1) else sep_file_path)
+                                # sep_file_path = os.path.relpath(buffer.path, conf.get_project_path()).split(os.sep)
+                                # file_path = os.path.join(*sep_file_path[1:] if (len(sep_file_path) > 1) else sep_file_path)
                                 # ******************************************************************** report.file_name -> report.file_path
-                                line_notes = report.get_notes_on_line(file_path, win.cursor.row-1)
+                                line_notes = report.get_notes_on_line(win.cursor.row-1)
                                 if len(line_notes) == 1:
                                     # open note for edit
                                     y, x, text = line_notes[0]
-                                    report.delete_note(file_name, y, x)
+                                    report.delete_note(y, x)
                                     user_input.text = list(text)
                                     note_entering = True
                                 elif len(line_notes) > 1:
@@ -847,8 +850,14 @@ def save_buffer(file_name, buffer, report=None):
         report.last_save = report.code_review.copy()
 
 
-def get_report_for_file(project, file_login):
-    report_path = os.path.join(REPORT_DIR, project, file_login)
+def get_report_file_name(file_path):
+    return os.path.splitext(file_path)[0]+".report"
+
+
+def get_report_for_file(file_path):
+    # report_path = os.path.join(REPORT_DIR, project, file_login)
+    report_path = get_report_file_name(file_path)
+
     if os.path.exists(report_path):
         with open(report_path, 'r') as f:
             lines = f.read()
@@ -856,29 +865,26 @@ def get_report_for_file(project, file_login):
         return Report(report_path, code_review)
     else:
         # there is no report yet for this project/login
-        return Report(report_path, {})
+        return Report(report_path, [])
 
 
 def str_to_report(full_text):
-    code_review = {}
+    code_review = []
     text = None
     line_content = "INFO"
     for line in full_text.split("\n"):
         if line == "":
             if line_content == "NOTE":
                 note = (int(row), int(col), text)
-                if file_name in code_review:
-                    code_review[file_name].append(note)
-                else:
-                    code_review[file_name] = [note]
+                code_review.append(note)
             line_content = "INFO"
             continue
         if line_content == "INFO":
             note = line.split(":")
-            if len(note) != 3:
+            if len(note) != 2:
                 log("invalid code_review syntax")
                 raise Exception("invalid code_review syntax")
-            file_name, row, col = note
+            row, col = note
             text = None
             line_content = "NOTE"
         elif line_content == "NOTE":
@@ -887,10 +893,8 @@ def str_to_report(full_text):
 
 def report_to_str(code_review):
     str_rep = ""
-    for file_name in code_review:
-        notes = code_review[file_name]
-        for note in notes:
-            str_rep += "{}:{}:{}\n{}\n\n".format(file_name, *note)
+    for note in code_review:
+        str_rep += "{}:{}\n{}\n\n".format(*note)
     return str_rep
 
 
@@ -900,6 +904,9 @@ def report_to_str(code_review):
     # with open(tag_file, 'r') as f:
         # data = json.load(f)
     # tags = Tags(tag_file, data)
+
+def get_tags_file_name(file_path):
+    return os.path.splitext(file_path)[0]+".tags"
 
 """ **************************** START TAGGING **************************** """
 def tag_management(stdscr, conf):
@@ -912,6 +919,8 @@ def tag_management(stdscr, conf):
     file_name = os.path.basename(conf.file_to_open)
     tag_path = os.path.join(TAG_DIR, str(file_name))
     tag_file = os.path.splitext(tag_path)[0]+".json"
+
+    # tag_file = get_tags_file_name(conf.file_to_open)
     try:
         if conf.tags: # tag file was already loaded
             tags = conf.tags
