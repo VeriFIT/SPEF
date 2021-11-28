@@ -134,9 +134,11 @@ class Filter:
                     show_user_input(conf.right_down_screen, user_input, max_rows, max_cols, conf)
                 else:
                     for file_path in files:
-                        file_name = os.path.basename(file_path)
-                        tag_path = os.path.join(TAG_DIR, str(file_name))
-                        tag_file = os.path.splitext(tag_path)[0]+".json"
+                        # file_name = os.path.basename(file_path)
+                        # tag_path = os.path.join(TAG_DIR, str(file_name))
+                        # tag_file = os.path.splitext(tag_path)[0]+".json"
+                        file_name = os.path.splitext(file_path)[:-1]
+                        tag_file = str(os.path.join(*file_name))+"_tags.yaml"
                         try:
                             with open(tag_file, 'r') as f:
                                 data = json.load(f)

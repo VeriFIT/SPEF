@@ -4,6 +4,7 @@ import curses
 import curses.ascii
 import datetime
 import json
+import yaml
 import os
 import re
 import sys
@@ -21,6 +22,8 @@ from coloring import *
 
 
 ESC = 27
+
+SOLUTION_IDENTIFIER = "x[a-z]{5}[0-9]{2}"
 
 """ hladanie cesty projektu v ktorom su odovzdane riesenia
     TODO: 1
@@ -477,49 +480,6 @@ def file_changes_are_saved(stdscr, conf, warning=None, exit_key=None):
         return True
 
 
-"""
-load file content to buffer and file tags to conf
-returns: config, buffer, succes
-"""
-def load_buffer_and_tags(conf):
-    """ try load file content to buffer """
-    file_already_loaded = False
-    if conf.buffer and conf.buffer.path == conf.file_to_open:
-        file_already_loaded = True
-        buffer = conf.buffer
-    else:
-        try:
-            with open(conf.file_to_open, 'r') as f:
-                lines = f.read().splitlines()
-            buffer = Buffer(conf.file_to_open, lines)
-            conf.buffer = buffer
-        except Exception as err:
-            log("load file content | "+str(err))
-            conf.set_exit_mode()
-            return conf, None, False
-
-    """ try load file tags to config - only for view, tags will not change """
-    if (not conf.tags or not file_already_loaded): # tag file wasnt loaded yet
-        # ******************************************************************************************************** conf -> tag_file
-        file_name = os.path.basename(conf.file_to_open)
-        tag_path = os.path.join(TAG_DIR, str(file_name))
-        tag_file = os.path.splitext(tag_path)[0]+".json"
-        # ******************************************************************************************************** conf -> tag_file
-        try:
-            with open(tag_file, 'r') as f:
-                data = json.load(f)
-            conf.tags = Tags(tag_file, data)
-        except json.decoder.JSONDecodeError:
-            conf.tags = Tags(tag_file, {})
-        except FileNotFoundError:
-            conf.tags = Tags(tag_file, {})
-        except Exception as err:
-            log("load file tags | "+str(err))
-            conf.set_exit_mode()
-            return conf, None, False
-
-    return conf, buffer, True
-
 """ **************************** START VIEWING **************************** """
 def file_viewing(stdscr, conf):
     curses.curs_set(1) # set cursor as visible
@@ -543,30 +503,20 @@ def file_viewing(stdscr, conf):
     conf.note_highlight = False
     report = None
     if buffer.path.startswith(HOME): # opened file is some file from students projects
-        # ****************************************************************************************** conf + buffer.path -> proj_name + file_login
-        # project_name = conf.get_project_name()
         project_path = conf.get_project_path()
         file_login = os.path.relpath(buffer.path, project_path).split(os.sep)[0]
-
         report_file = get_report_file_name(buffer.path)
-        # log(report_file)
-        # ****************************************************************************************** conf + buffer.path -> proj_name + file_login
-        login_match = bool(re.match("x[a-z]{5}[0-9]{2}", file_login))
+        login_match = bool(re.match(SOLUTION_IDENTIFIER, file_login))
         if login_match:
             conf.note_highlight = True
             if conf.report:
-                # check if loaded report is related to opened file in buffer
-                # ************************************************************************ proj_name + conf.report.path -> report_login
-                # report_path = os.path.join(REPORT_DIR, project_name)
-                # report_login = os.path.relpath(conf.report.path, report_path).split(os.sep)[0]
-                # ************************************************************************ proj_name + conf.report.path -> report_login
                 if conf.report.path == report_file:
                     report_already_loaded = True
                     report = conf.report
             if not conf.report or not report_already_loaded:
                 # try get report for file in buffer
                 try:
-                    report = get_report_for_file(buffer.path)
+                    report = load_report_from_file(buffer.path)
                     conf.report = report
                 except Exception as err:
                     log("load file report | "+str(err))
@@ -624,11 +574,6 @@ def file_viewing(stdscr, conf):
                     user_input.delete_symbol(win)
             elif key == curses.ascii.NL:
                 text = ''.join(user_input.text)
-                # file_name = os.path.basename(buffer.path)
-                # ************************************************************************************ report.file_name -> report.file_path
-                # sep_file_path = os.path.relpath(buffer.path, conf.get_project_path()).split(os.sep)
-                # file_path = os.path.join(*sep_file_path[1:] if (len(sep_file_path) > 1) else sep_file_path)
-                # ************************************************************************************ report.file_name -> report.file_path
                 report.add_note(win.cursor.row, win.cursor.col-win.begin_x, text)
                 note_entering = False
                 user_input.reset()
@@ -730,28 +675,14 @@ def file_viewing(stdscr, conf):
                         ctrl_key = curses.ascii.unctrl(key)
                         if ctrl_key == '7' or hex(key) == "0x237": # CTRL + UP: jump to prev note
                             if report and conf.note_highlight:
-                                # file_name = os.path.basename(buffer.path)
-                                # ******************************************************************** report.file_name -> report.file_path
-                                # sep_file_path = os.path.relpath(buffer.path, conf.get_project_path()).split(os.sep)
-                                # file_path = os.path.join(*sep_file_path[1:] if (len(sep_file_path) > 1) else sep_file_path)
-                                # ******************************************************************** report.file_name -> report.file_path
-                                prev_note = report.get_prev_line_with_note(win.cursor.row-1)
-                                if prev_note:
-                                    y,x,_ = prev_note
-                                    while win.cursor.row != y:
-                                        win.up(buffer, use_restrictions=True)
+                                prev_line = report.get_prev_line_with_note(win.cursor.row)
+                                while win.cursor.row != prev_line:
+                                    win.up(buffer, use_restrictions=True)
                         elif ctrl_key == '^N' or hex(key) == "0x20e": # CTRL + DOWN: jump to next note
                             if report and conf.note_highlight:
-                                # file_name = os.path.basename(buffer.path)
-                                # ******************************************************************** report.file_name -> report.file_path
-                                # sep_file_path = os.path.relpath(buffer.path, conf.get_project_path()).split(os.sep)
-                                # file_path = os.path.join(*sep_file_path[1:] if (len(sep_file_path) > 1) else sep_file_path)
-                                # ******************************************************************** report.file_name -> report.file_path
-                                next_note = report.get_next_line_with_note(win.cursor.row)
-                                if next_note:
-                                    y,x,_ = next_note
-                                    while win.cursor.row != y:
-                                        win.down(buffer, filter_on=conf.content_filter_on(), use_restrictions=True)
+                                next_line = report.get_next_line_with_note(win.cursor.row)
+                                while win.cursor.row != next_line:
+                                    win.down(buffer, filter_on=conf.content_filter_on(), use_restrictions=True)
                     elif curses.ascii.iscntrl(key):
                         ctrl_key = curses.ascii.unctrl(key)
                         if ctrl_key == '^L': # reload from original buffer
@@ -769,20 +700,11 @@ def file_viewing(stdscr, conf):
                             conf.note_highlight = not conf.note_highlight
                         elif ctrl_key == '^R': # remove all notes on current line
                             if report:
-                                # file_name = os.path.basename(buffer.path)
-                                # ******************************************************************** report.file_name -> report.file_path
-                                # sep_file_path = os.path.relpath(buffer.path, conf.get_project_path()).split(os.sep)
-                                # file_path = os.path.join(*sep_file_path[1:] if (len(sep_file_path) > 1) else sep_file_path)
-                                # ******************************************************************** report.file_name -> report.file_path
-                                report.delete_notes_on_line(win.cursor.row-1)
+                                report.delete_notes_on_line(win.cursor.row)
                         elif ctrl_key == '^E': # edit note
                             # TODO : note management / note editing  in separate window
+                            """
                             if report:
-                                # file_name = os.path.basename(buffer.path)
-                                # ******************************************************************** report.file_name -> report.file_path
-                                # sep_file_path = os.path.relpath(buffer.path, conf.get_project_path()).split(os.sep)
-                                # file_path = os.path.join(*sep_file_path[1:] if (len(sep_file_path) > 1) else sep_file_path)
-                                # ******************************************************************** report.file_name -> report.file_path
                                 line_notes = report.get_notes_on_line(win.cursor.row-1)
                                 if len(line_notes) == 1:
                                     # open note for edit
@@ -794,6 +716,8 @@ def file_viewing(stdscr, conf):
                                     # choose which note you want to edit
                                     log(len(line_notes))
                                     pass
+                            """
+                            pass
                 # ***************************** E.D.I.T *****************************
                 # ************************* V.I.E.W / T.A.G *************************
                 else:
@@ -829,12 +753,52 @@ def file_viewing(stdscr, conf):
                                 conf.enable_line_numbers(buffer)
                             resize_all(stdscr, conf, True)
                             win = conf.right_win if conf.edit_allowed else conf.right_up_win
+                        elif ctrl_key == '^H': # enable/disable note highlight
+                            conf.note_highlight = not conf.note_highlight
 
                 # ************************* V.I.E.W / T.A.G *************************
         except Exception as err:
             log("viewing Exception | "+str(err))
             conf.set_exit_mode()
             return conf
+
+
+""" **************************** END VIEWING **************************** """
+
+
+""" **************** BUFFER **************** """
+
+"""
+load file content to buffer and file tags to conf
+returns: config, buffer, succes
+"""
+def load_buffer_and_tags(conf):
+    """ try load file content to buffer """
+    file_already_loaded = False
+    if conf.buffer and conf.buffer.path == conf.file_to_open:
+        file_already_loaded = True
+        buffer = conf.buffer
+    else:
+        try:
+            with open(conf.file_to_open, 'r') as f:
+                lines = f.read().splitlines()
+            buffer = Buffer(conf.file_to_open, lines)
+            conf.buffer = buffer
+        except Exception as err:
+            log("load file content | "+str(err))
+            conf.set_exit_mode()
+            return conf, None, False
+
+    """ try load file tags to config - only for view, tags will not change """
+    if (not conf.tags or not file_already_loaded): # tag file wasnt loaded yet
+        tags = load_tags_from_file(conf.file_to_open)
+        if not tags:
+            conf.set_exit_mode()
+            return conf, None, False
+        else:
+            conf.tags = tags
+
+    return conf, buffer, True
 
 
 def save_buffer(file_name, buffer, report=None):
@@ -844,69 +808,66 @@ def save_buffer(file_name, buffer, report=None):
     buffer.set_save_status(True)
     buffer.last_save = buffer.lines.copy()
     if report:
-        notes = report_to_str(report.code_review)
-        with open(report.path, 'w+') as f:
-            f.write(notes)
+        save_report_to_file(report)
         report.last_save = report.code_review.copy()
 
 
-def get_report_file_name(file_path):
-    return os.path.splitext(file_path)[0]+".report"
+
+""" **************** REPORT **************** """
+def get_report_file_name(path):
+    file_name = os.path.splitext(path)[:-1]
+    return str(os.path.join(*file_name))+"_report.yaml"
 
 
-def get_report_for_file(file_path):
-    # report_path = os.path.join(REPORT_DIR, project, file_login)
-    report_path = get_report_file_name(file_path)
+def load_report_from_file(path):
+    report_file = get_report_file_name(path)
+    report = None
+    try:
+        with open(report_file, 'r') as f:
+            data = yaml.safe_load(f)
+        report = Report(report_file, data)
+    except yaml.YAMLError as err:
+        report = Report(report_file, {})
+    except FileNotFoundError:
+        report = Report(report_file, {})
+    except Exception as err:
+        log("load report | "+str(err))
 
-    if os.path.exists(report_path):
-        with open(report_path, 'r') as f:
-            lines = f.read()
-        code_review = str_to_report(lines)
-        return Report(report_path, code_review)
-    else:
-        # there is no report yet for this project/login
-        return Report(report_path, [])
-
-
-def str_to_report(full_text):
-    code_review = []
-    text = None
-    line_content = "INFO"
-    for line in full_text.split("\n"):
-        if line == "":
-            if line_content == "NOTE":
-                note = (int(row), int(col), text)
-                code_review.append(note)
-            line_content = "INFO"
-            continue
-        if line_content == "INFO":
-            note = line.split(":")
-            if len(note) != 2:
-                log("invalid code_review syntax")
-                raise Exception("invalid code_review syntax")
-            row, col = note
-            text = None
-            line_content = "NOTE"
-        elif line_content == "NOTE":
-            text = f"{text}\n{line}" if text else line
-    return code_review
-
-def report_to_str(code_review):
-    str_rep = ""
-    for note in code_review:
-        str_rep += "{}:{}\n{}\n\n".format(*note)
-    return str_rep
+    return report
 
 
-""" **************************** END VIEWING **************************** """
-# def get_tags_for_file(project, file_login):
-    # tag_path = f"{}"
-    # with open(tag_file, 'r') as f:
-        # data = json.load(f)
-    # tags = Tags(tag_file, data)
+def save_report_to_file(report):
+    with open(report.path, 'w+', encoding='utf8') as f:
+        yaml.dump(report.code_review, f, default_flow_style=False, allow_unicode=True)
 
-def get_tags_file_name(file_path):
-    return os.path.splitext(file_path)[0]+".tags"
+
+""" **************** TAGS **************** """
+def get_tags_file_name(path):
+    file_name = os.path.splitext(path)[:-1]
+    return str(os.path.join(*file_name))+"_tags.yaml"
+
+
+def load_tags_from_file(path):
+    tags_file = get_tags_file_name(path)
+    tags = None
+    try:
+        with open(tags_file, 'r') as f:
+            data = yaml.safe_load(f)
+        tags = Tags(tags_file, data)
+    except yaml.YAMLError as err:
+        tags = Tags(tags_file, {})
+    except FileNotFoundError:
+        tags = Tags(tags_file, {})
+    except Exception as err:
+        log("load tags | "+str(err))
+
+    return tags
+
+
+def save_tags_to_file(tags):
+    with open(tags.path, 'w+', encoding='utf8') as f:
+        yaml.dump(tags.data, f, default_flow_style=False, allow_unicode=True)
+
 
 """ **************************** START TAGGING **************************** """
 def tag_management(stdscr, conf):
@@ -916,29 +877,16 @@ def tag_management(stdscr, conf):
     win = conf.right_down_win
 
     """ read tags from file """
-    file_name = os.path.basename(conf.file_to_open)
-    tag_path = os.path.join(TAG_DIR, str(file_name))
-    tag_file = os.path.splitext(tag_path)[0]+".json"
-
-    # tag_file = get_tags_file_name(conf.file_to_open)
-    try:
-        if conf.tags: # tag file was already loaded
-            tags = conf.tags
+    if conf.tags: # tag file was already loaded
+        tags = conf.tags
+    else:
+        tags = load_tags_from_file(conf.file_to_open)
+        if not tags:
+            conf.set_exit_mode()
+            return conf
         else:
-            with open(tag_file, 'r') as f:
-                data = json.load(f)
-            tags = Tags(tag_file, data)
             conf.tags = tags
-    except json.decoder.JSONDecodeError:
-        tags = Tags(tag_file, {})
-        conf.tags = tags
-    except FileNotFoundError:
-        tags = Tags(tag_file, {})
-        conf.tags = tags
-    except Exception as err:
-        log("tagging | "+str(err))
-        conf.set_exit_mode()
-        return conf
+
 
     user_input = UserInput()
 
@@ -953,7 +901,7 @@ def tag_management(stdscr, conf):
         key = stdscr.getch()
         try:
             # ======================= EXIT =======================
-            if key == curses.KEY_F10: # curses.ascii.ESC
+            if key == curses.KEY_F10:
                 tags.save_to_file()
                 conf.update_tagging_data(win, tags)
                 conf.set_exit_mode()

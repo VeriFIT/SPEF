@@ -173,9 +173,9 @@ def show_file_content(screen, win, buffer, report, conf, user_input=None):
     """ highlight lines with notes """
     colored_lines = []
     if conf.note_highlight and report:
-        for note in report.code_review:
-            row, col, text = note
-            colored_lines.append(row)
+        for key in report.code_review:
+            colored_lines.append(int(key))
+
 
     shift = len(conf.line_numbers)+1 if conf.line_numbers else 0
     try:
