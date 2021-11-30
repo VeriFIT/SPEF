@@ -2,6 +2,9 @@ import curses
 
 BKGD = 1
 SELECT = 2
+HELP = 3
+# HELP_KEY = 4
+# HELP_ACTION = 5
 
 # filters 
 FILTER = 10
@@ -18,6 +21,9 @@ LINE_NUM = 32
 def init_color_pairs():
     curses.init_pair(BKGD, curses.COLOR_WHITE, -1)
     curses.init_pair(SELECT, curses.COLOR_BLACK, curses.COLOR_CYAN)
+    curses.init_pair(HELP, 166, -1)
+    # curses.init_pair(HELP, 161, -1)
+    # curses.init_pair(HELP_ACTION, 7, -1)
     curses.init_pair(FILTER, 9, -1)
 
     curses.init_pair(TAG_MGMT, 10, -1)

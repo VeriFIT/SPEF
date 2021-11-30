@@ -30,7 +30,7 @@ class Cursor:
         self._col_last = col
 
     def up(self, buffer, win, use_restrictions=True):
-        if self.row > win.begin_y:
+        if self.row > 0 + win.border:
             self.row -= 1
             if use_restrictions:
                 self._restrict_col(buffer, win)
@@ -71,6 +71,7 @@ class Window:
 
         self.border = border
         self.line_num_shift = line_num_shift
+        self.position = 2
 
         """ shift position """
         self.row_shift = 0 # y
@@ -155,6 +156,9 @@ class Window:
 
     def set_cursor(self, begin_y, begin_x):
         self.cursor = Cursor(row=begin_y,col=begin_x)
+
+    def set_position(self, pos):
+        self.position = pos
 
     def reset_shifts(self):
         self.row_shift = 0

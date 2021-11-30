@@ -11,16 +11,18 @@ PROJ_DIR = "project"
 # PROJ_DIR = "subject1/2021/project"
 
 class Config:
-    def __init__(self, left_screen, right_screen, down_screen):
+    def __init__(self, left_screen, right_screen, down_screen, center_screen=None):
         self.left_screen = left_screen
         self.right_screen = right_screen
         self.down_screen = down_screen # for hint
+        self.center_screen = center_screen
         self.right_up_screen = None
         self.right_down_screen = None
 
         """ view window """
         self.left_win = None
         self.right_win = None
+        self.center_win = None
         self.right_up_win = None
         self.right_down_win = None
 
@@ -29,6 +31,7 @@ class Config:
         self.edit_allowed = False
         self.note_highlight = True
         self.line_numbers = None # None or str(number_of_lines_in_buffer)
+        self.show_cached_files = False # files for tags and report
 
         self.file_to_open = None
         self.cwd = None # Directory(path, dirs, files)
@@ -75,25 +78,22 @@ class Config:
             return False
 
     def path_filter_on(self):
-        res = False
         if self.filter is not None:
             if self.filter.path:
-                res = True
-        return res
+                return True
+        return False
 
     def content_filter_on(self):
-        res = False
         if self.filter is not None:
             if self.filter.content:
-                res = True
-        return res
+                return True
+        return False
 
     def tag_filter_on(self):
-        res = False
         if self.filter is not None:
             if self.filter.tag:
-                res = True
-        return res
+                return True
+        return False
 
     """ update data """
     def update_browsing_data(self, win, cwd):

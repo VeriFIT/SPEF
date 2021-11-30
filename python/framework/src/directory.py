@@ -131,7 +131,7 @@ class Filter:
                     user.input.text = "invalid input for tag filter... press F1 to see how to use tag filter "
                     max_cols = conf.right_down_win.end_x - conf.right_down_win.begin_x
                     max_rows = conf.right_down_win.end_y - conf.right_down_win.begin_y - 1
-                    show_user_input(conf.right_down_screen, user_input, max_rows, max_cols, conf)
+                    show_filter(conf.right_down_screen, user_input, max_rows, max_cols, conf)
                 else:
                     for file_path in files:
                         # file_name = os.path.basename(file_path)

@@ -20,9 +20,20 @@ class Tags:
     def __str__(self):
         return str(self.data)
 
+    def __len__(self):
+        return len(self.data)
+
     def remove_tag(self, tag_name):
         if tag_name in self.data:
             del self.data[tag_name]
+
+    def remove_tag_by_idx(self, idx):
+        i = 0
+        for key in self.data:
+            if i == idx:
+                del self.data[key]
+                return
+            i+=1
 
     def set_tag(self, tag_name, args):
         self.data[tag_name] = [*args]
@@ -131,6 +142,8 @@ class UserInput:
         self.pointer = 0
         self.col_shift = 0
 
+        self.pages = 0
+
     def __len__(self):
         return len(self.text)
 
@@ -164,8 +177,8 @@ class UserInput:
     def horizontal_shift(self, win):
         width = win.end_x - win.begin_x
         shift = width - 1 - 1
-        pages = self.pointer // (width - 1)
-        self.col_shift = pages * shift
+        self.pages = self.pointer // (width - 1)
+        self.col_shift = self.pages * shift
 
     def get_shifted_pointer(self):
         return self.pointer - self.col_shift - (1 if self.col_shift > 0 else 0)
@@ -254,5 +267,7 @@ class Buffer:
         new_line = current_line[:col] + '\t' + current_line[col:]
         self.lines.insert(row, new_line)
         self.set_save_status(False)
+
+
 
 # END
