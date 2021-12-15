@@ -200,7 +200,11 @@ def file_viewing(stdscr, conf):
                             if report:
                                 report.code_review = report.last_save.copy()
                     elif key == curses.KEY_F9: # set filter
+                        old_content_filter = conf.filter.content if conf.filter is not None else None
                         conf = filter_management(stdscr, screen, win, conf)
+                        if conf.is_exit_mode():
+                            return conf
+                        new_content_filter = conf.filter.content if conf.filter is not None else None
                         """ rewrite screen in case that windows were resized during filter mgmnt - bcs line numbers were set / unset """
                         screen = conf.right_screen if conf.edit_allowed else conf.right_up_screen
                         win = conf.right_win if conf.edit_allowed else conf.right_up_win
@@ -209,11 +213,12 @@ def file_viewing(stdscr, conf):
                             show_tags(conf.right_down_screen, conf.right_down_win, conf.tags, conf)
 
                         conf.update_viewing_data(win, buffer, report)
-                        conf.set_brows_mode()
-                        conf.quick_view = True
-                        conf.left_win.reset_shifts()
-                        conf.left_win.set_cursor(0,0)
-                        return conf
+                        if old_content_filter != new_content_filter:
+                            conf.set_brows_mode()
+                            conf.quick_view = True
+                            conf.left_win.reset_shifts()
+                            conf.left_win.set_cursor(0,0)
+                            return conf
                     # ======================= CTRL KEYS =======================
                     elif curses.ascii.ismeta(key):
                         """ CTRL + UP / CTRL + DOWN """
@@ -274,7 +279,11 @@ def file_viewing(stdscr, conf):
                         conf.enable_file_edit()
                         return conf
                     elif key == curses.KEY_F9: # set filter
+                        old_content_filter = conf.filter.content if conf.filter is not None else None
                         conf = filter_management(stdscr, screen, win, conf)
+                        if conf.is_exit_mode():
+                            return conf
+                        new_content_filter = conf.filter.content if conf.filter is not None else None
                         """ rewrite screen in case that windows were resized during filter mgmnt """
                         screen = conf.right_screen if conf.edit_allowed else conf.right_up_screen
                         win = conf.right_win if conf.edit_allowed else conf.right_up_win
@@ -283,11 +292,12 @@ def file_viewing(stdscr, conf):
                             show_tags(conf.right_down_screen, conf.right_down_win, conf.tags, conf)
 
                         conf.update_viewing_data(win, buffer, report)
-                        conf.set_brows_mode()
-                        conf.quick_view = True
-                        conf.left_win.reset_shifts()
-                        conf.left_win.set_cursor(0,0)
-                        return conf
+                        if old_content_filter != new_content_filter:
+                            conf.set_brows_mode()
+                            conf.quick_view = True
+                            conf.left_win.reset_shifts()
+                            conf.left_win.set_cursor(0,0)
+                            return conf
                     # ======================= CTRL KEYS =======================
                     elif curses.ascii.iscntrl(key):
                         ctrl_key = curses.ascii.unctrl(key)

@@ -79,7 +79,7 @@ def tag_management(stdscr, conf):
                 if text is not None:
                     tag_parts = ''.join(text).split()
                     if len(tag_parts) < 1:
-                        log("unknown command, press F1 to see help")
+                        log("Wrong format for new tag")
                     else:
                         tag_name, *args = tag_parts
                         tags.set_tag(tag_name, args)
@@ -93,19 +93,25 @@ def tag_management(stdscr, conf):
                 conf.set_file_to_open(tags.path)
                 return conf
             elif key == curses.KEY_F8: # delete current tag
+                # TODO confirm delete
                 tags.remove_tag_by_idx(win.cursor.row)
                 tags.save_to_file()
                 win.up(tags, use_restrictions=False)
             elif key == curses.KEY_F9: # set filter
+                old_tag_filter = conf.filter.tag if conf.filter is not None else None
                 conf = filter_management(stdscr, screen, win, conf)
+                if conf.is_exit_mode():
+                    return conf
+                new_tag_filter = conf.filter.tag if conf.filter is not None else None
                 """ rewrite screen in case that windows were resized during filter mgmnt """
                 show_tags(conf.right_down_screen, conf.right_down_win, tags, conf)
                 conf.update_tagging_data(win, tags)
-                conf.set_brows_mode()
-                conf.quick_view = True
-                conf.left_win.reset_shifts()
-                conf.left_win.set_cursor(0,0)
-                return conf
+                if old_tag_filter != new_tag_filter:
+                    conf.set_brows_mode()
+                    conf.quick_view = True
+                    conf.left_win.reset_shifts()
+                    conf.left_win.set_cursor(0,0)
+                    return conf
         except Exception as err:
             log("tagging | "+str(err))
             conf.set_exit_mode()

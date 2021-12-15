@@ -43,9 +43,14 @@ def filter_management(stdscr, screen, win, conf):
 
             key = stdscr.getch()
 
-            if key in (curses.ascii.ESC, curses.KEY_F10): # exit filter management
+            if key in (curses.ascii.ESC, curses.KEY_F9): # exit filter management
                 user_input.reset()
                 curses.curs_set(0)
+                return conf
+            elif key == curses.KEY_F10:
+                user_input.reset()
+                curses.curs_set(0)
+                conf.set_exit_mode()
                 return conf
             elif key == curses.KEY_RESIZE:
                 conf = resize_all(stdscr, conf)

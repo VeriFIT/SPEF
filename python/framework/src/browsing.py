@@ -60,7 +60,7 @@ def directory_browsing(stdscr, conf):
                         new_conf.enable_line_numbers(buffer)
                         new_conf.right_up_win = resize_win(new_conf.right_up_win, new_conf.line_numbers)
                     conf = new_conf
-                    show_file_content(conf.right_up_screen, conf.right_up_win, buffer, None, conf, None)
+                    show_file_content(conf.right_up_screen, conf.right_up_win, buffer, conf.report, conf, None)
                     show_tags(conf.right_down_screen, conf.right_down_win, conf.tags, conf)
             else:
                 conf.set_file_to_open(None)
