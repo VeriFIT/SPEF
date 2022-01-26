@@ -1,11 +1,11 @@
 import os
 import glob
 import fnmatch
-import yaml
+import json
 import re
 
 from logger import *
-from buffer import Tags, UserInput
+from buffer import Tags
 
 
 """ represents content of current working directory """
@@ -141,7 +141,7 @@ class Filter:
                         tag_file = str(os.path.join(*file_name))+"_tags.yaml"
                         try:
                             with open(tag_file, 'r') as f:
-                                data = yaml.safe_load(f)
+                                data = json.load(f)
                             tags = Tags(tag_file, data)
                         except Exception:
                             continue

@@ -38,7 +38,7 @@ def print_hint(conf, filter_mode=False):
     E_HELP = {"F1":"help", "F2":"save", "F3":"view/tag", "F4":"note", "F5":"goto",
                 "F8":"reload", "F9":"filter", "F10":"exit"}
     V_HELP = {"F1":"help", "F4":"edit file", "F5":"goto", "F9":"filter", "F10":"exit"}
-    T_HELP = {"F1":"help", "F3":"add tag", "F8":"delete tag", "F9":"filter", "F10":"exit"}
+    T_HELP = {"F1":"help", "F4":"edit tags", "F9":"filter", "F10":"exit"}
 
     if filter_mode:
         if conf.is_brows_mode(): filter_type = "path"
