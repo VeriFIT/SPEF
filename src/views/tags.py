@@ -4,14 +4,16 @@ import yaml
 import os
 
 
-from filtering import filter_management
-from loading import load_tags_from_file
-from user_help import show_help, get_user_input
-from screens import *
+from views.filtering import filter_management
+from views.help import show_help
 
-from buffer import Tags, UserInput
-from printing import *
-from logger import *
+from modules.buffer import Tags, UserInput
+
+from utils.loading import load_tags_from_file
+from utils.input import get_user_input
+from utils.screens import *
+from utils.printing import *
+from utils.logger import *
 
 
 

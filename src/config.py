@@ -1,5 +1,8 @@
 import os
-from logger import *
+
+
+from utils.logger import *
+
 
 """ modes """
 BROWS = 1
@@ -7,8 +10,10 @@ VIEW = 2
 TAG = 3
 EXIT = -1
 
-PROJ_DIR = "project"
+PROJ_DIR = "subjectA/projectA"
 # PROJ_DIR = "subject1/2021/project"
+
+
 
 class Config:
     def __init__(self, left_screen, right_screen, down_screen, center_screen=None):

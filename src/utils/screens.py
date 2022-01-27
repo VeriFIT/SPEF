@@ -1,12 +1,13 @@
 import curses
 import curses.ascii
 
-
 from config import Config
-from directory import Directory
-from window import Window, Cursor
-from printing import *
-from logger import *
+
+from modules.directory import Directory
+from modules.window import Window, Cursor
+
+from utils.printing import *
+from utils.logger import *
 
 
 

@@ -12,21 +12,23 @@ import fnmatch
 import glob
 
 
-from browsing import get_directory_content, directory_browsing
-from filtering import filter_management
-from viewing import file_viewing
-from user_help import show_help
-from tags import tag_management
-from loading import *
-from screens import *
+from views.browsing import get_directory_content, directory_browsing
+from views.filtering import filter_management
+from views.viewing import file_viewing
+from views.tags import tag_management
+from views.help import show_help
 
-from buffer import Buffer, Report, UserInput
+from modules.buffer import Buffer, Report, UserInput
+from modules.directory import Directory
+from modules.window import Window, Cursor
+
+from utils.loading import *
+from utils.screens import *
+from utils.coloring import *
+from utils.printing import *
+from utils.logger import *
+
 from config import Config
-from directory import Directory
-from window import Window, Cursor
-from printing import *
-from logger import *
-from coloring import *
 
 
 """ hladanie cesty projektu v ktorom su odovzdane riesenia
@@ -42,9 +44,6 @@ from coloring import *
     -prehlada sa zoznam projektov
     -skontroluje sa ci aktualna cesta buffer.file_name ma prefix zhodny s niektorym projektom
 """
-
-# PROJ_DIR = "subject1/2021/project"
-# PROJ_DIR = "project"
 
 
 

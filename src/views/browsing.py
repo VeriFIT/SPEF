@@ -4,15 +4,15 @@ import curses.ascii
 import os
 
 
-from filtering import filter_management
-from loading import load_buffer_and_tags
-from user_help import show_help
-from screens import *
+from views.filtering import filter_management
+from views.help import show_help
 
+from modules.directory import Directory
 
-from directory import Directory
-from printing import *
-from logger import *
+from utils.loading import load_buffer_and_tags
+from utils.screens import *
+from utils.printing import *
+from utils.logger import *
 
 
 
@@ -36,7 +36,7 @@ def directory_browsing(stdscr, conf):
     win = conf.left_win
 
     if conf.filter_not_empty():
-        cwd = Directory(conf.filter.project_path, files=conf.filter.files)
+        cwd = Directory(conf.filter.project, files=conf.filter.files)
     else:
         cwd = get_directory_content()
     conf.cwd = cwd
@@ -141,7 +141,7 @@ def directory_browsing(stdscr, conf):
                 screen, win = conf.left_screen, conf.left_win
                 # actualize current working directory according to filter
                 if conf.filter_not_empty():
-                    cwd = Directory(conf.filter.project_path, files=conf.filter.files)
+                    cwd = Directory(conf.filter.project, files=conf.filter.files)
                 else:
                     conf.cwd = get_directory_content()
                     cwd = conf.cwd

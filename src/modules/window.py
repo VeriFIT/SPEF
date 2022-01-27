@@ -1,5 +1,6 @@
-from logger import *
 import time
+
+from utils.logger import *
 
 """
 -Window reprezentuje zobrazovane okno (view win) v obrazovke (screen)
@@ -9,6 +10,8 @@ vyber riadku    buffer[self.row - win.begin_y]
 koniec riadku   len(buffer[self.row - win.begin_y]) + win.begin_x   
 
 """
+
+# TODO: odstranit EDGE global !!!
 
 LEFT_EDGE = 2
 RIGHT_EDGE = 2

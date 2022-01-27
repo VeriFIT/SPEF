@@ -10,14 +10,15 @@ import fnmatch
 import glob
 
 
-from filtering import filter_management
-from user_help import show_help
-from loading import *
-from screens import *
+from views.filtering import filter_management
+from views.help import show_help
 
-from buffer import UserInput
-from printing import *
-from logger import *
+from modules.buffer import UserInput
+
+from utils.loading import *
+from utils.screens import *
+from utils.printing import *
+from utils.logger import *
 
 
 SOLUTION_IDENTIFIER = "x[a-z]{5}[0-9]{2}"

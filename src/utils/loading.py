@@ -5,9 +5,10 @@ import yaml
 import os
 
 
-from buffer import Buffer, Report, Tags
-from printing import *
-from logger import *
+from modules.buffer import Buffer, Report, Tags
+
+# from utils.printing import *
+from utils.logger import *
 
 
 """ **************** REPORT **************** """

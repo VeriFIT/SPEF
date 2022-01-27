@@ -1,12 +1,13 @@
 import datetime
 import os
+
 from pathlib import Path
 
 
 HOME = str(Path(__file__).parents[2])
-LOG_FILE = os.path.join(HOME,"framework","log")
-TAG_DIR = os.path.join(HOME,"framework","tags")
-REPORT_DIR = os.path.join(HOME,"framework","reports")
+LOG_FILE = os.path.join(HOME,"debug.log")
+TAG_DIR = os.path.join(HOME,"tags")
+REPORT_DIR = os.path.join(HOME,"reports")
 
 
 

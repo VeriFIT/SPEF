@@ -1,4 +1,8 @@
+
 import curses
+
+
+# TODO: pridat vsade COLOR_XXX !!!
 
 BKGD = 1
 SELECT = 2

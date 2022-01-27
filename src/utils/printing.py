@@ -2,10 +2,11 @@ import curses
 import os
 import re
 
-from loading import save_buffer
-from buffer import UserInput
-from logger import *
-from coloring import *
+from modules.buffer import UserInput
+
+from utils.loading import save_buffer
+from utils.coloring import *
+from utils.logger import *
 
 ESC = 27
 

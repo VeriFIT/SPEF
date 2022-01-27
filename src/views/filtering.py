@@ -1,12 +1,14 @@
 import curses
 import curses.ascii
 
-from user_help import show_help
+from views.help import show_help
 
-from buffer import UserInput
-from directory import Filter
-from printing import *
-from logger import *
+from modules.buffer import UserInput
+from modules.directory import Filter
+
+from utils.printing import *
+from utils.logger import *
+
 
 def filter_management(stdscr, screen, win, conf):
     curses.curs_set(1)
