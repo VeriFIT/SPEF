@@ -50,7 +50,7 @@ class Tags:
         return False
 
     def compare_args(self, tag_args, compare_args):
-        if len(compare_args) > len(tag_args):
+        if len(compare_args) != len(tag_args):
             return False
         for i in range(len(compare_args)):
             if not re.search(str(compare_args[i]), str(tag_args[i])):

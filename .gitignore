@@ -10,7 +10,7 @@ __pycache__/
 .log
 
 # Project files for testing
-project/*
+subject*/*
 reports/*
 tags/*
 

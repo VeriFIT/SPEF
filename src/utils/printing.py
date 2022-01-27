@@ -285,7 +285,7 @@ def show_filter(screen, user_input, max_rows, max_cols, conf, color=None):
         empty_message = ""
         if conf.is_brows_mode(): empty_message = "add path filter... ex: test1/unit_*.* "
         elif conf.is_view_mode(): empty_message = "add content filter... ex: def test1 "
-        elif conf.is_tag_mode(): empty_message = "add tag filter... ex: #plagiat(.*) "
+        elif conf.is_tag_mode(): empty_message = "add tag filter... ex: #plagiat(^[0-5]$) "
         empty_message += " "*(max_cols-1-len(empty_message))
         screen.addstr(max_rows, 1, empty_message[:max_cols-1], curses.color_pair(FILTER) | curses.A_ITALIC)
     else:
