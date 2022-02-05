@@ -13,16 +13,33 @@ EXIT = -1
 PROJ_DIR = "subjectA/projectA"
 # PROJ_DIR = "subject1/2021/project"
 
+class Screens:
+    def __init__(self, left, right, down, center, right_up, right_down):
+        self.left = left
+        self.right = right
+        self.down = down # for hint
+        self.center = center
+        self.right_up = right_up
+        self.right_down = right_down
+
+class Windows:
+    def __init__(self, left, right, center, right_up, right_down):
+        self.left = left
+        self.right = right
+        self.center = center
+        self.right_up = right_up
+        self.right_down = right_down
+
 
 
 class Config:
-    def __init__(self, left_screen, right_screen, down_screen, center_screen=None):
+    def __init__(self, left_screen, right_screen, down_screen, center_screen, right_up_screen, right_down_screen):
         self.left_screen = left_screen
         self.right_screen = right_screen
         self.down_screen = down_screen # for hint
         self.center_screen = center_screen
-        self.right_up_screen = None
-        self.right_down_screen = None
+        self.right_up_screen = right_up_screen
+        self.right_down_screen = right_down_screen
 
         """ view window """
         self.left_win = None
@@ -32,6 +49,7 @@ class Config:
         self.right_down_win = None
 
         self.mode = BROWS # start with browsing directory
+        self.show_menu = False
         self.quick_view = True
         self.edit_allowed = False
         self.note_highlight = True
@@ -47,6 +65,20 @@ class Config:
         """ filter """
         self.filter = None # Filter()
         self.filtered_files = None # Directory(path, [], files)
+
+    def get_all_screens(self):
+        screens = {"LS": self.left_screen, "RS": self.right_screen, "DS": self.down_screen,
+                "CS": self.center_screen, "RUS": self.right_up_screen, "RDS": self.right_down_screen}
+        return screens
+
+    def get_visible_screens(self):
+        screens = {"LS": self.left_screen, "RS": self.right_screen, "DS": self.down_screen} # main screens
+        if not self.edit_allowed:
+            screens["RUS"] = self.right_up_screen
+            screens["RDS"] = self.right_down_screen
+        if self.show_menu:
+            screens["CS"] = self.center_screen
+        return screens
 
 
     # TODO: get current project dir

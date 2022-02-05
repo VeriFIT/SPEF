@@ -10,6 +10,22 @@ from utils.logger import *
 
 ESC = 27
 
+""" CONFIGURABLE VARIABLES """
+EMPTY_PATH_FILTER = "add path filter... ex: test1/unit_*.* "
+EMPTY_CONTENT_FILTER = "add content filter... ex: def test1 "
+EMPTY_TAG_FILTER = "add tag filter... ex: #plagiat(^[0-5]$) "
+
+EXIT_WITHOUT_SAVING = """WARNING: Exit without saving.\n\
+    Press F2 to save and exit.\n\
+    Press {} to force exiting without saving.\n\
+    Press any other key to continue editing your file."""
+
+RELOAD_FILE_WITHOUT_SAVING = """WARNING: Reload file will discard changes.\n\
+    Press F2 to save changes.\n\
+    Press {} or Enter to reload file and discard all changes.\n\
+    Press any other key to continue editing your file."""
+
+
 
 """
     CTRL + Q    delete filter
@@ -25,6 +41,42 @@ ESC = 27
 
     CTRL + N    show/hide line numbers
 """
+
+
+
+
+""" used for tag input or note input """
+def show_input(conf):
+    pass
+
+def show_menu(conf):
+    pass
+
+
+
+def refresh_main_screens(conf):
+    conf.left_screen.erase()
+    conf.right_screen.erase()
+    conf.down_screen.erase()
+
+    conf.left_screen.border(0)
+    conf.right_screen.border(0)
+    conf.down_screen.border(0)
+
+    conf.left_screen.refresh()
+    conf.right_screen.refresh()
+    conf.down_screen.refresh()
+
+
+def rewrite_all_wins(conf):
+    # refresh_main_screens(conf)
+    show_directory_content(conf)
+    show_file_content(conf)
+    if not conf.edit_allowed:
+        show_tags(conf)
+
+
+
 
 
 def print_hint(conf, filter_mode=False):
@@ -177,24 +229,15 @@ def print_help(screen, max_cols, max_rows, conf, filter_mode=False):
 
 
 
-EXIT_WITHOUT_SAVING_MESSAGE = """WARNING: Exit without saving.\n\
-    Press F2 to save and exit.\n\
-    Press {} to force exiting without saving.\n\
-    Press any other key to continue editing your file."""
-
-RELOAD_FILE_WITHOUT_SAVING = """WARNING: Reload file will discard changes.\n\
-    Press F2 to save changes.\n\
-    Press {} or Enter to reload file and discard all changes.\n\
-    Press any other key to continue editing your file."""
-
 """ check if file changes are saved or user want to save or discard them """
-def show_unsaved_changes_warning(stdscr, conf, warning=None, exit_key=None):
+def file_changes_are_saved(stdscr, conf, warning=None, exit_key=None):
     if conf.buffer:
         if (conf.buffer.is_saved) or (conf.buffer.original_buff == conf.buffer.lines):
             return True
         else:
             curses_key, str_key = exit_key if exit_key else (ESC, "ESC")
-            message = warning if warning else EXIT_WITHOUT_SAVING_MESSAGE
+            message = warning if warning else EXIT_WITHOUT_SAVING
+
             """ print warning message """
             screen = conf.right_screen
             screen.erase()
@@ -217,14 +260,15 @@ def show_unsaved_changes_warning(stdscr, conf, warning=None, exit_key=None):
 
 """ show file name/path of currently opened file/directory """
 def show_path(screen, path, max_cols):
-    while len(path) > max_cols-2:
+    while len(path) > max_cols-4:
         path = path.split(os.sep)[1:]
         path = "/".join(path)
-    dir_name = str(path)
+    dir_name = " "+str(path)+" "
     screen.addstr(0, int(max_cols/2-len(dir_name)/2), dir_name)
     screen.refresh()
 
 
+""" center screen """
 def show_user_input(screen, user_input, max_rows, max_cols, conf, color=None, title=None):
     screen.erase()
     screen.border(0)
@@ -274,18 +318,19 @@ def show_user_input(screen, user_input, max_rows, max_cols, conf, color=None, ti
     return last_row, last_col
 
 
+""" filter on last row in screen """
 def show_filter(screen, user_input, max_rows, max_cols, conf, color=None):
     if user_input:
         user_input_str = ''.join(user_input.text)
-
         if user_input.col_shift > 0 and len(user_input_str) > user_input.col_shift:
             user_input_str = user_input_str[user_input.col_shift + 1:]
 
     if not user_input.text:
+        # show default message with example usage of filter
         empty_message = ""
-        if conf.is_brows_mode(): empty_message = "add path filter... ex: test1/unit_*.* "
-        elif conf.is_view_mode(): empty_message = "add content filter... ex: def test1 "
-        elif conf.is_tag_mode(): empty_message = "add tag filter... ex: #plagiat(^[0-5]$) "
+        if conf.is_brows_mode(): empty_message = EMPTY_PATH_FILTER
+        elif conf.is_view_mode(): empty_message = EMPTY_CONTENT_FILTER
+        elif conf.is_tag_mode(): empty_message = EMPTY_TAG_FILTER
         empty_message += " "*(max_cols-1-len(empty_message))
         screen.addstr(max_rows, 1, empty_message[:max_cols-1], curses.color_pair(FILTER) | curses.A_ITALIC)
     else:
@@ -294,17 +339,36 @@ def show_filter(screen, user_input, max_rows, max_cols, conf, color=None):
     screen.refresh()
 
 
-def show_directory_content(screen, win, cwd, conf):
-    screen.erase()
-    screen.border(0)
 
-    print_hint(conf)
 
-    dirs, files = cwd.get_shifted_dirs_and_files(win.row_shift)
+""" browsing directory """
+def show_directory_content(conf):
+    screen = conf.left_screen
+    win = conf.left_win
     max_cols = win.end_x - win.begin_x
     max_rows = win.end_y - win.begin_y - 1
-    # last_row = win.last_row
+
+    cwd = Directory(conf.filter.project, files=conf.filter.files) if conf.filter_not_empty() else conf.cwd
+    dirs, files = cwd.get_shifted_dirs_and_files(win.row_shift)
+
+
+    """ print borders """
+    screen.erase()
+    if conf.is_brows_mode():
+        screen.attron(curses.color_pair(BORDER))
+        screen.border(0)
+        screen.attroff(curses.color_pair(BORDER))
+    else:
+        screen.border(0)
+
+    """ print hint for user """
+    print_hint(conf)
+
+
     try:
+        """ show dir name """
+        show_path(screen, cwd.path, max_cols)
+
         """ show dir content """
         if cwd.is_empty():
             if conf.filter_not_empty():
@@ -320,7 +384,7 @@ def show_directory_content(screen, win, cwd, conf):
                     if conf.filter.path:
                         break
                 coloring = (curses.color_pair(SELECT) if i+win.row_shift == win.cursor.row+1 else curses.A_NORMAL)
-                screen.addstr(i, 1, "/"+str(dir_name[:max_cols-2]), coloring | curses.A_BOLD)
+                screen.addstr(i, 1, str(dir_name[:max_cols-2])+"/", coloring | curses.A_BOLD)
                 i+=1
             for file_name in files:
                 if i > max_rows:
@@ -339,26 +403,37 @@ def show_directory_content(screen, win, cwd, conf):
                 user_input.text = conf.filter.path
                 show_filter(screen, user_input, max_rows, max_cols, conf)
 
-        """ show dir name """
-        show_path(screen, cwd.path, max_cols)
-
     except Exception as err:
         log("show directory | "+str(err))
     finally:
         screen.refresh()
 
 
-
-def show_file_content(screen, win, buffer, report, conf, user_input=None):
-    screen.erase()
-    screen.border(0)
-
-    print_hint(conf)
-
+""" view file content """
+def show_file_content(conf):
+    screen = conf.right_screen if conf.edit_allowed else conf.right_up_screen
+    win = conf.right_win if conf.edit_allowed else conf.right_up_win
     max_cols = win.end_x - win.begin_x
     max_rows = win.end_y - win.begin_y - 1
-    # last_row = win.last_row
 
+    buffer = conf.buffer
+    report = conf.report
+    shift = len(conf.line_numbers)+1 if conf.line_numbers else 0 # shift for line numbers
+
+
+    """ print borders """
+    screen.erase()
+    if conf.is_view_mode():
+        screen.attron(curses.color_pair(BORDER))
+        screen.border(0)
+        screen.attroff(curses.color_pair(BORDER))
+    else:
+        screen.border(0)
+
+    """ print hint for user """
+    print_hint(conf)
+
+    """ if there is no buffer, show empty window """
     if buffer is None:
         screen.refresh()
         return
@@ -370,34 +445,45 @@ def show_file_content(screen, win, buffer, report, conf, user_input=None):
             colored_lines.append(int(key))
 
 
-    shift = len(conf.line_numbers)+1 if conf.line_numbers else 0
     try:
+        """ show file name """
+        show_path(screen, buffer.path, max_cols+(shift if conf.line_numbers else 1))
+
         """ show file content """
         if buffer:
             for row, line in enumerate(buffer[win.row_shift : max_rows + win.row_shift]):
-                if (user_input is not None) and (row == max_rows-1):
+                
+                if row > max_rows or (row == max_rows and conf.tag_filter_on()):
                     break
+                # if (user_input is not None) and (row == max_rows-1):
+                    # break
                 if (row + win.begin_y == win.cursor.row - win.row_shift) and (win.col_shift > 0):
                     line = line[win.col_shift + 1:]
-                if len(line) > max_cols - 1 - shift:
-                    line = line[:max_cols - 1 - shift]
-                color = curses.color_pair(NOTE_HIGHLIGHT) if (row+1+win.row_shift in colored_lines) else curses.A_NORMAL
-                if conf.line_numbers:
-                    screen.addstr(row+1, 1, str(row+win.row_shift), curses.color_pair(LINE_NUM))
+                if len(line) > max_cols - 1:
+                    line = line[:max_cols - 1]
+
+                """ set color """
+                if (row+1+win.row_shift in colored_lines):
+                    color = curses.color_pair(NOTE_HIGHLIGHT)            
+                else:
+                    color = curses.A_NORMAL
+
+                """ print line """
+                if conf.line_numbers: # row+1 bcs row starts from 0
+                    screen.addstr(row+1, 1, str(row+1+win.row_shift), curses.color_pair(LINE_NUM))
                 screen.addstr(row+1, 1+shift, line, color)
 
         """ show user input from note entering """
-        if user_input:
-            color=curses.color_pair(NOTE_MGMT)
-            show_filter(screen, user_input, max_rows, max_cols, conf, color=color)
-        elif conf.filter:
-            if conf.filter.content:
-                user_input = UserInput()
-                user_input.text = conf.filter.content
-                show_filter(screen, user_input, max_rows, max_cols, conf)
-
-        """ show file name """
-        show_path(screen, buffer.path, max_cols+(shift if conf.line_numbers else 1))
+        # TODO: prerobit note management na center okno
+        # if user_input:
+            # color=curses.color_pair(NOTE_MGMT)
+            # show_filter(screen, user_input, max_rows, max_cols, conf, color=color)
+        
+        """ show content filter if there is one """
+        if conf.content_filter_on():
+            user_input = UserInput()
+            user_input.text = conf.filter.content
+            show_filter(screen, user_input, max_rows, max_cols, conf)
 
     except Exception as err:
         log("show file | "+str(err))
@@ -405,29 +491,48 @@ def show_file_content(screen, win, buffer, report, conf, user_input=None):
         screen.refresh()
 
 
+""" tag management """
+def show_tags(conf):
+    screen = conf.right_down_screen
+    win = conf.right_down_win
+    max_cols = win.end_x - win.begin_x
+    max_rows = win.end_y - win.begin_y - 1
 
-def show_tags(screen, win, tags, conf, user_input=None):
+    tags = conf.tags
+
+
+    """ print borders """
     screen.erase()
-    screen.border(0)
+    if conf.is_tag_mode():
+        screen.attron(curses.color_pair(BORDER))
+        screen.border(0)
+        screen.attroff(curses.color_pair(BORDER))
+    else:
+        screen.border(0)
 
+    """ if there is no tags, then show empty window """
     if tags is None:
         screen.refresh()
         return
 
-    max_cols = win.end_x - win.begin_x
-    max_rows = win.end_y - win.begin_y - 1
-    # last_row = win.last_row
+
     try:
+        """ show file name """
+        show_path(screen, tags.path, max_cols)
+
         """ show tags """
         if tags.data:
             for row, name in enumerate(tags.data):
                 if row > max_rows or (row == max_rows and conf.tag_filter_on()):
                     break
+
+                """ set color """
                 if row+win.row_shift == win.cursor.row and conf.is_tag_mode():
                     coloring = curses.color_pair(SELECT)
                 else:
                     coloring = curses.A_NORMAL
 
+                """ format and print tag """
                 params = tags.data[name]
                 str_params = "(" + ",".join(map(str,params)) + ")"
                 line = "#"+str(name)+str_params
@@ -435,15 +540,11 @@ def show_tags(screen, win, tags, conf, user_input=None):
                     line = line[:max_cols - 1]
                 screen.addstr(row+1, 1, line, coloring)
 
-
         """ show tag filter if there is one """
         if conf.tag_filter_on():
             user_input = UserInput()
             user_input.text = conf.filter.tag
             show_filter(screen, user_input, max_rows, max_cols, conf)
-
-        """ show file name """
-        show_path(screen, tags.path, max_cols)
 
     except Exception as err:
         log("show tags | "+str(err))

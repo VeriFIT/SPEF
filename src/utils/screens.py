@@ -11,36 +11,49 @@ from utils.logger import *
 
 
 
-def refresh_main_screens(stdscr, config):
-    stdscr.erase()
-    config.left_screen.border(0)
-    config.right_screen.border(0)
-    config.down_screen.border(0)
+def new_vertical_shift(old_shift, old_height, cursor, new_height):
+    lines_before = cursor - old_shift - 1
+    lines_after = (old_shift+old_height) - cursor
 
-    stdscr.refresh()
-    config.left_screen.refresh()
-    config.right_screen.refresh()
-    config.down_screen.refresh()
-
-
-def resize_win(win, line_numbers):
-    new_shift = len(line_numbers)+1
-
-    shift = win.line_num_shift
-    border = win.border
-    begin_y = win.begin_y - win.border
-    begin_x = win.begin_x - win.border - shift
-    height = win.end_y - win.begin_y + 1
-    width = win.end_x - win.begin_x + 1 + shift
-
-    win = Window(height, width-new_shift, begin_y, begin_x+new_shift, border=border, line_num_shift=new_shift)
-    return win
+    new_shift = old_shift
+    if new_height > old_height: # new window is larger
+        height_diff = new_height - old_height
+        for i in range(height_diff):
+            if lines_before < lines_after:
+                # reduce shift so that the window extend at the top (not at the bottom)
+                new_shift -= 1
+                lines_before += 1
+            else:
+                # shift stays the same so that the window extend at the bottom
+                lines_after += 1
+        if new_shift < 0:
+            new_shift = 0
+    elif new_height < old_height: # new window is smaler
+        height_diff = old_height - new_height
+        for i in range(height_diff):
+            if lines_before > lines_after:
+                new_shift += 1
+                lines_before -= 1
+            else:
+                lines_after -= 1
+    return new_shift
 
 
 def resize_all(stdscr, conf, force_resize=False):
     """ get cursor positions from old windows """
     l_win_old_row, l_win_old_col = conf.left_win.get_cursor_position()
     rd_win_old_row, rd_win_old_col = conf.right_down_win.get_cursor_position()
+
+    """ cursor """
+    ru_win_old_row = conf.right_up_win.cursor.row
+    r_win_old_row = conf.right_win.cursor.row
+    """ shift """
+    r_win_old_shift = conf.right_win.row_shift
+    ru_win_old_shift = conf.right_up_win.row_shift
+    """ height """
+    ru_win_old_height = conf.right_up_win.end_y - conf.right_up_win.begin_y - 1
+    r_win_old_height = conf.right_win.end_y - conf.right_win.begin_y - 1
+
 
     result_conf = conf
     try:
@@ -55,7 +68,7 @@ def resize_all(stdscr, conf, force_resize=False):
             screens, windows = create_screens_and_windows(y, x, conf.line_numbers)
             new_conf = create_config(screens, windows, conf)
 
-            """ set new cursor positions to windows """
+            """ set old cursor positions to resized windows """
             l_win_new_row = min(l_win_old_row, new_conf.left_win.end_y-2)
             l_win_new_col = min(l_win_old_col, new_conf.left_win.end_x)
             rd_win_new_row = min(rd_win_old_row, new_conf.right_down_win.end_y-2)
@@ -64,16 +77,19 @@ def resize_all(stdscr, conf, force_resize=False):
             new_conf.right_down_win.set_cursor(rd_win_new_row, rd_win_new_col)
 
             # TODO: cursor stays in the middle (see window resizing in vim)
-            new_conf.right_win.set_cursor(new_conf.right_win.begin_y, new_conf.right_win.begin_x)
+            """ set old shift to resized windows """
+            ru_win_height = new_conf.right_up_win.end_y - new_conf.right_up_win.begin_y - 1
+            r_win_height = new_conf.right_win.end_y - new_conf.right_win.begin_y - 1
+            
+            ru_win_new_shift = new_vertical_shift(ru_win_old_shift, ru_win_old_height, ru_win_old_row, ru_win_height)
+            r_win_new_shift = new_vertical_shift(r_win_old_shift, r_win_old_height, r_win_old_row, r_win_height)
 
-            """ rewrite all screens """
-            print_hint(new_conf)
-            show_directory_content(new_conf.left_screen, new_conf.left_win, new_conf.cwd, new_conf)
-            if new_conf.edit_allowed:
-                show_file_content(new_conf.right_screen, new_conf.right_win, new_conf.buffer, new_conf.report, new_conf)
-            else:
-                show_file_content(new_conf.right_up_screen, new_conf.right_up_win, new_conf.buffer, new_conf.report, new_conf)
-                show_tags(new_conf.right_down_screen, new_conf.right_down_win, new_conf.tags, new_conf)
+            new_conf.right_up_win.row_shift = ru_win_new_shift
+            new_conf.right_win.row_shift = r_win_new_shift
+
+            new_conf.right_up_win.set_cursor(ru_win_old_row, new_conf.right_up_win.begin_x)
+            new_conf.right_win.set_cursor(r_win_old_row, new_conf.right_win.begin_x)
+
             result_conf = new_conf
     except Exception as err:
         log("resizing | "+str(err))
@@ -138,11 +154,11 @@ def create_config(screens, windows, config=None):
         config.right_screen = screens["RS"]
         config.down_screen = screens["DS"]
         config.center_screen = screens["CS"]
+        config.right_up_screen = screens["RUS"]
+        config.right_down_screen = screens["RDS"]
     else:
-        config = Config(screens["LS"], screens["RS"], screens["DS"], screens["CS"])
+        config = Config(screens["LS"], screens["RS"], screens["DS"], screens["CS"], screens["RUS"], screens["RDS"])
 
-    config.right_up_screen = screens["RUS"]
-    config.right_down_screen = screens["RDS"]
 
     config.right_win = windows["RW"]
     config.left_win = windows["LW"]

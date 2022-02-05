@@ -25,6 +25,9 @@ def save_tags_to_file(tags):
 
 def tag_management(stdscr, conf):
     curses.curs_set(0)
+    screen = conf.right_down_screen
+    win = conf.right_down_win
+
 
     """ read tags from file """
     if conf.tags: # tag file was already loaded
@@ -33,17 +36,17 @@ def tag_management(stdscr, conf):
         tags = load_tags_from_file(conf.file_to_open)
         conf.right_down_win.set_cursor(0,0)
         if tags is None:
-            log("tag management error")
+            log("unexpected exception while load tags from file")
             conf.set_exit_mode()
             return conf
         else:
             conf.tags = tags
 
-    screen = conf.right_down_screen
-    win = conf.right_down_win
 
     while True:
-        show_tags(screen, win, tags, conf)
+        """ print all screens """
+        conf.update_tagging_data(win, tags)
+        rewrite_all_wins(conf)
 
         key = stdscr.getch()
         try:
@@ -101,7 +104,7 @@ def tag_management(stdscr, conf):
             elif key == curses.KEY_F9: # set filter
                 conf = filter_management(stdscr, screen, win, conf)
                 """ rewrite screen in case that windows were resized during filter mgmnt """
-                show_tags(conf.right_down_screen, conf.right_down_win, tags, conf)
+                # show_tags(conf.right_down_screen, conf.right_down_win, tags, conf)
                 conf.update_tagging_data(win, tags)
                 conf.set_brows_mode()
                 conf.quick_view = True

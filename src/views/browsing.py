@@ -31,9 +31,8 @@ def get_directory_content():
 
 def directory_browsing(stdscr, conf):
     curses.curs_set(0)
+    screen, win = conf.get_screen_for_current_mode()
 
-    screen = conf.left_screen
-    win = conf.left_win
 
     if conf.filter_not_empty():
         cwd = Directory(conf.filter.project, files=conf.filter.files)
@@ -41,30 +40,30 @@ def directory_browsing(stdscr, conf):
         cwd = get_directory_content()
     conf.cwd = cwd
 
-    while True:
-        show_directory_content(screen, win, cwd, conf)
 
-        # show file buffer and tags if quick view is on
+    while True:
+        """ try to load buffer and tag for current file in directory structure """
         if conf.quick_view:
             idx = win.cursor.row
-            if idx >= len(cwd.dirs) and idx < len(cwd):
+            if idx >= len(cwd.dirs) and idx < len(cwd): # selected item is file
                 dirs_and_files = cwd.get_all_items()
                 conf.set_file_to_open(os.path.join(cwd.path, dirs_and_files[idx]))
-                new_conf, buffer, succ = load_buffer_and_tags(conf)
+                new_conf, buffer, succ = load_buffer_and_tags(conf) # try to load file
                 if not succ: # couldnt load buffer and/or fags for current file
                     conf.set_file_to_open(None)
-                    conf.set_brows_mode()
+                    conf.set_brows_mode() # instead of exit mode
                 else:
                     """ calculate line numbers """
                     if conf.line_numbers:
                         new_conf.enable_line_numbers(buffer)
-                        new_conf.right_up_win = resize_win(new_conf.right_up_win, new_conf.line_numbers)
+                        new_conf.right_up_win.set_line_num_shift(len(new_conf.line_numbers)+1)
                     conf = new_conf
-                    show_file_content(conf.right_up_screen, conf.right_up_win, buffer, None, conf, None)
-                    show_tags(conf.right_down_screen, conf.right_down_win, conf.tags, conf)
             else:
                 conf.set_file_to_open(None)
 
+        """ print all screens """
+        conf.update_browsing_data(win, cwd)
+        rewrite_all_wins(conf)
 
         key = stdscr.getch()
 
@@ -72,9 +71,8 @@ def directory_browsing(stdscr, conf):
             # ======================= EXIT =======================
             if key == curses.KEY_F10: # if key F10 doesnt work, use alternative ALT+0
                 conf.update_browsing_data(win, cwd) # save browsing state before exit browsing
-                if show_unsaved_changes_warning(stdscr, conf):
-                    conf.set_exit_mode()
-                    return conf
+                conf.set_exit_mode()
+                return conf
             # ======================= FOCUS =======================
             elif key == curses.ascii.TAB:
                 conf.update_browsing_data(win, cwd)
@@ -112,7 +110,7 @@ def directory_browsing(stdscr, conf):
                 screen, win = conf.left_screen, conf.left_win
             # ======================= F KEYS =======================
             elif key == curses.KEY_F1: # help
-                conf.cwd = cwd
+                conf.update_browsing_data(win, cwd)
                 conf = show_help(stdscr, conf)
                 screen, win = conf.left_screen, conf.left_win
                 curses.curs_set(0)
@@ -128,12 +126,6 @@ def directory_browsing(stdscr, conf):
             elif key == curses.KEY_F3:
                 conf.update_browsing_data(win, cwd)
                 conf.quick_view = not conf.quick_view
-                conf.right_up_win.reset()
-                conf.right_down_win.reset()
-                conf.right_up_screen.erase()
-                conf.right_up_screen.border(0)
-                conf.right_down_screen.erase()
-                conf.right_down_screen.border(0)
             elif key == curses.KEY_F9: # set filter
                 conf = filter_management(stdscr, screen, win, conf)
                 if conf.is_exit_mode():

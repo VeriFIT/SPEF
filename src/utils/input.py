@@ -7,8 +7,6 @@ from modules.directory import Directory
 from modules.window import Window
 from modules.buffer import UserInput
 
-# TODO: premiestnit !!!
-from views.help import rewrite_all_wins
 
 from utils.printing import *
 from utils.screens import *
@@ -39,7 +37,7 @@ def get_user_input(stdscr, conf, title=None):
 
         key = stdscr.getch()
         if key == curses.KEY_F1 or key == ESC:
-            rewrite_all_wins(stdscr, conf)
+            rewrite_all_wins(conf)
             return conf, None
         elif key == curses.KEY_RESIZE:
             conf = resize_all(stdscr, conf)
@@ -53,7 +51,7 @@ def get_user_input(stdscr, conf, title=None):
                 user_input.left(win)
                 user_input.delete_symbol(win)
         elif key == curses.ascii.NL:
-            rewrite_all_wins(stdscr, conf)
+            rewrite_all_wins(conf)
             return conf, user_input.text
         elif curses.ascii.isprint(key):
             user_input.insert_symbol(win, chr(key))
@@ -87,7 +85,9 @@ def get_user_input(stdscr, conf, title=None):
                 win.set_position = position
                 conf.center_screen = screen
                 conf.center_win = win
-                rewrite_all_wins(stdscr, conf)
+                stdscr.erase()
+                stdscr.refresh()
+                rewrite_all_wins(conf)
 
 
 

@@ -21,14 +21,14 @@ from utils.printing import *
 from utils.logger import *
 
 
+# TODO: project config
 SOLUTION_IDENTIFIER = "x[a-z]{5}[0-9]{2}"
 
 
 def file_viewing(stdscr, conf):
     curses.curs_set(1) # set cursor as visible
+    screen, win = conf.get_screen_for_current_mode()
 
-    screen = conf.right_screen if conf.edit_allowed else conf.right_up_screen
-    win = conf.right_win if conf.edit_allowed else conf.right_up_win
 
     if not conf.file_to_open: # there is no file to open and edit
         conf.set_brows_mode()
@@ -77,10 +77,9 @@ def file_viewing(stdscr, conf):
 
 
     while True:
-        """ print current file content """
-        show_file_content(screen, win, buffer, report, conf, user_input if note_entering else None)
-        if not conf.edit_allowed and conf.tags:
-            show_tags(conf.right_down_screen, conf.right_down_win, conf.tags, conf)
+        """ print all screens """
+        conf.update_viewing_data(win, buffer, report)
+        rewrite_all_wins(conf)
 
         try:
             """ move cursor to correct position """
@@ -129,19 +128,16 @@ def file_viewing(stdscr, conf):
             # ======================= EXIT =======================
             if key == curses.KEY_F10:
                 conf.update_viewing_data(win, buffer, report)
-                if show_unsaved_changes_warning(stdscr, conf):
+                if file_changes_are_saved(stdscr, conf):
                     conf.set_exit_mode()
                     return conf
-                else:
-                    continue
             # ======================= FOCUS =======================
             elif key == curses.ascii.TAB:
                 conf.update_viewing_data(win, buffer, report)
                 if conf.edit_allowed:
-                    if show_unsaved_changes_warning(stdscr, conf):
+                    if file_changes_are_saved(stdscr, conf):
                         conf.set_brows_mode()
-                    show_file_content(screen, win, buffer, report, conf)
-                    return conf
+                        return conf
                 else:
                     conf.set_tag_mode()
                     return conf
@@ -157,8 +153,7 @@ def file_viewing(stdscr, conf):
             # ======================= RESIZE =======================
             elif key == curses.KEY_RESIZE:
                 conf = resize_all(stdscr, conf)
-                screen = conf.right_screen if conf.edit_allowed else conf.right_up_screen
-                win = conf.right_win if conf.edit_allowed else conf.right_up_win
+                screen, win = conf.get_screen_for_current_mode()
             else:
                 # ***************************** E.D.I.T *****************************
                 if conf.edit_allowed:
@@ -178,37 +173,27 @@ def file_viewing(stdscr, conf):
                     # ======================= F KEYS =======================
                     elif key == curses.KEY_F1: # help
                         conf = show_help(stdscr, conf)
-                        screen = conf.right_screen if conf.edit_allowed else conf.right_up_screen
-                        win = conf.right_win if conf.edit_allowed else conf.right_up_win
+                        screen, win = conf.get_screen_for_current_mode()
                         curses.curs_set(1)
                     elif key == curses.KEY_F2: # save file
                         save_buffer(conf.file_to_open, buffer, report)
                     elif key == curses.KEY_F3: # change to view/tag mode
                         conf.update_viewing_data(win, buffer, report)
-                        if show_unsaved_changes_warning(stdscr, conf):
+                        if file_changes_are_saved(stdscr, conf):
                             conf.disable_file_edit()
                             return conf
-                        else:
-                            show_file_content(screen, win, buffer, report, conf)
                     elif key == curses.KEY_F4: # add note
                         if report:
                             note_entering = True
                     elif key == curses.KEY_F8: # reload from last save
                         conf.update_viewing_data(win, buffer, report)
                         exit_key = (curses.KEY_F8, "F8")
-                        if show_unsaved_changes_warning(stdscr, conf, RELOAD_FILE_WITHOUT_SAVING, exit_key):
+                        if file_changes_are_saved(stdscr, conf, RELOAD_FILE_WITHOUT_SAVING, exit_key):
                             buffer.lines = buffer.last_save.copy()
                             if report:
                                 report.code_review = report.last_save.copy()
                     elif key == curses.KEY_F9: # set filter
                         conf = filter_management(stdscr, screen, win, conf)
-                        """ rewrite screen in case that windows were resized during filter mgmnt - bcs line numbers were set / unset """
-                        screen = conf.right_screen if conf.edit_allowed else conf.right_up_screen
-                        win = conf.right_win if conf.edit_allowed else conf.right_up_win
-                        show_file_content(screen, win, buffer, report, conf, user_input if note_entering else None)
-                        if not conf.edit_allowed:
-                            show_tags(conf.right_down_screen, conf.right_down_win, conf.tags, conf)
-
                         conf.update_viewing_data(win, buffer, report)
                         conf.set_brows_mode()
                         conf.quick_view = True
@@ -276,13 +261,7 @@ def file_viewing(stdscr, conf):
                         return conf
                     elif key == curses.KEY_F9: # set filter
                         conf = filter_management(stdscr, screen, win, conf)
-                        """ rewrite screen in case that windows were resized during filter mgmnt """
-                        screen = conf.right_screen if conf.edit_allowed else conf.right_up_screen
-                        win = conf.right_win if conf.edit_allowed else conf.right_up_win
-                        show_file_content(screen, win, buffer, report, conf, user_input if note_entering else None)
-                        if not conf.edit_allowed:
-                            show_tags(conf.right_down_screen, conf.right_down_win, conf.tags, conf)
-
+                        screen, win = conf.get_screen_for_current_mode()
                         conf.update_viewing_data(win, buffer, report)
                         conf.set_brows_mode()
                         conf.quick_view = True

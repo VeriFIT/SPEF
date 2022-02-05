@@ -27,7 +27,7 @@ def show_help(stdscr, conf, filter_mode=False):
 
         key = stdscr.getch()
         if key == curses.KEY_F1 or key == ESC:
-            rewrite_all_wins(stdscr, conf)
+            rewrite_all_wins(conf)
             return conf
         elif key == curses.KEY_RESIZE:
             conf = resize_all(stdscr, conf)
@@ -43,14 +43,14 @@ def show_help(stdscr, conf, filter_mode=False):
                 c_win_h = win.end_y - win.begin_y + 1
                 c_win_y = win.begin_y
                 c_win_x = win.begin_x
-                if hex(key) == "0x222": # move left
+                if hex(key) == "0x222": # move window to the left side
                     if position == 2:
                         position = 1
                         c_win_x = 0
                     elif position == 3:
                         position = 2
                         c_win_x = int(c_win_w/2)
-                elif hex(key) == "0x231": # move right
+                elif hex(key) == "0x231": # move window to the right side
                     if position == 1:
                         position = 2
                         c_win_x = int(c_win_w/2)
@@ -60,17 +60,5 @@ def show_help(stdscr, conf, filter_mode=False):
 
                 screen = curses.newwin(c_win_h, c_win_w, c_win_y, c_win_x)
                 win = Window(c_win_h, c_win_w, c_win_y, c_win_x)
-                rewrite_all_wins(stdscr, conf)
-
-
-def rewrite_all_wins(stdscr, conf):
-    refresh_main_screens(stdscr, conf)
-    cwd = Directory(conf.filter.project, files=conf.filter.files) if conf.filter_not_empty() else conf.cwd
-    show_directory_content(conf.left_screen, conf.left_win, cwd, conf)
-
-    view_screen = conf.right_screen if conf.edit_allowed else conf.right_up_screen
-    view_win = conf.right_win if conf.edit_allowed else conf.right_up_win
-    show_file_content(view_screen, view_win, conf.buffer, conf.report, conf, None)
-    if not conf.edit_allowed and conf.tags:
-        show_tags(conf.right_down_screen, conf.right_down_win, conf.tags, conf)
+                rewrite_all_wins(conf)
 

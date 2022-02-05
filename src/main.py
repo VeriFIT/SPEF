@@ -70,12 +70,15 @@ def main(stdscr):
     stdscr.bkgd(' ', bkgd_color)
 
     """ show all main screens """
-    refresh_main_screens(stdscr, config)
+    stdscr.erase()
+    stdscr.refresh()
+    refresh_main_screens(config)
 
     """ get current files and dirs """
     config.cwd = get_directory_content()
 
     while True:
+
         print_hint(config)
         if config.is_exit_mode():
             break

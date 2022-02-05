@@ -11,10 +11,11 @@ koniec riadku   len(buffer[self.row - win.begin_y]) + win.begin_x
 
 """
 
-# TODO: odstranit EDGE global !!!
 
 LEFT_EDGE = 2
 RIGHT_EDGE = 2
+TOP_EDGE = 1
+BOTTOM_EDGE = 1 # ak chces posuvat okno az ked je kurzor na poslednom riadku, nastav na 0
 
 
 class Cursor:
@@ -66,7 +67,7 @@ class Cursor:
 
 class Window:
     def __init__(self, height, width, begin_y, begin_x, border=0, line_num_shift=None):
-        """ position / location """
+        """ location """
         self.begin_y = begin_y+border # height (max_rows = end_y - begin_y)
         self.begin_x = begin_x+border # width (max_cols = end_x - begin_x)
         self.end_y = begin_y+border + height - 1
@@ -74,7 +75,7 @@ class Window:
 
         self.border = border
         self.line_num_shift = line_num_shift
-        self.position = 2
+        self.position = 2 # for center window (position left (1), middle (2), right (3))
 
         """ shift position """
         self.row_shift = 0 # y
@@ -96,9 +97,8 @@ class Window:
 
         """ window shift """
         self.horizontal_shift()
-        if (self.cursor.row - self.begin_y == self.row_shift - 1 ) and (self.row_shift > 0):
+        if (self.cursor.row - self.begin_y - TOP_EDGE == self.row_shift - 1 ) and (self.row_shift > 0):
             self.row_shift -= 1
-
 
     def down(self, buffer, filter_on=False, use_restrictions=True):
         self.cursor.down(buffer, self, use_restrictions)
@@ -106,7 +106,7 @@ class Window:
         """ window shift """
         self.horizontal_shift()
         bottom = self.bottom - (1 if filter_on else 0)
-        if (self.cursor.row == bottom) and (self.cursor.row - self.begin_y < len(buffer)):
+        if (self.cursor.row == bottom - BOTTOM_EDGE) and (self.cursor.row - self.begin_y + BOTTOM_EDGE < len(buffer)):
             self.row_shift += 1
 
 
@@ -159,6 +159,12 @@ class Window:
 
     def set_cursor(self, begin_y, begin_x):
         self.cursor = Cursor(row=begin_y,col=begin_x)
+
+    def set_line_num_shift(self, shift):
+        self.line_num_shift = shift
+        self.begin_x += shift
+        self.col_shift = 0
+        self.cursor.col = 0
 
     def set_position(self, pos):
         self.position = pos
