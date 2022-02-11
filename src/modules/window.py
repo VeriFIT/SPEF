@@ -1,6 +1,9 @@
 import time
 
+
 from utils.logger import *
+from utils.printing import TAB_SIZE
+
 
 """
 -Window reprezentuje zobrazovane okno (view win) v obrazovke (screen)
@@ -82,7 +85,9 @@ class Window:
         self.col_shift = 0 # x
 
         """ cursor """
-        self.cursor = Cursor(self.begin_y,self.begin_x)
+        self.cursor = Cursor(self.begin_y,self.begin_x) # for working with buffer
+        self.tab_col = self.cursor.col # for correct visual (bcs of tabs in buffer)
+        self.tab_shift = 0
 
     @property
     def bottom(self):
@@ -113,6 +118,14 @@ class Window:
     def left(self, buffer):
         self.cursor.left(buffer, self)
 
+        row = self.cursor.row - self.begin_y
+        col = self.cursor.col - self.begin_x
+        current_line = buffer.lines[row]
+        if current_line[col] == "\t":
+            self.tab_shift -= (TAB_SIZE-1)
+
+        # self.calculate_tab_shift(buffer)
+
         """ window shift """
         self.horizontal_shift()
         if (self.cursor.row == self.row_shift + 1) and (self.row_shift > 0):
@@ -126,6 +139,18 @@ class Window:
 
     def right(self, buffer, filter_on=False):
         self.cursor.right(buffer, self)
+
+        # row = self.cursor.row - self.begin_y
+        # col = self.cursor.col - self.begin_x
+        # current_line = buffer.lines[row]
+        # if current_line[col] == "\t":
+        #     self.tab_shift += (TAB_SIZE-1) # -1 bcs cursor.right move cursor +1 already
+
+        self.calculate_tab_shift(buffer)
+
+        # cnt = self.tab_shift 
+        # if (self.tab_shift > 0):
+            # self.tab_shift -= 1
 
         """ window shift """
         self.horizontal_shift()
@@ -151,10 +176,20 @@ class Window:
         self.row_shift = pages * shift
 
 
+    def calculate_tab_shift(self, buffer):
+        row = self.cursor.row - self.begin_y
+        col = self.cursor.col - self.begin_x
+
+        current_line = buffer.lines[row]
+        tab_count = current_line.count("\t", 0, col)
+        self.tab_shift = (TAB_SIZE-1)*tab_count # -1 cursor shift (right/left) correction
+
+
     def get_cursor_position(self):
         new_col = self.cursor.col - self.col_shift - (1 if self.col_shift > 0 else 0)
         new_row = self.cursor.row - self.row_shift
-        return new_row, new_col
+        return new_row, new_col + self.tab_shift
+
 
 
     def set_cursor(self, begin_y, begin_x):

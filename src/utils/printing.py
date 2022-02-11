@@ -10,6 +10,8 @@ from utils.logger import *
 
 ESC = 27
 
+TAB_SIZE = 4
+
 """ CONFIGURABLE VARIABLES """
 EMPTY_PATH_FILTER = "add path filter... ex: test1/unit_*.* "
 EMPTY_CONTENT_FILTER = "add content filter... ex: def test1 "
@@ -457,6 +459,20 @@ def show_file_content(conf):
                     break
                 # if (user_input is not None) and (row == max_rows-1):
                     # break
+
+                """ replace tab with spaces in line """
+                # new_line = ""
+                # for ch in line:
+                    # if ch == '\t':
+                        # new_line += " "*TAB_SIZE
+                    # else:
+                        # new_line += ch
+                # line = new_line
+
+                """ replace tab with spaces in line """
+                line = line.replace("\t", " "*TAB_SIZE)
+
+
                 if (row + win.begin_y == win.cursor.row - win.row_shift) and (win.col_shift > 0):
                     line = line[win.col_shift + 1:]
                 if len(line) > max_cols - 1:
@@ -467,6 +483,7 @@ def show_file_content(conf):
                     color = curses.color_pair(NOTE_HIGHLIGHT)            
                 else:
                     color = curses.A_NORMAL
+
 
                 """ print line """
                 if conf.line_numbers: # row+1 bcs row starts from 0
