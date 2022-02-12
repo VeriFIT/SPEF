@@ -144,12 +144,16 @@ def file_viewing(stdscr, conf):
             # ======================= ARROWS =======================
             elif key == curses.KEY_UP:
                 win.up(buffer, use_restrictions=True)
+                win.calculate_tab_shift(buffer)
             elif key == curses.KEY_DOWN:
                 win.down(buffer, filter_on=conf.content_filter_on(), use_restrictions=True)
+                win.calculate_tab_shift(buffer)
             elif key == curses.KEY_LEFT:
                 win.left(buffer)
+                win.calculate_tab_shift(buffer)
             elif key == curses.KEY_RIGHT:
                 win.right(buffer, filter_on=conf.content_filter_on())
+                win.calculate_tab_shift(buffer)
             # ======================= RESIZE =======================
             elif key == curses.KEY_RESIZE:
                 conf = resize_all(stdscr, conf)

@@ -6,6 +6,10 @@ import re
 from utils.logger import *
 
 
+# from utils.printing import TAB_SIZE
+
+TAB_SIZE = 4
+
 
 """
 data = {'documentation': ['ok'],
@@ -201,6 +205,12 @@ class Buffer:
 
     def __getitem__(self, index):
         return self.lines[index]
+
+    def line_length(self, index):
+        line = self.lines[index]
+        tmp_line = line.replace("\t", " "*TAB_SIZE)
+        return len(tmp_line)
+
 
     def set_save_status(self, status):
         self.is_saved = status
