@@ -1,5 +1,5 @@
 import os
-
+import yaml
 
 from utils.logger import *
 
@@ -13,48 +13,33 @@ EXIT = -1
 PROJ_DIR = "subjectA/projectA"
 # PROJ_DIR = "subject1/2021/project"
 
-class Screens:
-    def __init__(self, left, right, down, center, right_up, right_down):
-        self.left = left
-        self.right = right
-        self.down = down # for hint
-        self.center = center
-        self.right_up = right_up
-        self.right_down = right_down
 
-class Windows:
-    def __init__(self, left, right, center, right_up, right_down):
-        self.left = left
-        self.right = right
-        self.center = center
-        self.right_up = right_up
-        self.right_down = right_down
+""" current framework environment """
+class Environment:
+    def __init__(self, screens, windows, conf):
+
+        """ screens and windows """
+        self.screens = screens
+        self.windows = windows
+
+        self.win_left_edge, self.win_right_edge = conf['window']['left_edge'], conf['window']['right_edge']
+        self.win_top_edge, self.win_bottom_edge = conf['window']['top_edge'], conf['window']['bottom_edge']
+        self.windows.set_edges(self.win_left_edge, self.win_right_edge, self.win_top_edge, self.win_bottom_edge)
+        self.windows.center.position = conf['window']['position']
 
 
+        """ environment """
+        self.mode = conf['env']['mode']
+        self.quick_view = conf['env']['quick_view']
+        self.edit_allowed = conf['env']['edit_allowed']
+        self.note_highlight = conf['env']['note_highlight']
+        self.show_cached_files = conf['env']['show_cached_files'] # files for tags and report
 
-class Config:
-    def __init__(self, left_screen, right_screen, down_screen, center_screen, right_up_screen, right_down_screen):
-        self.left_screen = left_screen
-        self.right_screen = right_screen
-        self.down_screen = down_screen # for hint
-        self.center_screen = center_screen
-        self.right_up_screen = right_up_screen
-        self.right_down_screen = right_down_screen
+        self.tab_size = conf['editor']['tab_size']
+        self.messages = conf['messages'] # {'empty_path_filter': txt, 'empty_tag_filter': txt, ... }
 
-        """ view window """
-        self.left_win = None
-        self.right_win = None
-        self.center_win = None
-        self.right_up_win = None
-        self.right_down_win = None
-
-        self.mode = BROWS # start with browsing directory
         self.show_menu = False
-        self.quick_view = True
-        self.edit_allowed = False
-        self.note_highlight = True
         self.line_numbers = None # None or str(number_of_lines_in_buffer)
-        self.show_cached_files = False # files for tags and report
 
         self.file_to_open = None
         self.cwd = None # Directory(path, dirs, files)
@@ -66,18 +51,19 @@ class Config:
         self.filter = None # Filter()
         self.filtered_files = None # Directory(path, [], files)
 
+
     def get_all_screens(self):
-        screens = {"LS": self.left_screen, "RS": self.right_screen, "DS": self.down_screen,
-                "CS": self.center_screen, "RUS": self.right_up_screen, "RDS": self.right_down_screen}
+        screens = {"LS": self.screens.left, "RS": self.screens.right, "DS": self.screens.down,
+                "CS": self.screens.center, "RUS": self.screens.right_up, "RDS": self.screens.right_down}
         return screens
 
     def get_visible_screens(self):
-        screens = {"LS": self.left_screen, "RS": self.right_screen, "DS": self.down_screen} # main screens
+        screens = {"LS": self.screens.left, "RS": self.screens.right, "DS": self.screens.down} # main screens
         if not self.edit_allowed:
-            screens["RUS"] = self.right_up_screen
-            screens["RDS"] = self.right_down_screen
+            screens["RUS"] = self.screens.right_up
+            screens["RDS"] = self.screens.right_down
         if self.show_menu:
-            screens["CS"] = self.center_screen
+            screens["CS"] = self.screens.center
         return screens
 
 
@@ -92,20 +78,23 @@ class Config:
         if self.file_to_open != file_to_open:
             self.file_to_open = file_to_open
             if self.edit_allowed:
-                self.right_win.reset()
+                self.windows.right.reset()
             else:
-                self.right_up_win.reset()
+                self.windows.right_up.reset()
+            self.windows.right_down.reset_shifts()
+            self.windows.right_down.set_cursor(0,0)
+
 
     def get_screen_for_current_mode(self):
         if self.is_brows_mode():
-            return self.left_screen, self.left_win
+            return self.screens.left, self.windows.left
         if self.is_view_mode():
             if self.edit_allowed:
-                return self.right_screen, self.right_win
+                return self.screens.right, self.windows.right
             else:
-                return self.right_up_screen, self.right_up_win
+                return self.screens.right_up, self.windows.right_up
         if self.is_tag_mode():
-            return self.right_down_screen, self.right_down_win
+            return self.screens.right_down, self.windows.right_down
 
     """ filter """
     def filter_not_empty(self):
@@ -134,20 +123,20 @@ class Config:
 
     """ update data """
     def update_browsing_data(self, win, cwd):
-        self.left_win = win
+        self.windows.left = win
         self.cwd = cwd
 
     def update_viewing_data(self, win, buffer, report=None):
         if self.edit_allowed:
-            self.right_win = win
+            self.windows.right = win
         else:
-            self.right_up_win = win
+            self.windows.right_up = win
         self.buffer = buffer
         if report:
             self.report = report
 
     def update_tagging_data(self, win, tags):
-        self.right_down_win = win
+        self.windows.right_down = win
         self.tags = tags
 
 

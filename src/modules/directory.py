@@ -4,10 +4,9 @@ import fnmatch
 import json
 import re
 
-from modules.buffer import Tags
+from modules.buffer import Tags, UserInput
 from utils.loading import load_tags_from_file
 from utils.logger import *
-
 
 
 """ represents content of current working directory (cwd)"""
@@ -76,7 +75,7 @@ class Filter:
 
 
     """ search for files with match of all set filters in project directory """
-    def find_files(self, conf):
+    def find_files(self, env):
         matches = []
 
         if self.path:
@@ -108,22 +107,22 @@ class Filter:
 
 
     """ remove filter according to current mode (ex: if broswing, remove filter by path) """
-    def reset_by_current_mode(self, conf):
-        if conf.is_brows_mode():
+    def reset_by_current_mode(self, env):
+        if env.is_brows_mode():
             self.path = None
-        if conf.is_view_mode():
+        if env.is_view_mode():
             self.content = None
-        if conf.is_tag_mode():
+        if env.is_tag_mode():
             self.tag = None
 
 
     """ set filter according to current mode """
-    def add_by_current_mode(self, conf, text):
-        if conf.is_brows_mode():
+    def add_by_current_mode(self, env, text):
+        if env.is_brows_mode():
             self.path = text
-        if conf.is_view_mode():
+        if env.is_view_mode():
             self.content = text
-        if conf.is_tag_mode():
+        if env.is_tag_mode():
             self.tag = text
 
 
@@ -192,11 +191,12 @@ def get_files_by_tag(files, tag):
                     tag_parsing_ok = True
 
         if not tag_parsing_ok:
-            user_input = UserInput()
-            user_input.text = "invalid input for tag filter... press F1 to see how to use tag filter "
-            max_cols = conf.right_down_win.end_x - conf.right_down_win.begin_x
-            max_rows = conf.right_down_win.end_y - conf.right_down_win.begin_y - 1
-            show_filter(conf.right_down_screen, user_input, max_rows, max_cols, conf)
+            # user_input = UserInput()
+            # user_input.text = "invalid input for tag filter... press F1 to see how to use tag filter "
+            # max_cols = env.windows.right_down.end_x - env.windows.right_down.begin_x
+            # max_rows = env.windows.right_down.end_y - env.windows.right_down.begin_y - 1
+            # show_filter(env.screens.right_down, user_input, max_rows, max_cols, env)
+            return files
         else:
             for file_path in files:
                 tags = load_tags_from_file(file_path)

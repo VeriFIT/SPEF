@@ -1,0 +1,19 @@
+env:
+  mode: 1 # 1 BROWS, 2 VIEW, 3 TAG, -1 EXIT
+  quick_view: True
+  edit_allowed: False
+  note_highlight: True
+  show_cached_files: False
+
+window:
+  position: 2 # 1 left, 2 center, 3 right
+  left_edge: 2
+  right_edge: 2
+  top_edge: 1
+  bottom_edge: 1
+editor:
+  tab_size: 4
+messages:
+  empty_path_filter: "add path filter... ex: test1/unit_*.* "
+  empty_content_filter: "add content filter... ex: def test1 "
+  empty_tag_filter: "add tag filter... ex: #plagiat(^[0-5]$) "

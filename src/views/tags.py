@@ -23,63 +23,63 @@ def save_tags_to_file(tags):
 
 
 
-def tag_management(stdscr, conf):
+def tag_management(stdscr, env):
     curses.curs_set(0)
-    screen = conf.right_down_screen
-    win = conf.right_down_win
+    screen = env.screens.right_down
+    win = env.windows.right_down
 
 
     """ read tags from file """
-    if conf.tags: # tag file was already loaded
-        tags = conf.tags
+    if env.tags: # tag file was already loaded
+        tags = env.tags
     else:
-        tags = load_tags_from_file(conf.file_to_open)
-        conf.right_down_win.set_cursor(0,0)
+        tags = load_tags_from_file(env.file_to_open)
+        env.windows.right_down.set_cursor(0,0)
         if tags is None:
             log("unexpected exception while load tags from file")
-            conf.set_exit_mode()
-            return conf
+            env.set_exit_mode()
+            return env
         else:
-            conf.tags = tags
+            env.tags = tags
 
 
     while True:
         """ print all screens """
-        conf.update_tagging_data(win, tags)
-        rewrite_all_wins(conf)
+        env.update_tagging_data(win, tags)
+        rewrite_all_wins(env)
 
         key = stdscr.getch()
         try:
             # ======================= EXIT =======================
             if key == curses.KEY_F10:
                 tags.save_to_file()
-                conf.update_tagging_data(win, tags)
-                conf.set_exit_mode()
-                return conf
+                env.update_tagging_data(win, tags)
+                env.set_exit_mode()
+                return env
             # ======================= FOCUS =======================
             elif key == curses.ascii.TAB:
                 tags.save_to_file()
-                conf.update_tagging_data(win, tags)
-                conf.set_brows_mode()
-                return conf
+                env.update_tagging_data(win, tags)
+                env.set_brows_mode()
+                return env
             # ======================= RESIZE =======================
             elif key == curses.KEY_RESIZE:
-                conf = resize_all(stdscr, conf)
-                screen, win = conf.right_down_screen, conf.right_down_win
+                env = resize_all(stdscr, env)
+                screen, win = env.screens.right_down, env.windows.right_down
             # ======================= ARROWS =======================
             elif key == curses.KEY_UP:
                 win.up(tags, use_restrictions=False)
             elif key == curses.KEY_DOWN:
-                win.down(tags, filter_on=conf.tag_filter_on(), use_restrictions=False)
+                win.down(tags, filter_on=env.tag_filter_on(), use_restrictions=False)
             # ======================= F KEYS =======================
             elif key == curses.KEY_F1: # help
-                conf = show_help(stdscr, conf)
-                screen, win = conf.right_down_screen, conf.right_down_win
+                env = show_help(stdscr, env)
+                screen, win = env.screens.right_down, env.windows.right_down
                 curses.curs_set(0)
             # elif key == curses.KEY_F2: # edit current tag
             elif key == curses.KEY_F3: # create new tag
                 title = "Enter new tag in format: tag_name param1 param2 ..."
-                conf, text = get_user_input(stdscr, conf, title=title)
+                env, text = get_user_input(stdscr, env, title=title)
                 curses.curs_set(0)
                 if text is not None:
                     tag_parts = ''.join(text).split()
@@ -90,28 +90,27 @@ def tag_management(stdscr, conf):
                         tags.set_tag(tag_name, args)
                         tags.save_to_file()
             elif key == curses.KEY_F4: # open tags file for edit
-                conf.update_tagging_data(win, tags)
+                env.update_tagging_data(win, tags)
                 if not os.path.exists(tags.path):
                     with open(tags.path, 'a+') as f: pass
-                conf.set_view_mode()
-                conf.enable_file_edit()
-                conf.set_file_to_open(tags.path)
-                return conf
+                env.set_view_mode()
+                env.enable_file_edit()
+                env.set_file_to_open(tags.path)
+                return env
             elif key == curses.KEY_F8: # delete current tag
                 tags.remove_tag_by_idx(win.cursor.row)
                 tags.save_to_file()
                 win.up(tags, use_restrictions=False)
             elif key == curses.KEY_F9: # set filter
-                conf = filter_management(stdscr, screen, win, conf)
-                """ rewrite screen in case that windows were resized during filter mgmnt """
-                # show_tags(conf.right_down_screen, conf.right_down_win, tags, conf)
-                conf.update_tagging_data(win, tags)
-                conf.set_brows_mode()
-                conf.quick_view = True
-                conf.left_win.reset_shifts()
-                conf.left_win.set_cursor(0,0)
-                return conf
+                env = filter_management(stdscr, screen, win, env)
+
+                env.update_tagging_data(win, tags)
+                env.set_brows_mode()
+                env.quick_view = True
+                env.windows.left.reset_shifts()
+                env.windows.left.set_cursor(0,0)
+                return env
         except Exception as err:
             log("tagging | "+str(err))
-            conf.set_exit_mode()
-            return conf
+            env.set_exit_mode()
+            return env

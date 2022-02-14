@@ -10,23 +10,23 @@ from utils.printing import *
 from utils.logger import *
 
 
-def filter_management(stdscr, screen, win, conf):
+def filter_management(stdscr, screen, win, env):
     curses.curs_set(1)
 
     user_input = UserInput()
-    if conf.is_brows_mode() and conf.path_filter_on():
-        user_input.text = list(conf.filter.path)
-    elif conf.is_view_mode() and conf.content_filter_on():
-        user_input.text = list(conf.filter.content)
-    elif conf.is_tag_mode() and conf.tag_filter_on():
-        user_input.text = list(conf.filter.tag)
+    if env.is_brows_mode() and env.path_filter_on():
+        user_input.text = list(env.filter.path)
+    elif env.is_view_mode() and env.content_filter_on():
+        user_input.text = list(env.filter.content)
+    elif env.is_tag_mode() and env.tag_filter_on():
+        user_input.text = list(env.filter.tag)
 
 
-    if not conf.filter:
-        project_path = conf.get_project_path()
-        conf.filter = Filter(project_path)
+    if not env.filter:
+        project_path = env.get_project_path()
+        env.filter = Filter(project_path)
 
-    print_hint(conf, filter_mode=True)
+    print_hint(env, filter_mode=True)
 
     while True:
         try:
@@ -34,11 +34,11 @@ def filter_management(stdscr, screen, win, conf):
             """ show user input """
             max_cols = win.end_x - win.begin_x
             max_rows = win.end_y - win.begin_y - 1
-            show_filter(screen, user_input, max_rows, max_cols, conf)
+            show_filter(screen, user_input, max_rows, max_cols, env)
 
             shifted_pointer = user_input.get_shifted_pointer()
             new_row, new_col = win.last_row, win.begin_x+1-win.border+shifted_pointer
-            if conf.line_numbers and conf.is_view_mode():
+            if env.line_numbers and env.is_view_mode():
                 new_col -= win.line_num_shift
             stdscr.move(new_row, new_col)
 
@@ -48,19 +48,19 @@ def filter_management(stdscr, screen, win, conf):
             if key in (curses.ascii.ESC, curses.KEY_F10): # exit filter management
                 user_input.reset()
                 curses.curs_set(0)
-                return conf
+                return env
             elif key == curses.KEY_RESIZE:
-                conf = resize_all(stdscr, conf)
-                screen, win = conf.get_screen_for_current_mode()
+                env = resize_all(stdscr, env)
+                screen, win = env.get_screen_for_current_mode()
             elif key == curses.KEY_F8: # remove all filters
-                # conf.filter.reset_by_current_mode(conf)
-                conf.filter.reset_all()
-                conf.filter.find_files(conf)
+                # env.filter.reset_by_current_mode(env)
+                env.filter.reset_all()
+                env.filter.find_files(env)
                 user_input.reset()
                 curses.curs_set(0)
-                return conf
+                return env
             elif key == curses.KEY_F1: # help
-                show_help(stdscr, conf, filter_mode=True)
+                show_help(stdscr, env, filter_mode=True)
                 curses.curs_set(1)
             # ============ edit user input ============
             elif key == curses.KEY_LEFT:
@@ -84,12 +84,12 @@ def filter_management(stdscr, screen, win, conf):
                 user_input.insert_symbol(win, chr(key))
             elif key == curses.ascii.NL: # enter filter
                 text = ''.join(user_input.text)
-                conf.filter.add_by_current_mode(conf, text)
-                conf.filter.find_files(conf)
+                env.filter.add_by_current_mode(env, text)
+                env.filter.find_files(env)
                 user_input.reset()
                 curses.curs_set(0)
-                return conf
+                return env
         except Exception as err:
             log("filter management | "+str(err))
-            conf.set_exit_mode()
-            return conf
+            env.set_exit_mode()
+            return env

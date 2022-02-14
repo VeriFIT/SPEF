@@ -16,11 +16,11 @@ from utils.logger import *
 ESC = 27
 
 
-def get_user_input(stdscr, conf, title=None):
+def get_user_input(stdscr, env, title=None):
     curses.curs_set(1)
 
-    screen = conf.center_screen
-    win = conf.center_win
+    screen = env.screens.center
+    win = env.windows.center
     position = win.position
 
     user_input = UserInput()
@@ -31,18 +31,18 @@ def get_user_input(stdscr, conf, title=None):
         max_rows = win.end_y - win.begin_y
         color = curses.color_pair(TAG_MGMT)
 
-        row, col = show_user_input(screen, user_input, max_rows, max_cols, conf, color=color, title=title)
+        row, col = show_user_input(screen, user_input, max_rows, max_cols, env, color=color, title=title)
         stdscr.move(win.begin_y + row, win.begin_x + col)
 
 
         key = stdscr.getch()
         if key == curses.KEY_F1 or key == ESC:
-            rewrite_all_wins(conf)
-            return conf, None
+            rewrite_all_wins(env)
+            return env, None
         elif key == curses.KEY_RESIZE:
-            conf = resize_all(stdscr, conf)
-            screen = conf.center_screen
-            win = conf.center_win
+            env = resize_all(stdscr, env)
+            screen = env.screens.center
+            win = env.windows.center
         # ======================= INPUT =======================
         elif key == curses.KEY_DC:
             user_input.delete_symbol(win)
@@ -51,8 +51,8 @@ def get_user_input(stdscr, conf, title=None):
                 user_input.left(win)
                 user_input.delete_symbol(win)
         elif key == curses.ascii.NL:
-            rewrite_all_wins(conf)
-            return conf, user_input.text
+            rewrite_all_wins(env)
+            return env, user_input.text
         elif curses.ascii.isprint(key):
             user_input.insert_symbol(win, chr(key))
         elif curses.ascii.ismeta(key):
@@ -83,11 +83,11 @@ def get_user_input(stdscr, conf, title=None):
                 screen = curses.newwin(c_win_h, c_win_w, c_win_y, c_win_x)
                 win = Window(c_win_h, c_win_w, c_win_y, c_win_x)
                 win.set_position = position
-                conf.center_screen = screen
-                conf.center_win = win
+                env.screens.center = screen
+                env.windows.center = win
                 stdscr.erase()
                 stdscr.refresh()
-                rewrite_all_wins(conf)
+                rewrite_all_wins(env)
 
 
 

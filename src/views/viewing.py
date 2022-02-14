@@ -25,68 +25,69 @@ from utils.logger import *
 SOLUTION_IDENTIFIER = "x[a-z]{5}[0-9]{2}"
 
 
-def file_viewing(stdscr, conf):
+def file_viewing(stdscr, env):
     curses.curs_set(1) # set cursor as visible
-    screen, win = conf.get_screen_for_current_mode()
+    screen, win = env.get_screen_for_current_mode()
 
 
-    if not conf.file_to_open: # there is no file to open and edit
-        conf.set_brows_mode()
-        return conf
+    if not env.file_to_open: # there is no file to open and edit
+        env.set_brows_mode()
+        return env
 
 
     """ try load file content and tags """
-    conf, buffer, succ = load_buffer_and_tags(conf)
+    env, buffer, succ = load_buffer_and_tags(env)
     if not succ:
-        return conf
+        return env
 
 
     """ try load code review to report  """
     report_already_loaded = False
-    conf.note_highlight = False
+    env.note_highlight = False
     report = None
     if buffer.path.startswith(HOME): # opened file is some file from students projects
-        project_path = conf.get_project_path()
+        project_path = env.get_project_path()
         file_login = os.path.relpath(buffer.path, project_path).split(os.sep)[0]
         report_file = get_report_file_name(buffer.path)
         login_match = bool(re.match(SOLUTION_IDENTIFIER, file_login))
         if login_match:
-            conf.note_highlight = True
-            if conf.report:
-                if conf.report.path == report_file:
+            env.note_highlight = True
+            if env.report:
+                if env.report.path == report_file:
                     report_already_loaded = True
-                    report = conf.report
-            if not conf.report or not report_already_loaded:
+                    report = env.report
+            if not env.report or not report_already_loaded:
                 # try get report for file in buffer
                 try:
                     report = load_report_from_file(buffer.path)
-                    conf.report = report
+                    env.report = report
                 except Exception as err:
                     log("load file report | "+str(err))
-                    conf.set_exit_mode()
-                    return conf
+                    env.set_exit_mode()
+                    return env
 
     note_entering = False
     user_input = UserInput()
 
     """ calculate line numbers """
-    if conf.line_numbers:
-        conf.enable_line_numbers(buffer)
-        conf = resize_all(stdscr, conf, True)
-        win = conf.right_win if conf.edit_allowed else conf.right_up_win
+    if env.line_numbers:
+        env.enable_line_numbers(buffer)
+        env = resize_all(stdscr, env, True)
+        win = env.windows.right if env.edit_allowed else env.windows.right_up
+        win.set_line_num_shift(len(env.line_numbers)+1)
 
 
     while True:
         """ print all screens """
-        conf.update_viewing_data(win, buffer, report)
-        rewrite_all_wins(conf)
+        env.update_viewing_data(win, buffer, report)
+        rewrite_all_wins(env)
 
         try:
             """ move cursor to correct position """
             if note_entering:
                 shifted_pointer = user_input.get_shifted_pointer()
                 new_row, new_col = win.last_row, win.begin_x+1-win.border+shifted_pointer
-                if conf.line_numbers:
+                if env.line_numbers:
                     new_col -= win.line_num_shift
                 stdscr.move(new_row, new_col)
             else:
@@ -94,8 +95,8 @@ def file_viewing(stdscr, conf):
                 stdscr.move(new_row, new_col)
         except Exception as err:
             log("move cursor | "+str(err))
-            conf.set_exit_mode()
-            return conf
+            env.set_exit_mode()
+            return env
 
         key = stdscr.getch()
 
@@ -127,40 +128,40 @@ def file_viewing(stdscr, conf):
         try:
             # ======================= EXIT =======================
             if key == curses.KEY_F10:
-                conf.update_viewing_data(win, buffer, report)
-                if file_changes_are_saved(stdscr, conf):
-                    conf.set_exit_mode()
-                    return conf
+                env.update_viewing_data(win, buffer, report)
+                if file_changes_are_saved(stdscr, env):
+                    env.set_exit_mode()
+                    return env
             # ======================= FOCUS =======================
             elif key == curses.ascii.TAB:
-                conf.update_viewing_data(win, buffer, report)
-                if conf.edit_allowed:
-                    if file_changes_are_saved(stdscr, conf):
-                        conf.set_brows_mode()
-                        return conf
+                env.update_viewing_data(win, buffer, report)
+                if env.edit_allowed:
+                    if file_changes_are_saved(stdscr, env):
+                        env.set_brows_mode()
+                        return env
                 else:
-                    conf.set_tag_mode()
-                    return conf
+                    env.set_tag_mode()
+                    return env
             # ======================= ARROWS =======================
             elif key == curses.KEY_UP:
                 win.up(buffer, use_restrictions=True)
-                win.calculate_tab_shift(buffer)
+                win.calculate_tab_shift(buffer, env.tab_size)
             elif key == curses.KEY_DOWN:
-                win.down(buffer, filter_on=conf.content_filter_on(), use_restrictions=True)
-                win.calculate_tab_shift(buffer)
+                win.down(buffer, filter_on=env.content_filter_on(), use_restrictions=True)
+                win.calculate_tab_shift(buffer, env.tab_size)
             elif key == curses.KEY_LEFT:
                 win.left(buffer)
-                win.calculate_tab_shift(buffer)
+                win.calculate_tab_shift(buffer, env.tab_size)
             elif key == curses.KEY_RIGHT:
-                win.right(buffer, filter_on=conf.content_filter_on())
-                win.calculate_tab_shift(buffer)
+                win.right(buffer, filter_on=env.content_filter_on())
+                win.calculate_tab_shift(buffer, env.tab_size)
             # ======================= RESIZE =======================
             elif key == curses.KEY_RESIZE:
-                conf = resize_all(stdscr, conf)
-                screen, win = conf.get_screen_for_current_mode()
+                env = resize_all(stdscr, env)
+                screen, win = env.get_screen_for_current_mode()
             else:
                 # ***************************** E.D.I.T *****************************
-                if conf.edit_allowed:
+                if env.edit_allowed:
                     # ======================= EDIT FILE =======================
                     if key == curses.KEY_DC: # \x04 for MacOS which doesnt correctly decode delete key
                         report = buffer.delete(win, report)
@@ -168,56 +169,59 @@ def file_viewing(stdscr, conf):
                         if (win.cursor.row, win.cursor.col) > (win.begin_y, win.begin_x):
                             win.left(buffer)
                             report = buffer.delete(win, report)
+                            win.calculate_tab_shift(buffer, env.tab_size)
                     elif key == curses.ascii.NL:
                         report = buffer.newline(win, report)
-                        win.right(buffer, filter_on=conf.content_filter_on())
+                        win.right(buffer, filter_on=env.content_filter_on())
+                        win.calculate_tab_shift(buffer, env.tab_size)
                     elif curses.ascii.isprint(key):
                         buffer.insert(win, chr(key))
-                        win.right(buffer, filter_on=conf.content_filter_on())
+                        win.right(buffer, filter_on=env.content_filter_on())
+                        win.calculate_tab_shift(buffer, env.tab_size)
                     # ======================= F KEYS =======================
                     elif key == curses.KEY_F1: # help
-                        conf = show_help(stdscr, conf)
-                        screen, win = conf.get_screen_for_current_mode()
+                        env = show_help(stdscr, env)
+                        screen, win = env.get_screen_for_current_mode()
                         curses.curs_set(1)
                     elif key == curses.KEY_F2: # save file
-                        save_buffer(conf.file_to_open, buffer, report)
+                        save_buffer(env.file_to_open, buffer, report)
                     elif key == curses.KEY_F3: # change to view/tag mode
-                        conf.update_viewing_data(win, buffer, report)
-                        if file_changes_are_saved(stdscr, conf):
-                            conf.disable_file_edit()
-                            return conf
+                        env.update_viewing_data(win, buffer, report)
+                        if file_changes_are_saved(stdscr, env):
+                            env.disable_file_edit()
+                            return env
                     elif key == curses.KEY_F4: # add note
                         if report:
                             note_entering = True
                     elif key == curses.KEY_F8: # reload from last save
-                        conf.update_viewing_data(win, buffer, report)
+                        env.update_viewing_data(win, buffer, report)
                         exit_key = (curses.KEY_F8, "F8")
-                        if file_changes_are_saved(stdscr, conf, RELOAD_FILE_WITHOUT_SAVING, exit_key):
+                        if file_changes_are_saved(stdscr, env, RELOAD_FILE_WITHOUT_SAVING, exit_key):
                             buffer.lines = buffer.last_save.copy()
                             if report:
                                 report.code_review = report.last_save.copy()
                     elif key == curses.KEY_F9: # set filter
-                        conf = filter_management(stdscr, screen, win, conf)
-                        conf.update_viewing_data(win, buffer, report)
-                        conf.set_brows_mode()
-                        conf.quick_view = True
-                        conf.left_win.reset_shifts()
-                        conf.left_win.set_cursor(0,0)
-                        return conf
+                        env = filter_management(stdscr, screen, win, env)
+                        env.update_viewing_data(win, buffer, report)
+                        env.set_brows_mode()
+                        env.quick_view = True
+                        env.windows.left.reset_shifts()
+                        env.windows.left.set_cursor(0,0)
+                        return env
                     # ======================= CTRL KEYS =======================
                     elif curses.ascii.ismeta(key):
                         """ CTRL + UP / CTRL + DOWN """
                         ctrl_key = curses.ascii.unctrl(key)
                         if ctrl_key == '7' or hex(key) == "0x237": # CTRL + UP: jump to prev note
-                            if report and conf.note_highlight:
+                            if report and env.note_highlight:
                                 prev_line = report.get_prev_line_with_note(win.cursor.row)
                                 while win.cursor.row != prev_line:
                                     win.up(buffer, use_restrictions=True)
                         elif ctrl_key == '^N' or hex(key) == "0x20e": # CTRL + DOWN: jump to next note
-                            if report and conf.note_highlight:
+                            if report and env.note_highlight:
                                 next_line = report.get_next_line_with_note(win.cursor.row)
                                 while win.cursor.row != next_line:
-                                    win.down(buffer, filter_on=conf.content_filter_on(), use_restrictions=True)
+                                    win.down(buffer, filter_on=env.content_filter_on(), use_restrictions=True)
                     elif curses.ascii.iscntrl(key):
                         ctrl_key = curses.ascii.unctrl(key)
                         if ctrl_key == '^L': # reload from original buffer
@@ -225,14 +229,14 @@ def file_viewing(stdscr, conf):
                             if report:
                                 report.code_review = report.original_report.copy()
                         elif ctrl_key == '^N': # enable/disable line numbers
-                            if conf.line_numbers:
-                                conf.disable_line_numbers()
+                            if env.line_numbers:
+                                env.disable_line_numbers()
                             else:
-                                conf.enable_line_numbers(buffer)
-                            resize_all(stdscr, conf, True)
-                            win = conf.right_win if conf.edit_allowed else conf.right_up_win
+                                env.enable_line_numbers(buffer)
+                            resize_all(stdscr, env, True)
+                            win = env.windows.right if env.edit_allowed else env.windows.right_up
                         elif ctrl_key == '^H': # enable/disable note highlight
-                            conf.note_highlight = not conf.note_highlight
+                            env.note_highlight = not env.note_highlight
                         elif ctrl_key == '^R': # remove all notes on current line
                             if report:
                                 report.delete_notes_on_line(win.cursor.row)
@@ -258,36 +262,36 @@ def file_viewing(stdscr, conf):
                 else:
                     # ======================= F KEYS =======================
                     if key == curses.KEY_F1: # help
-                        show_help(stdscr, conf)
+                        show_help(stdscr, env)
                         curses.curs_set(1)
                     elif key == curses.KEY_F4: # change to edit mode
-                        conf.enable_file_edit()
-                        return conf
+                        env.enable_file_edit()
+                        return env
                     elif key == curses.KEY_F9: # set filter
-                        conf = filter_management(stdscr, screen, win, conf)
-                        screen, win = conf.get_screen_for_current_mode()
-                        conf.update_viewing_data(win, buffer, report)
-                        conf.set_brows_mode()
-                        conf.quick_view = True
-                        conf.left_win.reset_shifts()
-                        conf.left_win.set_cursor(0,0)
-                        return conf
+                        env = filter_management(stdscr, screen, win, env)
+                        screen, win = env.get_screen_for_current_mode()
+                        env.update_viewing_data(win, buffer, report)
+                        env.set_brows_mode()
+                        env.quick_view = True
+                        env.windows.left.reset_shifts()
+                        env.windows.left.set_cursor(0,0)
+                        return env
                     # ======================= CTRL KEYS =======================
                     elif curses.ascii.iscntrl(key):
                         ctrl_key = curses.ascii.unctrl(key)
                         if ctrl_key == '^N': # enable/disable line numbers
-                            if conf.line_numbers:
-                                conf.disable_line_numbers()
+                            if env.line_numbers:
+                                env.disable_line_numbers()
                             else:
-                                conf.enable_line_numbers(buffer)
-                            resize_all(stdscr, conf, True)
-                            win = conf.right_win if conf.edit_allowed else conf.right_up_win
+                                env.enable_line_numbers(buffer)
+                            resize_all(stdscr, env, True)
+                            win = env.windows.right if env.edit_allowed else env.windows.right_up
                         elif ctrl_key == '^H': # enable/disable note highlight
-                            conf.note_highlight = not conf.note_highlight
+                            env.note_highlight = not env.note_highlight
 
                 # ************************* V.I.E.W / T.A.G *************************
         except Exception as err:
             log("viewing Exception | "+str(err))
-            conf.set_exit_mode()
-            return conf
+            env.set_exit_mode()
+            return env
 

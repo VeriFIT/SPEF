@@ -58,34 +58,34 @@ def load_tags_from_file(path):
 
 
 """ **************** BUFFER AND TAGS **************** """
-def load_buffer_and_tags(conf):
+def load_buffer_and_tags(env):
     """ try load file content to buffer """
     file_already_loaded = False
-    if conf.buffer and conf.buffer.path == conf.file_to_open:
+    if env.buffer and env.buffer.path == env.file_to_open:
         file_already_loaded = True
-        buffer = conf.buffer
+        buffer = env.buffer
     else:
         try:
-            with open(conf.file_to_open, 'r') as f:
+            with open(env.file_to_open, 'r') as f:
                 lines = f.read().splitlines()
-            buffer = Buffer(conf.file_to_open, lines)
-            conf.buffer = buffer
+            buffer = Buffer(env.file_to_open, lines)
+            env.buffer = buffer
         except Exception as err:
             log("load file content | "+str(err))
-            conf.set_exit_mode()
-            return conf, None, False
+            env.set_exit_mode()
+            return env, None, False
 
-    """ try load file tags to config - only for view, tags will not change """
-    if (not conf.tags or not file_already_loaded): # tag file wasnt loaded yet
-        tags = load_tags_from_file(conf.file_to_open)
+    """ try load file tags to env - only for view, tags will not change """
+    if (not env.tags or not file_already_loaded): # tag file wasnt loaded yet
+        tags = load_tags_from_file(env.file_to_open)
         if tags is None:
-            conf.set_exit_mode()
-            return conf, None, False
+            env.set_exit_mode()
+            return env, None, False
         else:
-            conf.tags = tags
+            env.tags = tags
 
-    return conf, buffer, True
-    # return config, buffer, succes
+    return env, buffer, True
+    # return env, buffer, succes
 
 
 

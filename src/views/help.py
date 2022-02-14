@@ -12,27 +12,27 @@ from utils.screens import *
 from utils.logger import *
 
 
-def show_help(stdscr, conf, filter_mode=False):
+def show_help(stdscr, env, filter_mode=False):
     curses.curs_set(0)
 
-    screen = conf.center_screen
-    win = conf.center_win
+    screen = env.screens.center
+    win = env.windows.center
     position = 2
 
     while True:
         """ print something in center screen """
         max_cols = win.end_x - win.begin_x
         max_rows = win.end_y - win.begin_y
-        print_help(screen, max_cols, max_rows, conf, filter_mode=filter_mode)
+        print_help(screen, max_cols, max_rows, env, filter_mode=filter_mode)
 
         key = stdscr.getch()
         if key == curses.KEY_F1 or key == ESC:
-            rewrite_all_wins(conf)
-            return conf
+            rewrite_all_wins(env)
+            return env
         elif key == curses.KEY_RESIZE:
-            conf = resize_all(stdscr, conf)
-            screen = conf.center_screen
-            win = conf.center_win
+            env = resize_all(stdscr, env)
+            screen = env.screens.center
+            win = env.windows.center
         elif curses.ascii.ismeta(key):
             """ CTRL + LEFT / CTRL + RIGHT """
             # https://asecuritysite.com/coding/asc2?val=512%2C768
@@ -60,5 +60,5 @@ def show_help(stdscr, conf, filter_mode=False):
 
                 screen = curses.newwin(c_win_h, c_win_w, c_win_y, c_win_x)
                 win = Window(c_win_h, c_win_w, c_win_y, c_win_x)
-                rewrite_all_wins(conf)
+                rewrite_all_wins(env)
 

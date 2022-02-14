@@ -3,6 +3,7 @@ import os
 import re
 
 from modules.buffer import UserInput
+from modules.directory import Directory
 
 from utils.loading import save_buffer
 from utils.coloring import *
@@ -10,12 +11,6 @@ from utils.logger import *
 
 ESC = 27
 
-TAB_SIZE = 4
-
-""" CONFIGURABLE VARIABLES """
-EMPTY_PATH_FILTER = "add path filter... ex: test1/unit_*.* "
-EMPTY_CONTENT_FILTER = "add content filter... ex: def test1 "
-EMPTY_TAG_FILTER = "add tag filter... ex: #plagiat(^[0-5]$) "
 
 EXIT_WITHOUT_SAVING = """WARNING: Exit without saving.\n\
     Press F2 to save and exit.\n\
@@ -24,7 +19,7 @@ EXIT_WITHOUT_SAVING = """WARNING: Exit without saving.\n\
 
 RELOAD_FILE_WITHOUT_SAVING = """WARNING: Reload file will discard changes.\n\
     Press F2 to save changes.\n\
-    Press {} or Enter to reload file and discard all changes.\n\
+    Press {} to reload file and discard all changes.\n\
     Press any other key to continue editing your file."""
 
 
@@ -48,46 +43,44 @@ RELOAD_FILE_WITHOUT_SAVING = """WARNING: Reload file will discard changes.\n\
 
 
 """ used for tag input or note input """
-def show_input(conf):
+def show_input(env):
     pass
 
-def show_menu(conf):
+def show_menu(env):
     pass
 
 
 
-def refresh_main_screens(conf):
-    conf.left_screen.erase()
-    conf.right_screen.erase()
-    conf.down_screen.erase()
+def refresh_main_screens(env):
+    env.screens.left.erase()
+    env.screens.right.erase()
+    env.screens.down.erase()
 
-    conf.left_screen.border(0)
-    conf.right_screen.border(0)
-    conf.down_screen.border(0)
+    env.screens.left.border(0)
+    env.screens.right.border(0)
+    env.screens.down.border(0)
 
-    conf.left_screen.refresh()
-    conf.right_screen.refresh()
-    conf.down_screen.refresh()
-
-
-def rewrite_all_wins(conf):
-    # refresh_main_screens(conf)
-    show_directory_content(conf)
-    show_file_content(conf)
-    if not conf.edit_allowed:
-        show_tags(conf)
+    env.screens.left.refresh()
+    env.screens.right.refresh()
+    env.screens.down.refresh()
 
 
+def rewrite_all_wins(env):
+    # refresh_main_screens(env)
+    show_directory_content(env)
+    show_file_content(env)
+    if not env.edit_allowed:
+        show_tags(env)
 
 
 
-def print_hint(conf, filter_mode=False):
-    screen = conf.down_screen
+def print_hint(env, filter_mode=False):
+    screen = env.screens.down
     screen.erase()
     screen.border(0)
     size = screen.getmaxyx()
 
-    view_switch = "off" if conf.quick_view else "on"
+    view_switch = "off" if env.quick_view else "on"
     B_HELP = {"F1":"help", "F2":"menu", "F3":f"view {view_switch}","F4":"edit", "F5":"copy",
                 "F6":"rename", "F8":"delete", "F9":"filter", "F10":"exit"}
     E_HELP = {"F1":"help", "F2":"save", "F3":"view/tag", "F4":"note", "F5":"goto",
@@ -96,9 +89,9 @@ def print_hint(conf, filter_mode=False):
     T_HELP = {"F1":"help", "F4":"edit tags", "F9":"filter", "F10":"exit"}
 
     if filter_mode:
-        if conf.is_brows_mode(): filter_type = "path"
-        elif conf.is_view_mode(): filter_type = "content"
-        elif conf.is_tag_mode(): filter_type = "tag"
+        if env.is_brows_mode(): filter_type = "path"
+        elif env.is_view_mode(): filter_type = "content"
+        elif env.is_tag_mode(): filter_type = "tag"
         else: filter_type = None
 
         if not filter_type:
@@ -106,11 +99,11 @@ def print_hint(conf, filter_mode=False):
         else:
             help_dict = {"F1":"help", "ESC":"exit filter mode", 
                         "F8":"remove all filters", "F9":f"edit {filter_type} filter"}
-    elif conf.is_brows_mode():
+    elif env.is_brows_mode():
         help_dict = B_HELP
-    elif conf.is_view_mode():
-        help_dict = E_HELP if conf.edit_allowed else V_HELP
-    elif conf.is_tag_mode():
+    elif env.is_view_mode():
+        help_dict = E_HELP if env.edit_allowed else V_HELP
+    elif env.is_tag_mode():
         help_dict = T_HELP
     else:
         help_dict = {}
@@ -126,7 +119,7 @@ def print_hint(conf, filter_mode=False):
 
 
 
-def print_help(screen, max_cols, max_rows, conf, filter_mode=False):
+def print_help(screen, max_cols, max_rows, env, filter_mode=False):
     screen.erase()
     screen.border(0)
     mode = ""
@@ -140,7 +133,7 @@ def print_help(screen, max_cols, max_rows, conf, filter_mode=False):
         "Ascii character": "insert symbol in user input",
         "Enter": "set filter and exit filter management"}
 
-    elif conf.is_brows_mode():
+    elif env.is_brows_mode():
         mode = "DIRECTORY BROWSING"
         actions = {"F10": "exit program",
         "F9": "set filter by path",
@@ -152,8 +145,8 @@ def print_help(screen, max_cols, max_rows, conf, filter_mode=False):
         "F1": "show this user help",
         "TAB": "change focus to file view or edit",
         "Arrows": "brows between files and dirs"}
-    elif conf.is_view_mode():
-        if conf.edit_allowed:
+    elif env.is_view_mode():
+        if env.edit_allowed:
             mode = "FILE EDIT"
             actions = {"F10": "exit program",
             "F9": "set filter by content",
@@ -182,7 +175,7 @@ def print_help(screen, max_cols, max_rows, conf, filter_mode=False):
             "F1": "show this user help",
             "TAB": "change focus to tag management",
             "Arrows": "move cursor in file content"}
-    elif conf.is_tag_mode():
+    elif env.is_tag_mode():
         mode = "TAG MANAGEMENT"
         actions = {"F10": "exit program",
         "F9": "set filter by tag",
@@ -232,16 +225,16 @@ def print_help(screen, max_cols, max_rows, conf, filter_mode=False):
 
 
 """ check if file changes are saved or user want to save or discard them """
-def file_changes_are_saved(stdscr, conf, warning=None, exit_key=None):
-    if conf.buffer:
-        if (conf.buffer.is_saved) or (conf.buffer.original_buff == conf.buffer.lines):
+def file_changes_are_saved(stdscr, env, warning=None, exit_key=None):
+    if env.buffer:
+        if (env.buffer.is_saved) or (env.buffer.original_buff == env.buffer.lines):
             return True
         else:
             curses_key, str_key = exit_key if exit_key else (ESC, "ESC")
             message = warning if warning else EXIT_WITHOUT_SAVING
 
             """ print warning message """
-            screen = conf.right_screen
+            screen = env.screens.right
             screen.erase()
             screen.addstr(1, 1, str(message.format(str_key)), curses.A_BOLD)
             screen.border(0)
@@ -251,7 +244,7 @@ def file_changes_are_saved(stdscr, conf, warning=None, exit_key=None):
             if key == curses_key: # force exit without saving
                 return True
             elif key == curses.KEY_F2: # save and exit
-                save_buffer(conf.file_to_open, conf.buffer, conf.report)
+                save_buffer(env.file_to_open, env.buffer, env.report)
                 return True
             else:
                 return False
@@ -271,7 +264,7 @@ def show_path(screen, path, max_cols):
 
 
 """ center screen """
-def show_user_input(screen, user_input, max_rows, max_cols, conf, color=None, title=None):
+def show_user_input(screen, user_input, max_rows, max_cols, env, color=None, title=None):
     screen.erase()
     screen.border(0)
 
@@ -321,7 +314,7 @@ def show_user_input(screen, user_input, max_rows, max_cols, conf, color=None, ti
 
 
 """ filter on last row in screen """
-def show_filter(screen, user_input, max_rows, max_cols, conf, color=None):
+def show_filter(screen, user_input, max_rows, max_cols, env, color=None):
     if user_input:
         user_input_str = ''.join(user_input.text)
         if user_input.col_shift > 0 and len(user_input_str) > user_input.col_shift:
@@ -330,9 +323,9 @@ def show_filter(screen, user_input, max_rows, max_cols, conf, color=None):
     if not user_input.text:
         # show default message with example usage of filter
         empty_message = ""
-        if conf.is_brows_mode(): empty_message = EMPTY_PATH_FILTER
-        elif conf.is_view_mode(): empty_message = EMPTY_CONTENT_FILTER
-        elif conf.is_tag_mode(): empty_message = EMPTY_TAG_FILTER
+        if env.is_brows_mode(): empty_message = env.messages['empty_path_filter']
+        elif env.is_view_mode(): empty_message = env.messages['empty_content_filter']
+        elif env.is_tag_mode(): empty_message = env.messages['empty_tag_filter']
         empty_message += " "*(max_cols-1-len(empty_message))
         screen.addstr(max_rows, 1, empty_message[:max_cols-1], curses.color_pair(FILTER) | curses.A_ITALIC)
     else:
@@ -344,19 +337,19 @@ def show_filter(screen, user_input, max_rows, max_cols, conf, color=None):
 
 
 """ browsing directory """
-def show_directory_content(conf):
-    screen = conf.left_screen
-    win = conf.left_win
+def show_directory_content(env):
+    screen = env.screens.left
+    win = env.windows.left
     max_cols = win.end_x - win.begin_x
     max_rows = win.end_y - win.begin_y - 1
 
-    cwd = Directory(conf.filter.project, files=conf.filter.files) if conf.filter_not_empty() else conf.cwd
+    cwd = Directory(env.filter.project, files=env.filter.files) if env.filter_not_empty() else env.cwd
     dirs, files = cwd.get_shifted_dirs_and_files(win.row_shift)
 
 
     """ print borders """
     screen.erase()
-    if conf.is_brows_mode():
+    if env.is_brows_mode():
         screen.attron(curses.color_pair(BORDER))
         screen.border(0)
         screen.attroff(curses.color_pair(BORDER))
@@ -364,7 +357,7 @@ def show_directory_content(conf):
         screen.border(0)
 
     """ print hint for user """
-    print_hint(conf)
+    print_hint(env)
 
 
     try:
@@ -373,7 +366,7 @@ def show_directory_content(conf):
 
         """ show dir content """
         if cwd.is_empty():
-            if conf.filter_not_empty():
+            if env.filter_not_empty():
                 screen.addstr(1, 1, "* No file matches with current filter *", curses.A_NORMAL | curses.A_BOLD)
             else:
                 screen.addstr(1, 1, "* This directory is empty *", curses.A_NORMAL | curses.A_BOLD)
@@ -382,8 +375,8 @@ def show_directory_content(conf):
             for dir_name in dirs:
                 if i > max_rows:
                     break
-                elif i == max_rows and conf.filter:
-                    if conf.filter.path:
+                elif i == max_rows and env.filter:
+                    if env.filter.path:
                         break
                 coloring = (curses.color_pair(SELECT) if i+win.row_shift == win.cursor.row+1 else curses.A_NORMAL)
                 screen.addstr(i, 1, str(dir_name[:max_cols-2])+"/", coloring | curses.A_BOLD)
@@ -391,19 +384,19 @@ def show_directory_content(conf):
             for file_name in files:
                 if i > max_rows:
                     break
-                elif i == max_rows and conf.filter:
-                    if conf.filter.path:
+                elif i == max_rows and env.filter:
+                    if env.filter.path:
                         break
                 coloring = curses.color_pair(SELECT) if i+win.row_shift == win.cursor.row+1 else curses.A_NORMAL
                 screen.addstr(i, 1, str(file_name[:max_cols-1]), coloring)
                 i+=1
 
         """ show path filter if there is one """
-        if conf.filter:
-            if conf.filter.path:
+        if env.filter:
+            if env.filter.path:
                 user_input = UserInput()
-                user_input.text = conf.filter.path
-                show_filter(screen, user_input, max_rows, max_cols, conf)
+                user_input.text = env.filter.path
+                show_filter(screen, user_input, max_rows, max_cols, env)
 
     except Exception as err:
         log("show directory | "+str(err))
@@ -412,20 +405,20 @@ def show_directory_content(conf):
 
 
 """ view file content """
-def show_file_content(conf):
-    screen = conf.right_screen if conf.edit_allowed else conf.right_up_screen
-    win = conf.right_win if conf.edit_allowed else conf.right_up_win
+def show_file_content(env):
+    screen = env.screens.right if env.edit_allowed else env.screens.right_up
+    win = env.windows.right if env.edit_allowed else env.windows.right_up
     max_cols = win.end_x - win.begin_x
     max_rows = win.end_y - win.begin_y - 1
 
-    buffer = conf.buffer
-    report = conf.report
-    shift = len(conf.line_numbers)+1 if conf.line_numbers else 0 # shift for line numbers
+    buffer = env.buffer
+    report = env.report
+    shift = len(env.line_numbers)+1 if env.line_numbers else 0 # shift for line numbers
 
 
     """ print borders """
     screen.erase()
-    if conf.is_view_mode():
+    if env.is_view_mode():
         screen.attron(curses.color_pair(BORDER))
         screen.border(0)
         screen.attroff(curses.color_pair(BORDER))
@@ -433,7 +426,7 @@ def show_file_content(conf):
         screen.border(0)
 
     """ print hint for user """
-    print_hint(conf)
+    print_hint(env)
 
     """ if there is no buffer, show empty window """
     if buffer is None:
@@ -442,20 +435,20 @@ def show_file_content(conf):
 
     """ highlight lines with notes """
     colored_lines = []
-    if conf.note_highlight and report:
+    if env.note_highlight and report:
         for key in report.code_review:
             colored_lines.append(int(key))
 
 
     try:
         """ show file name """
-        show_path(screen, buffer.path, max_cols+(shift if conf.line_numbers else 1))
+        show_path(screen, buffer.path, max_cols+(shift if env.line_numbers else 1))
 
         """ show file content """
         if buffer:
             for row, line in enumerate(buffer[win.row_shift : max_rows + win.row_shift]):
                 
-                if row > max_rows or (row == max_rows and conf.tag_filter_on()):
+                if row > max_rows or (row == max_rows and env.tag_filter_on()):
                     break
                 # if (user_input is not None) and (row == max_rows-1):
                     # break
@@ -464,13 +457,13 @@ def show_file_content(conf):
                 # new_line = ""
                 # for ch in line:
                     # if ch == '\t':
-                        # new_line += " "*TAB_SIZE
+                        # new_line += " "*env.tab_size
                     # else:
                         # new_line += ch
                 # line = new_line
 
                 """ replace tab with spaces in line """
-                line = line.replace("\t", " "*TAB_SIZE)
+                line = line.replace("\t", " "*env.tab_size)
 
 
                 if (row + win.begin_y == win.cursor.row - win.row_shift) and (win.col_shift > 0):
@@ -486,7 +479,7 @@ def show_file_content(conf):
 
 
                 """ print line """
-                if conf.line_numbers: # row+1 bcs row starts from 0
+                if env.line_numbers: # row+1 bcs row starts from 0
                     screen.addstr(row+1, 1, str(row+1+win.row_shift), curses.color_pair(LINE_NUM))
                 screen.addstr(row+1, 1+shift, line, color)
 
@@ -494,13 +487,13 @@ def show_file_content(conf):
         # TODO: prerobit note management na center okno
         # if user_input:
             # color=curses.color_pair(NOTE_MGMT)
-            # show_filter(screen, user_input, max_rows, max_cols, conf, color=color)
+            # show_filter(screen, user_input, max_rows, max_cols, env, color=color)
         
         """ show content filter if there is one """
-        if conf.content_filter_on():
+        if env.content_filter_on():
             user_input = UserInput()
-            user_input.text = conf.filter.content
-            show_filter(screen, user_input, max_rows, max_cols, conf)
+            user_input.text = env.filter.content
+            show_filter(screen, user_input, max_rows, max_cols, env)
 
     except Exception as err:
         log("show file | "+str(err))
@@ -509,18 +502,18 @@ def show_file_content(conf):
 
 
 """ tag management """
-def show_tags(conf):
-    screen = conf.right_down_screen
-    win = conf.right_down_win
+def show_tags(env):
+    screen = env.screens.right_down
+    win = env.windows.right_down
     max_cols = win.end_x - win.begin_x
     max_rows = win.end_y - win.begin_y - 1
 
-    tags = conf.tags
+    tags = env.tags
 
 
     """ print borders """
     screen.erase()
-    if conf.is_tag_mode():
+    if env.is_tag_mode():
         screen.attron(curses.color_pair(BORDER))
         screen.border(0)
         screen.attroff(curses.color_pair(BORDER))
@@ -540,11 +533,11 @@ def show_tags(conf):
         """ show tags """
         if tags.data:
             for row, name in enumerate(tags.data):
-                if row > max_rows or (row == max_rows and conf.tag_filter_on()):
+                if row > max_rows or (row == max_rows and env.tag_filter_on()):
                     break
 
                 """ set color """
-                if row+win.row_shift == win.cursor.row and conf.is_tag_mode():
+                if row+win.row_shift == win.cursor.row and env.is_tag_mode():
                     coloring = curses.color_pair(SELECT)
                 else:
                     coloring = curses.A_NORMAL
@@ -558,10 +551,10 @@ def show_tags(conf):
                 screen.addstr(row+1, 1, line, coloring)
 
         """ show tag filter if there is one """
-        if conf.tag_filter_on():
+        if env.tag_filter_on():
             user_input = UserInput()
-            user_input.text = conf.filter.tag
-            show_filter(screen, user_input, max_rows, max_cols, conf)
+            user_input.text = env.filter.tag
+            show_filter(screen, user_input, max_rows, max_cols, env)
 
     except Exception as err:
         log("show tags | "+str(err))

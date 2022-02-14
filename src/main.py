@@ -28,7 +28,7 @@ from utils.coloring import *
 from utils.printing import *
 from utils.logger import *
 
-from config import Config
+from config import Environment
 
 
 """ hladanie cesty projektu v ktorom su odovzdane riesenia
@@ -59,35 +59,43 @@ def main(stdscr):
 
     init_color_pairs()
     bkgd_color = curses.color_pair(BKGD)
-
-    """ create screen for browsing, editing and showing hint """
-    screens, windows = create_screens_and_windows(curses.LINES, curses.COLS)
-
-    """ create config """
-    config = create_config(screens, windows)
-    config.left_win.set_cursor(0,0)
-    config.right_down_win.set_cursor(0,0)
     stdscr.bkgd(' ', bkgd_color)
+
+    """ create screens and windows for TUI """
+    screens, windows = create_screens_and_windows(curses.LINES, curses.COLS)
+    windows.left.set_cursor(0,0)
+    windows.right_down.set_cursor(0,0)
+
+    """ load config from file and create framework environment """
+    dir_path = os.path.dirname(__file__)
+    conf_file = os.path.join(dir_path, "config.yaml")
+    try:
+        with open(conf_file, 'r') as f:
+            config = yaml.safe_load(f)
+        env = Environment(screens, windows, config)
+    except Exception as err:
+        log("cannot load config file | "+str(err))
+        exit(-1)
 
     """ show all main screens """
     stdscr.erase()
     stdscr.refresh()
-    refresh_main_screens(config)
+    refresh_main_screens(env)
 
     """ get current files and dirs """
-    config.cwd = get_directory_content()
+    env.cwd = get_directory_content()
 
     while True:
 
-        print_hint(config)
-        if config.is_exit_mode():
+        print_hint(env)
+        if env.is_exit_mode():
             break
-        elif config.is_brows_mode():
-            config = directory_browsing(stdscr, config)
-        elif config.is_view_mode():
-            config = file_viewing(stdscr, config)
-        elif config.is_tag_mode():
-            config = tag_management(stdscr, config)
+        elif env.is_brows_mode():
+            env = directory_browsing(stdscr, env)
+        elif env.is_view_mode():
+            env = file_viewing(stdscr, env)
+        elif env.is_tag_mode():
+            env = tag_management(stdscr, env)
 
     log("END")
 """ ======================= END MAIN ========================= """

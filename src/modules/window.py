@@ -2,7 +2,6 @@ import time
 
 
 from utils.logger import *
-from utils.printing import TAB_SIZE
 
 
 """
@@ -15,11 +14,30 @@ koniec riadku   len(buffer[self.row - win.begin_y]) + win.begin_x
 """
 
 
-LEFT_EDGE = 2
-RIGHT_EDGE = 2
-TOP_EDGE = 1
-BOTTOM_EDGE = 1 # ak chces posuvat okno az ked je kurzor na poslednom riadku, nastav na 0
 
+class Screens:
+    def __init__(self, left, right, down, center, right_up, right_down):
+        self.left = left
+        self.right = right
+        self.down = down # for hint
+        self.center = center
+        self.right_up = right_up
+        self.right_down = right_down
+
+class Windows:
+    def __init__(self, left, right, center, right_up, right_down):
+        self.left = left
+        self.right = right
+        self.center = center
+        self.right_up = right_up
+        self.right_down = right_down
+
+    def set_edges(self, left, right, top, bottom):
+        self.left.set_edges(left, right, top, bottom)
+        self.right.set_edges(left, right, top, bottom)
+        self.center.set_edges(left, right, top, bottom)
+        self.right_up.set_edges(left, right, top, bottom)
+        self.right_down.set_edges(left, right, top, bottom)
 
 class Cursor:
     def __init__(self, row=0, col=0, col_last=None):
@@ -69,12 +87,12 @@ class Cursor:
 
 
 class Window:
-    def __init__(self, height, width, begin_y, begin_x, border=0, line_num_shift=None):
+    def __init__(self, height, width, begin_y, begin_x, border=0, line_num_shift=0):
         """ location """
-        self.begin_y = begin_y+border # height (max_rows = end_y - begin_y)
         self.begin_x = begin_x+border # width (max_cols = end_x - begin_x)
-        self.end_y = begin_y+border + height - 1
+        self.begin_y = begin_y+border # height (max_rows = end_y - begin_y)
         self.end_x = begin_x+border + width - 1
+        self.end_y = begin_y+border + height - 1
 
         self.border = border
         self.line_num_shift = line_num_shift
@@ -86,8 +104,13 @@ class Window:
 
         """ cursor """
         self.cursor = Cursor(self.begin_y,self.begin_x) # for working with buffer
-        self.tab_col = self.cursor.col # for correct visual (bcs of tabs in buffer)
         self.tab_shift = 0
+
+        """ edges - default values """
+        self.left_edge = 2
+        self.right_edge = 2
+        self.top_edge = 1
+        self.bottom_edge = 1 # ak chces posuvat okno az ked je kurzor na poslednom riadku, nastav na 0
 
     @property
     def bottom(self):
@@ -97,12 +120,18 @@ class Window:
     def last_row(self):
         return self.end_y - self.border - 1
 
-    def up(self, buffer, use_restrictions=True):
+    def set_edges(self, left, right, top, bottom):
+        self.left_edge = left
+        self.right_edge = right
+        self.top_edge = top
+        self.bottom_edge = bottom
+
+    def up(self, buffer, use_restrictions=True, ):
         self.cursor.up(buffer, self, use_restrictions)
 
         """ window shift """
         self.horizontal_shift()
-        if (self.cursor.row - self.begin_y - TOP_EDGE == self.row_shift - 1 ) and (self.row_shift > 0):
+        if (self.cursor.row - self.begin_y - self.top_edge == self.row_shift - 1 ) and (self.row_shift > 0):
             self.row_shift -= 1
 
     def down(self, buffer, filter_on=False, use_restrictions=True):
@@ -110,8 +139,8 @@ class Window:
 
         """ window shift """
         self.horizontal_shift()
-        bottom = self.bottom - (1 if filter_on else 0)
-        if (self.cursor.row == bottom - BOTTOM_EDGE) and (self.cursor.row - self.begin_y + BOTTOM_EDGE < len(buffer)):
+        bottom = self.bottom - (1 if filter_on else 0) - self.bottom_edge
+        if (self.cursor.row == bottom) and (self.cursor.row - self.begin_y + self.bottom_edge < len(buffer)):
             self.row_shift += 1
 
 
@@ -132,12 +161,6 @@ class Window:
     def right(self, buffer, filter_on=False):
         self.cursor.right(buffer, self)
 
-        # row = self.cursor.row - self.begin_y
-        # col = self.cursor.col - self.begin_x
-        # current_line = buffer.lines[row]
-        # if current_line[col] == "\t":
-        #     self.tab_shift += (TAB_SIZE-1) # -1 bcs cursor.right move cursor +1 already
-
         """ window shift """
         self.horizontal_shift()
         bottom = self.bottom - (1 if filter_on else 0)
@@ -152,8 +175,8 @@ class Window:
 
     def horizontal_shift(self):
         width = self.end_x - self.begin_x
-        shift = width - RIGHT_EDGE - LEFT_EDGE
-        pages = (self.cursor.col - self.begin_x) // (width - RIGHT_EDGE)
+        shift = width - self.right_edge - self.left_edge
+        pages = (self.cursor.col - self.begin_x) // (width - self.right_edge)
         self.col_shift = pages * shift
 
     def vertical_shift(self):
@@ -162,13 +185,13 @@ class Window:
         self.row_shift = pages * shift
 
 
-    def calculate_tab_shift(self, buffer):
+    def calculate_tab_shift(self, buffer, tab_size):
         row = self.cursor.row - self.begin_y
         col = self.cursor.col - self.begin_x
 
         current_line = buffer.lines[row]
         tab_count = current_line.count("\t", 0, col)
-        self.tab_shift = (TAB_SIZE-1)*tab_count # -1 cursor shift (right/left) correction
+        self.tab_shift = (tab_size-1)*tab_count # -1 cursor shift (right/left) correction
 
 
     def get_cursor_position(self):
@@ -181,10 +204,11 @@ class Window:
         self.cursor = Cursor(row=begin_y,col=begin_x)
 
     def set_line_num_shift(self, shift):
-        self.line_num_shift = shift
-        self.begin_x += shift
-        self.col_shift = 0
-        self.cursor.col = 0
+        if self.line_num_shift != shift:
+            self.line_num_shift = shift
+            # self.begin_x += shift
+            # self.col_shift = 0
+            # self.cursor.col = self.begin_x
 
     def set_position(self, pos):
         self.position = pos
