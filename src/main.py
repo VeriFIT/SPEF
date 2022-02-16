@@ -16,6 +16,8 @@ from views.browsing import get_directory_content, directory_browsing
 from views.filtering import filter_management
 from views.viewing import file_viewing
 from views.tags import tag_management
+from views.notes import notes_management
+
 from views.help import show_help
 
 from modules.buffer import Buffer, Report, UserInput
@@ -63,8 +65,9 @@ def main(stdscr):
 
     """ create screens and windows for TUI """
     screens, windows = create_screens_and_windows(curses.LINES, curses.COLS)
-    windows.left.set_cursor(0,0)
-    windows.right_down.set_cursor(0,0)
+    windows.brows.set_cursor(0,0)
+    windows.notes.set_cursor(0,0)
+    windows.tag.set_cursor(0,0)
 
     """ load config from file and create framework environment """
     dir_path = os.path.dirname(__file__)
@@ -96,6 +99,8 @@ def main(stdscr):
             env = file_viewing(stdscr, env)
         elif env.is_tag_mode():
             env = tag_management(stdscr, env)
+        elif env.is_notes_mode():
+            env = notes_management(stdscr, env)
 
     log("END")
 """ ======================= END MAIN ========================= """

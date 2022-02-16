@@ -191,6 +191,7 @@ def get_files_by_tag(files, tag):
                     tag_parsing_ok = True
 
         if not tag_parsing_ok:
+            # TODO !!!
             # user_input = UserInput()
             # user_input.text = "invalid input for tag filter... press F1 to see how to use tag filter "
             # max_cols = env.windows.right_down.end_x - env.windows.right_down.begin_x

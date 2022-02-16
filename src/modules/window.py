@@ -13,8 +13,7 @@ koniec riadku   len(buffer[self.row - win.begin_y]) + win.begin_x
 
 """
 
-
-
+""" zobrazovacie plochy rozdelene podla rozlozenia a polohy na obrazovke """
 class Screens:
     def __init__(self, left, right, down, center, right_up, right_down):
         self.left = left
@@ -24,20 +23,39 @@ class Screens:
         self.right_up = right_up
         self.right_down = right_down
 
+
+"""
+okna rozdelene podla pouzitia (kazde okno ma svoj vlastny cursor a dalsie parametre)
+viac okien moze byt zobrazovanych na tom istom screen (napr brows aj notes sa zobrazuje na screens.left)
+stredne okno center sa vyuziva jednorazovo na viac ucelov, preto ho treba pri kazdom pouziti resetovat (cursor a shift) 
+"""
 class Windows:
-    def __init__(self, left, right, center, right_up, right_down):
-        self.left = left
-        self.right = right
-        self.center = center
-        self.right_up = right_up
-        self.right_down = right_down
+    def __init__(self, brows, edit, center, view, tag, notes):
+        self.brows = brows # brows directory
+        self.edit = edit # edit file
+        self.center = center # menu/help/user input/... !!! pozor aby sa toto okno pri kazdom pouziti resetovalo !!!
+        self.view = view # view file
+        self.tag = tag # tag management
+        self.notes = notes
+
+
+    def set_win_for_notes(self, win):
+        self.notes = win
 
     def set_edges(self, left, right, top, bottom):
-        self.left.set_edges(left, right, top, bottom)
-        self.right.set_edges(left, right, top, bottom)
+        # self.left.set_edges(left, right, top, bottom)
+        # self.right.set_edges(left, right, top, bottom)
+        # self.center.set_edges(left, right, top, bottom)
+        # self.right_up.set_edges(left, right, top, bottom)
+        # self.right_down.set_edges(left, right, top, bottom)
+
+        self.brows.set_edges(left, right, top, bottom)
+        self.edit.set_edges(left, right, top, bottom)
         self.center.set_edges(left, right, top, bottom)
-        self.right_up.set_edges(left, right, top, bottom)
-        self.right_down.set_edges(left, right, top, bottom)
+        self.view.set_edges(left, right, top, bottom)
+        self.tag.set_edges(left, right, top, bottom)
+        self.notes.set_edges(left, right, top, bottom)
+
 
 class Cursor:
     def __init__(self, row=0, col=0, col_last=None):
@@ -96,6 +114,11 @@ class Window:
 
         self.border = border
         self.line_num_shift = line_num_shift
+
+        """ relative position - for center window """
+        self.left_position_x = 0
+        self.center_position_x = int((self.end_x - self.begin_x + 1)/2)
+        self.right_position_x = self.end_x - self.begin_x + 1
         self.position = 2 # for center window (position left (1), middle (2), right (3))
 
         """ shift position """
@@ -104,7 +127,7 @@ class Window:
 
         """ cursor """
         self.cursor = Cursor(self.begin_y,self.begin_x) # for working with buffer
-        self.tab_shift = 0
+        self.tab_shift = 0 # used only in file view/edit
 
         """ edges - default values """
         self.left_edge = 2
@@ -210,13 +233,35 @@ class Window:
             # self.col_shift = 0
             # self.cursor.col = self.begin_x
 
-    def set_position(self, pos):
+
+    def set_position(self, pos, screen=None):
         self.position = pos
+        if pos == 1:
+            position_x = self.left_position_x
+        elif pos == 2:
+            position_x = self.center_position_x
+        else:
+            position_x = self.right_position_x
+        width = self.end_x - self.begin_x + 1
+        self.begin_x = position_x + self.border
+        self.end_x = position_x + self.border + width - 1
+        self.center_position_x = int((self.end_x - self.begin_x + 1)/2)
+        self.right_position_x = self.end_x - self.begin_x + 1
+        self.reset()
+        try:
+            if screen:
+                screen.mvwin(self.begin_y, position_x)
+        except Exception as err:
+            log("win set position | "+str(err))
+
 
     def reset_shifts(self):
         self.row_shift = 0
         self.col_shift = 0
 
-    def reset(self):
+    def reset(self, row=None, col=None):
         self.reset_shifts()
-        self.set_cursor(self.begin_y, self.begin_x)
+        if (row!=None) and (col!=None):
+            self.set_cursor(row, col)
+        else:
+            self.set_cursor(self.begin_y, self.begin_x)

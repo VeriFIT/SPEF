@@ -56,10 +56,12 @@ def directory_browsing(stdscr, env):
                     """ set line numbers """
                     if env.line_numbers:
                         new_env.enable_line_numbers(buffer)
-                        new_env.windows.right_up.set_line_num_shift(len(new_env.line_numbers)+1)
+                        new_env = resize_all(stdscr, new_env, True)
+                        screen, win = new_env.get_screen_for_current_mode()
                     env = new_env
             else:
-                env.set_file_to_open(None)
+                pass
+                # env.set_file_to_open(None)
 
         """ print all screens """
         env.update_browsing_data(win, cwd)
@@ -76,7 +78,7 @@ def directory_browsing(stdscr, env):
             # ======================= FOCUS =======================
             elif key == curses.ascii.TAB:
                 env.update_browsing_data(win, cwd)
-                env.set_view_mode()
+                env.switch_to_next_mode()
                 return env
             # ======================= ARROWS =======================
             elif key == curses.KEY_UP:
@@ -89,16 +91,14 @@ def directory_browsing(stdscr, env):
                     """ go to subdirectory """
                     os.chdir(os.path.join(cwd.path, cwd.dirs[idx]))
                     cwd = get_directory_content()
-                    win.reset_shifts()
-                    win.set_cursor(0,0) # set cursor on first position (first item)
+                    win.reset(0,0) # set cursor on first position (first item)
             elif key == curses.KEY_LEFT:
                 current_dir = os.path.basename(cwd.path) # get directory name
                 if not env.filter_not_empty() and current_dir: # if its not root
                     """ go to parent directory """
                     os.chdir('..')
                     cwd = get_directory_content()
-                    win.reset_shifts()
-                    win.set_cursor(0,0)
+                    win.reset(0,0)
                     """ set cursor position to prev directory """
                     dir_position = cwd.dirs.index(current_dir) # find position of prev directory
                     if dir_position:
@@ -121,7 +121,7 @@ def directory_browsing(stdscr, env):
                     dirs_and_files = cwd.get_all_items()
                     env.enable_file_edit()
                     env.set_file_to_open(os.path.join(cwd.path, dirs_and_files[idx]))
-                    env.set_view_mode()
+                    env.switch_to_next_mode()
                     return env
             elif key == curses.KEY_F3:
                 env.update_browsing_data(win, cwd)
@@ -137,8 +137,7 @@ def directory_browsing(stdscr, env):
                 else:
                     env.cwd = get_directory_content()
                     cwd = env.cwd
-                win.reset_shifts()
-                win.set_cursor(0,0)
+                win.reset(0,0)
         except Exception as err:
             log("browsing with quick view | "+str(err))
             env.set_exit_mode()

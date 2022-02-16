@@ -41,26 +41,25 @@ def new_vertical_shift(old_shift, old_height, cursor, new_height):
 
 def resize_all(stdscr, env, force_resize=False):
     """ get cursor positions from old windows """
-    l_win_old_row, l_win_old_col = env.windows.left.get_cursor_position()
-    rd_win_old_row, rd_win_old_col = env.windows.right_down.get_cursor_position()
-    # ru_win_old_row, ru_win_old_col = env.windows.right_up.cursor.row, env.windows.right_up.cursor.col
-    # r_win_old_row, r_win_old_col = env.windows.right.cursor.row, env.windows.right.cursor.col
+    b_win_old_row, b_win_old_col = env.windows.brows.get_cursor_position()
+    n_win_old_row, n_win_old_col = env.windows.notes.get_cursor_position()
+    t_win_old_row, t_win_old_col = env.windows.tag.get_cursor_position()
     
-    ru_win_old_row = env.windows.right_up.cursor.row
-    ru_win_old_col = env.windows.right_up.cursor.col - env.windows.right_up.begin_x
-    r_win_old_row = env.windows.right.cursor.row
-    r_win_old_col = env.windows.right.cursor.col - env.windows.right.begin_x
+    v_win_old_row = env.windows.view.cursor.row
+    v_win_old_col = env.windows.view.cursor.col - env.windows.view.begin_x
+    e_win_old_row = env.windows.edit.cursor.row
+    e_win_old_col = env.windows.edit.cursor.col - env.windows.edit.begin_x
 
     """ shift """
-    ru_win_old_shift = env.windows.right_up.row_shift
-    r_win_old_shift = env.windows.right.row_shift
+    v_win_old_shift = env.windows.view.row_shift
+    e_win_old_shift = env.windows.edit.row_shift
 
-    ru_win_old_tab_shift = env.windows.right_up.tab_shift
-    r_win_old_tab_shift = env.windows.right.tab_shift
+    v_win_old_tab_shift = env.windows.view.tab_shift
+    e_win_old_tab_shift = env.windows.edit.tab_shift
 
     """ height """
-    ru_win_old_height = env.windows.right_up.end_y - env.windows.right_up.begin_y - 1
-    r_win_old_height = env.windows.right.end_y - env.windows.right.begin_y - 1
+    v_win_old_height = env.windows.view.end_y - env.windows.view.begin_y - 1
+    e_win_old_height = env.windows.edit.end_y - env.windows.edit.begin_y - 1
 
 
     result_env = env
@@ -81,32 +80,35 @@ def resize_all(stdscr, env, force_resize=False):
             new_env.windows = windows
 
             """ set old cursor positions to resized windows """
-            l_win_new_row = min(l_win_old_row, new_env.windows.left.end_y-2)
-            l_win_new_col = min(l_win_old_col, new_env.windows.left.end_x)
-            rd_win_new_row = min(rd_win_old_row, new_env.windows.right_down.end_y-2)
-            rd_win_new_col = min(rd_win_old_col, new_env.windows.right_down.end_x)
+            b_win_new_row = min(b_win_old_row, new_env.windows.brows.end_y-2)
+            b_win_new_col = min(b_win_old_col, new_env.windows.brows.end_x)
+            n_win_new_row = min(n_win_old_row, new_env.windows.notes.end_y-2)
+            n_win_new_col = min(n_win_old_col, new_env.windows.notes.end_x)
+            t_win_new_row = min(t_win_old_row, new_env.windows.tag.end_y-2)
+            t_win_new_col = min(t_win_old_col, new_env.windows.tag.end_x)
 
-            ru_win_new_col = ru_win_old_col + new_env.windows.right_up.begin_x
-            r_win_new_col = r_win_old_col + new_env.windows.right.begin_x
+            v_win_new_col = v_win_old_col + new_env.windows.view.begin_x
+            e_win_new_col = e_win_old_col + new_env.windows.edit.begin_x
 
-            new_env.windows.left.set_cursor(l_win_new_row, l_win_new_col)
-            new_env.windows.right_down.set_cursor(rd_win_new_row, rd_win_new_col)
-            new_env.windows.right_up.set_cursor(ru_win_old_row, ru_win_new_col)
-            new_env.windows.right.set_cursor(r_win_old_row, r_win_new_col)
+            new_env.windows.brows.set_cursor(b_win_new_row, b_win_new_col)
+            new_env.windows.notes.set_cursor(n_win_new_row, n_win_new_col)
+            new_env.windows.tag.set_cursor(t_win_new_row, t_win_new_col)
+            new_env.windows.view.set_cursor(v_win_old_row, v_win_new_col)
+            new_env.windows.edit.set_cursor(e_win_old_row, e_win_new_col)
 
-            new_env.windows.right_up.tab_shift = ru_win_old_tab_shift
-            new_env.windows.right.tab_shift = r_win_old_tab_shift
+            new_env.windows.view.tab_shift = v_win_old_tab_shift
+            new_env.windows.edit.tab_shift = e_win_old_tab_shift
 
 
             """ set old shift to resized windows - cursor stays in the middle """
-            ru_win_height = new_env.windows.right_up.end_y - new_env.windows.right_up.begin_y - 1
-            r_win_height = new_env.windows.right.end_y - new_env.windows.right.begin_y - 1
+            v_win_height = new_env.windows.view.end_y - new_env.windows.view.begin_y - 1
+            e_win_height = new_env.windows.edit.end_y - new_env.windows.edit.begin_y - 1
             
-            ru_win_new_shift = new_vertical_shift(ru_win_old_shift, ru_win_old_height, ru_win_old_row, ru_win_height)
-            r_win_new_shift = new_vertical_shift(r_win_old_shift, r_win_old_height, r_win_old_row, r_win_height)
+            v_win_new_shift = new_vertical_shift(v_win_old_shift, v_win_old_height, v_win_old_row, v_win_height)
+            e_win_new_shift = new_vertical_shift(e_win_old_shift, e_win_old_height, e_win_old_row, e_win_height)
 
-            new_env.windows.right_up.row_shift = ru_win_new_shift
-            new_env.windows.right.row_shift = r_win_new_shift
+            new_env.windows.view.row_shift = v_win_new_shift
+            new_env.windows.edit.row_shift = e_win_new_shift
 
 
             result_env = new_env
@@ -149,12 +151,13 @@ def create_screens_and_windows(height, width, line_numbers=None):
 
     """ create windows """
     center_win = Window(c_win_h, c_win_w, c_win_y, c_win_x)
-    left_win = Window(l_win_h, l_win_w, l_win_y, l_win_x)
-    right_down_win = Window(right_down_h, r_win_w, r_win_y+right_up_h, r_win_x)
+    brows_win = Window(l_win_h, l_win_w, l_win_y, l_win_x)
+    notes_win = Window(l_win_h, l_win_w, l_win_y, l_win_x)
+    tag_win = Window(right_down_h, r_win_w, r_win_y+right_up_h, r_win_x)
 
     shift = 0 if line_numbers is None else len(line_numbers)+1 # +1 stands for a space between line number and text
-    right_win = Window(r_win_h, r_win_w-shift, r_win_y, r_win_x+shift, border=1, line_num_shift=shift) # +1 stands for bordes at first line and col
-    right_up_win = Window(right_up_h, r_win_w-shift, r_win_y, r_win_x+shift, border=1, line_num_shift=shift)
+    edit_win = Window(r_win_h, r_win_w-shift, r_win_y, r_win_x+shift, border=1, line_num_shift=shift) # +1 stands for bordes at first line and col
+    view_win = Window(right_up_h, r_win_w-shift, r_win_y, r_win_x+shift, border=1, line_num_shift=shift)
 
 
     """ set background color for screens """
@@ -167,7 +170,7 @@ def create_screens_and_windows(height, width, line_numbers=None):
     right_down_screen.bkgd(' ', bkgd_col)
 
     screens = Screens(left_screen, right_screen, down_screen, center_screen, right_up_screen, right_down_screen)
-    windows = Windows(left_win, right_win, center_win, right_up_win, right_down_win)
+    windows = Windows(brows_win, edit_win, center_win, view_win, tag_win, notes_win)
 
     return screens, windows
 

@@ -19,17 +19,19 @@ ESC = 27
 def get_user_input(stdscr, env, title=None):
     curses.curs_set(1)
 
-    screen = env.screens.center
-    win = env.windows.center
+    screen, win = env.get_center_win(reset=True)
     position = win.position
 
     user_input = UserInput()
+
+    rewrite_all_wins(env)
 
     while True:
         """ show user input """
         max_cols = win.end_x - win.begin_x
         max_rows = win.end_y - win.begin_y
         color = curses.color_pair(TAG_MGMT)
+
 
         row, col = show_user_input(screen, user_input, max_rows, max_cols, env, color=color, title=title)
         stdscr.move(win.begin_y + row, win.begin_x + col)
@@ -41,8 +43,10 @@ def get_user_input(stdscr, env, title=None):
             return env, None
         elif key == curses.KEY_RESIZE:
             env = resize_all(stdscr, env)
-            screen = env.screens.center
-            win = env.windows.center
+            screen, win = env.get_center_win()
+            win.reset()
+            win.set_position(position, screen)
+            rewrite_all_wins(env)
         # ======================= INPUT =======================
         elif key == curses.KEY_DC:
             user_input.delete_symbol(win)
@@ -59,35 +63,16 @@ def get_user_input(stdscr, env, title=None):
             """ CTRL + LEFT / CTRL + RIGHT """
             # https://asecuritysite.com/coding/asc2?val=512%2C768
             if hex(key) == "0x222" or hex(key) == "0x231":
-                stdscr_max_y, stdscr_max_x = stdscr.getmaxyx()
-
-                c_win_w = win.end_x - win.begin_x + 1
-                c_win_h = win.end_y - win.begin_y + 1
-                c_win_y = win.begin_y
-                c_win_x = win.begin_x
                 if hex(key) == "0x222": # move left
                     if position == 2:
                         position = 1
-                        c_win_x = 0
                     elif position == 3:
                         position = 2
-                        c_win_x = int(c_win_w/2)
                 elif hex(key) == "0x231": # move right
                     if position == 1:
                         position = 2
-                        c_win_x = int(c_win_w/2)
                     elif position == 2:
                         position = 3
-                        c_win_x = c_win_w
-
-                screen = curses.newwin(c_win_h, c_win_w, c_win_y, c_win_x)
-                win = Window(c_win_h, c_win_w, c_win_y, c_win_x)
-                win.set_position = position
-                env.screens.center = screen
-                env.windows.center = win
-                stdscr.erase()
-                stdscr.refresh()
+                win.set_position(position, screen)
                 rewrite_all_wins(env)
-
-
 

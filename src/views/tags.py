@@ -25,23 +25,20 @@ def save_tags_to_file(tags):
 
 def tag_management(stdscr, env):
     curses.curs_set(0)
-    screen = env.screens.right_down
-    win = env.windows.right_down
-
+    screen, win = env.get_screen_for_current_mode()
 
     """ read tags from file """
     if env.tags: # tag file was already loaded
         tags = env.tags
     else:
         tags = load_tags_from_file(env.file_to_open)
-        env.windows.right_down.set_cursor(0,0)
+        # win.reset(0,0)
         if tags is None:
             log("unexpected exception while load tags from file")
             env.set_exit_mode()
             return env
         else:
             env.tags = tags
-
 
     while True:
         """ print all screens """
@@ -60,12 +57,12 @@ def tag_management(stdscr, env):
             elif key == curses.ascii.TAB:
                 tags.save_to_file()
                 env.update_tagging_data(win, tags)
-                env.set_brows_mode()
+                env.switch_to_next_mode()
                 return env
             # ======================= RESIZE =======================
             elif key == curses.KEY_RESIZE:
                 env = resize_all(stdscr, env)
-                screen, win = env.screens.right_down, env.windows.right_down
+                screen, win = env.get_screen_for_current_mode()
             # ======================= ARROWS =======================
             elif key == curses.KEY_UP:
                 win.up(tags, use_restrictions=False)
@@ -74,12 +71,14 @@ def tag_management(stdscr, env):
             # ======================= F KEYS =======================
             elif key == curses.KEY_F1: # help
                 env = show_help(stdscr, env)
-                screen, win = env.screens.right_down, env.windows.right_down
+                screen, win = env.get_screen_for_current_mode()
                 curses.curs_set(0)
-            # elif key == curses.KEY_F2: # edit current tag
+            elif key == curses.KEY_F2: # edit current tag
+                pass
             elif key == curses.KEY_F3: # create new tag
                 title = "Enter new tag in format: tag_name param1 param2 ..."
                 env, text = get_user_input(stdscr, env, title=title)
+                screen, win = env.get_screen_for_current_mode()
                 curses.curs_set(0)
                 if text is not None:
                     tag_parts = ''.join(text).split()
@@ -103,12 +102,8 @@ def tag_management(stdscr, env):
                 win.up(tags, use_restrictions=False)
             elif key == curses.KEY_F9: # set filter
                 env = filter_management(stdscr, screen, win, env)
-
                 env.update_tagging_data(win, tags)
-                env.set_brows_mode()
-                env.quick_view = True
-                env.windows.left.reset_shifts()
-                env.windows.left.set_cursor(0,0)
+                env.prepare_browsing_after_filter()
                 return env
         except Exception as err:
             log("tagging | "+str(err))

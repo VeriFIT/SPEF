@@ -24,24 +24,6 @@ RELOAD_FILE_WITHOUT_SAVING = """WARNING: Reload file will discard changes.\n\
 
 
 
-"""
-    CTRL + Q    delete filter
-
-    CTRL + L    hard reload (from original buff)
-    CTRL + H    enable/disable note highlight
-
-    CTRL + D    show notes detail
-    CTRL + R    remove note
-    CTRL + E    edit note
-    CTRL + Down next note
-    CTRL + Up   prev note
-
-    CTRL + N    show/hide line numbers
-"""
-
-
-
-
 """ used for tag input or note input """
 def show_input(env):
     pass
@@ -67,7 +49,10 @@ def refresh_main_screens(env):
 
 def rewrite_all_wins(env):
     # refresh_main_screens(env)
-    show_directory_content(env)
+    if env.note_management:
+        show_notes(env)
+    else:
+        show_directory_content(env)
     show_file_content(env)
     if not env.edit_allowed:
         show_tags(env)
@@ -81,12 +66,17 @@ def print_hint(env, filter_mode=False):
     size = screen.getmaxyx()
 
     view_switch = "off" if env.quick_view else "on"
+    line_nums_switch = "hide" if env.line_numbers else "show"
+    note_switch = "hide" if env.note_highlight else "show"
     B_HELP = {"F1":"help", "F2":"menu", "F3":f"view {view_switch}","F4":"edit", "F5":"copy",
                 "F6":"rename", "F8":"delete", "F9":"filter", "F10":"exit"}
-    E_HELP = {"F1":"help", "F2":"save", "F3":"view/tag", "F4":"note", "F5":"goto",
-                "F8":"reload", "F9":"filter", "F10":"exit"}
-    V_HELP = {"F1":"help", "F4":"edit file", "F5":"goto", "F9":"filter", "F10":"exit"}
+    E_HELP = {"F1":"help", "F2":"save", "F3":"view/tag", "F4":"note", "F5":f"{line_nums_switch} lines",
+                "F6":f"{note_switch} notes", "F8":"reload", "F9":"filter", "F10":"exit"}
+    V_HELP = {"F1":"help", "F4":"edit", "F5":f"{line_nums_switch} lines",
+                "F6":f"{note_switch} notes", "F9":"filter", "F10":"exit"}
     T_HELP = {"F1":"help", "F4":"edit tags", "F9":"filter", "F10":"exit"}
+    N_HELP = {"F1":"help", "F2":"edit", "F3":"create new", "F4":"insert from menu", 
+                "F5":"go to", "F6":"save as typical", "F8":"delete", "F10":"exit"}
 
     if filter_mode:
         if env.is_brows_mode(): filter_type = "path"
@@ -105,6 +95,8 @@ def print_hint(env, filter_mode=False):
         help_dict = E_HELP if env.edit_allowed else V_HELP
     elif env.is_tag_mode():
         help_dict = T_HELP
+    elif env.is_notes_mode():
+        help_dict = N_HELP
     else:
         help_dict = {}
 
@@ -125,9 +117,10 @@ def print_help(screen, max_cols, max_rows, env, filter_mode=False):
     mode = ""
     if filter_mode:
         mode = "FILTER MANAGEMENT"
-        actions = {"ESC, F10": "exit filter management",
-        "F8": "delete/remove all filters",
+        actions = {
         "F1": "show this user help",
+        "F8": "delete/remove all filters",
+        "ESC, F10": "exit filter management",
         "Arrows": "move cursor in user input",
         "Delete, Backspace": "delete symbol in user input",
         "Ascii character": "insert symbol in user input",
@@ -135,28 +128,30 @@ def print_help(screen, max_cols, max_rows, env, filter_mode=False):
 
     elif env.is_brows_mode():
         mode = "DIRECTORY BROWSING"
-        actions = {"F10": "exit program",
-        "F9": "set filter by path",
-        "F7": "show/hide project info",
-        "F6": "show/hide cached files (tags, report)",
-        "F4": "opent file for edit",
-        "F3": "set quick view mode on/off",
-        "F2": "open menu with other functions",
+        actions = {
         "F1": "show this user help",
+        "F2": "open menu with other functions",
+        "F3": "set quick view mode on/off",
+        "F4": "opent file for edit",
+        "F6": "show/hide cached files (tags, report)",
+        "F7": "show/hide project info",
+        "F9": "set filter by path",
+        "F10": "exit program",
         "TAB": "change focus to file view or edit",
         "Arrows": "brows between files and dirs"}
     elif env.is_view_mode():
         if env.edit_allowed:
             mode = "FILE EDIT"
-            actions = {"F10": "exit program",
-            "F9": "set filter by content",
-            "F8": "reload file content from last save",
-            "F6": "show/hide note highlight",
-            "F5": "show/hide line numbers",
-            "F4": "open note management",
-            "F3": "change to file view/tag mode",
-            "F2": "save file changes",
+            actions = {
             "F1": "show this user help",
+            "F2": "save file changes",
+            "F3": "change to file view/tag mode",
+            "F4": "open note management",
+            "F5": "show/hide line numbers",
+            "F6": "show/hide note highlight",
+            "F8": "reload file content from last save",
+            "F9": "set filter by content",
+            "F10": "exit program",
             "TAB": "change focus to directory browsing or note management",
             "Arrows": "move cursor in file content",
             "Delete, Backspace": "delete symbol in file on current cursor position",
@@ -167,32 +162,49 @@ def print_help(screen, max_cols, max_rows, env, filter_mode=False):
             "CTRL + R": "remove all notes on current line"}
         else:
             mode = "FILE VIEW"
-            actions = {"F10": "exit program",
-            "F9": "set filter by content",
-            "F6": "show/hide note highlight",
-            "F5": "show/hide line numbers",
-            "F4": "change to file edit mode",
+            actions = {
             "F1": "show this user help",
+            "F4": "change to file edit mode",
+            "F5": "show/hide line numbers",
+            "F6": "show/hide note highlight",
+            "F9": "set filter by content",
+            "F10": "exit program",
             "TAB": "change focus to tag management",
             "Arrows": "move cursor in file content"}
     elif env.is_tag_mode():
         mode = "TAG MANAGEMENT"
-        actions = {"F10": "exit program",
-        "F9": "set filter by tag",
-        "F8": "delete current tag",
-        "F4": "open file with tags for edit",
-        "F3": "create new tag",
-        "F2": "edit current tag",
+        actions = {
         "F1": "show this user help",
+        "F2": "edit current tag",
+        "F3": "create new tag",
+        "F4": "open file with tags for edit",
+        "F8": "delete current tag",
+        "F9": "set filter by tag",
+        "F10": "exit program",
         "TAB": "change focus to directory browsing",
         "Arrows": "brows between tags"}
+    elif env.is_notes_mode():
+        mode = "NOTES MANAGEMENT"
+        actions = {
+        "F1": "show this user help",
+        "F2": "edit current note",
+        "F3": "create new note",
+        "F4": "insert note from saved (typical) notes",
+        "F5": "go to current note in file",
+        "F6": "save note as typical",
+        "F8": "delete current note",
+        "F10": "exit note management",
+        "TAB": "change focus to file view or edit",
+        "Arrows": "brows between notes"}
     if mode and actions:
         exit_message = "Press ESC or F1 to hide user help."
         message = f"*** USER HELP FOR {mode} ***"
-        if len(message) > max_cols or len(exit_message) > max_cols:
-            return
+        if len(message) >= max_cols:
+            message = message[:max_cols-1]
+        if len(exit_message) >= max_cols:
+            exit_message = exit_message[:max_cols-1]
         screen.addstr(1, 1, exit_message, curses.color_pair(HELP))
-        screen.addstr(2, int(max_cols/2-len(message)/2), message, curses.A_NORMAL)
+        screen.addstr(2, int(max_cols/2-len(message)/2)+1, message, curses.A_NORMAL)
         line = 3
         for key in actions:
             action = actions[key]
@@ -205,7 +217,7 @@ def print_help(screen, max_cols, max_rows, env, filter_mode=False):
                 if len(action) > free_space:
                     words = action.split()
                     while words:
-                        if line > max_rows:
+                        if line >= max_rows:
                             break
                         part = ""
                         word = words[0]
@@ -286,14 +298,14 @@ def show_user_input(screen, user_input, max_rows, max_cols, env, color=None, tit
             if len(word) >= max_cols:
                 while len(word) >= max_cols:
                     part = word[:max_cols-1]
-                    log(part)
+                    # log(part)
                     split_words.append(part)
                     word = word[max_cols-1:]
             split_words.append(word)
 
         words = split_words
         while words:
-            if row > max_rows:
+            if row >= max_rows:
                 break
             part = ""
             word = words[0]
@@ -303,7 +315,7 @@ def show_user_input(screen, user_input, max_rows, max_cols, env, color=None, tit
                 if not words:
                     break
                 word = words[0]
-            log(part)
+            # log(part)
             screen.addstr(row, 1, str(part), curses.A_NORMAL)
             last_col = 1+len(part)
             last_row = row
@@ -314,7 +326,7 @@ def show_user_input(screen, user_input, max_rows, max_cols, env, color=None, tit
 
 
 """ filter on last row in screen """
-def show_filter(screen, user_input, max_rows, max_cols, env, color=None):
+def show_filter(screen, user_input, max_rows, max_cols, env):
     if user_input:
         user_input_str = ''.join(user_input.text)
         if user_input.col_shift > 0 and len(user_input_str) > user_input.col_shift:
@@ -330,7 +342,7 @@ def show_filter(screen, user_input, max_rows, max_cols, env, color=None):
         screen.addstr(max_rows, 1, empty_message[:max_cols-1], curses.color_pair(FILTER) | curses.A_ITALIC)
     else:
         user_input_str += " "*(max_cols-1-len(user_input_str))
-        screen.addstr(max_rows, 1, user_input_str[:max_cols-1], color if color else curses.color_pair(FILTER))
+        screen.addstr(max_rows, 1, user_input_str[:max_cols-1], curses.color_pair(FILTER))
     screen.refresh()
 
 
@@ -338,8 +350,8 @@ def show_filter(screen, user_input, max_rows, max_cols, env, color=None):
 
 """ browsing directory """
 def show_directory_content(env):
-    screen = env.screens.left
-    win = env.windows.left
+    screen, win = env.screens.left, env.windows.brows
+
     max_cols = win.end_x - win.begin_x
     max_rows = win.end_y - win.begin_y - 1
 
@@ -407,7 +419,8 @@ def show_directory_content(env):
 """ view file content """
 def show_file_content(env):
     screen = env.screens.right if env.edit_allowed else env.screens.right_up
-    win = env.windows.right if env.edit_allowed else env.windows.right_up
+    win = env.windows.edit if env.edit_allowed else env.windows.view
+
     max_cols = win.end_x - win.begin_x
     max_rows = win.end_y - win.begin_y - 1
 
@@ -447,24 +460,11 @@ def show_file_content(env):
         """ show file content """
         if buffer:
             for row, line in enumerate(buffer[win.row_shift : max_rows + win.row_shift]):
-                
                 if row > max_rows or (row == max_rows and env.tag_filter_on()):
                     break
-                # if (user_input is not None) and (row == max_rows-1):
-                    # break
-
-                """ replace tab with spaces in line """
-                # new_line = ""
-                # for ch in line:
-                    # if ch == '\t':
-                        # new_line += " "*env.tab_size
-                    # else:
-                        # new_line += ch
-                # line = new_line
 
                 """ replace tab with spaces in line """
                 line = line.replace("\t", " "*env.tab_size)
-
 
                 if (row + win.begin_y == win.cursor.row - win.row_shift) and (win.col_shift > 0):
                     line = line[win.col_shift + 1:]
@@ -476,7 +476,12 @@ def show_file_content(env):
                     color = curses.color_pair(NOTE_HIGHLIGHT)            
                 else:
                     color = curses.A_NORMAL
-
+                
+                if env.specific_line_highlight is not None:
+                    # highlight current line in file so that user can see where he is typing note
+                    highlight_line, highlight_col = env.specific_line_highlight
+                    if (row == highlight_line):
+                        color = highlight_col
 
                 """ print line """
                 if env.line_numbers: # row+1 bcs row starts from 0
@@ -503,8 +508,8 @@ def show_file_content(env):
 
 """ tag management """
 def show_tags(env):
-    screen = env.screens.right_down
-    win = env.windows.right_down
+    screen, win = env.screens.right_down, env.windows.tag
+
     max_cols = win.end_x - win.begin_x
     max_rows = win.end_y - win.begin_y - 1
 
@@ -560,3 +565,67 @@ def show_tags(env):
         log("show tags | "+str(err))
     finally:
         screen.refresh()
+
+
+def show_notes(env):
+    screen, win = env.screens.left, env.windows.notes
+
+    max_cols = win.end_x - win.begin_x
+    max_rows = win.end_y - win.begin_y - 1
+
+    report = env.report
+
+    """ print borders """
+    screen.erase()
+    if env.is_notes_mode():
+        screen.attron(curses.color_pair(BORDER))
+        screen.border(0)
+        screen.attroff(curses.color_pair(BORDER))
+    else:
+        screen.border(0)
+
+    """ if there is no report with notes, then show empty window """
+    if report is None:
+        screen.refresh()
+        return
+
+    try:
+        """ show file name """
+        show_path(screen, report.path, max_cols)
+
+        """ show report """
+        # if False:
+        if report.code_review:
+            row = 0
+            # {line : { row1: ['note1'], row2: ['note2', 'note3']} }
+            notes = get_visible_notes(report, max_rows)
+            for row, note in enumerate(notes):
+                """ set color """
+                if row+win.row_shift == win.cursor.row and env.is_notes_mode():
+                    coloring = curses.color_pair(SELECT)
+                else:
+                    coloring = curses.A_NORMAL
+
+                if len(note) > max_cols - 1:
+                    note = note[:max_cols - 1]
+                screen.addstr(row+1, 1, note, coloring)
+
+    except Exception as err:
+        log("show notes | "+str(err))
+    finally:
+        screen.refresh()
+
+
+def get_visible_notes(report, max_rows):
+    row = 0
+    result = []
+    for line in sorted(report.code_review):
+        for col in sorted(report.code_review[line]):
+            notes = report.code_review[line][col]
+            for note in notes:
+                if row >= max_rows:
+                    return result
+                text = str(line)+":"+str(col)+":"+str(note)
+                result.append(text)
+                row +=1
+    return result

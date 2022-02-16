@@ -8,6 +8,7 @@ from utils.logger import *
 BROWS = 1
 VIEW = 2
 TAG = 3
+NOTES = 4
 EXIT = -1
 
 PROJ_DIR = "subjectA/projectA"
@@ -22,10 +23,11 @@ class Environment:
         self.screens = screens
         self.windows = windows
 
+        self.win_center_pos = conf['window']['position']
         self.win_left_edge, self.win_right_edge = conf['window']['left_edge'], conf['window']['right_edge']
         self.win_top_edge, self.win_bottom_edge = conf['window']['top_edge'], conf['window']['bottom_edge']
         self.windows.set_edges(self.win_left_edge, self.win_right_edge, self.win_top_edge, self.win_bottom_edge)
-        self.windows.center.position = conf['window']['position']
+        self.windows.center.set_position(self.win_center_pos)
 
 
         """ environment """
@@ -40,6 +42,8 @@ class Environment:
 
         self.show_menu = False
         self.line_numbers = None # None or str(number_of_lines_in_buffer)
+        self.note_management = False
+        self.specific_line_highlight = None # (line_number, color)
 
         self.file_to_open = None
         self.cwd = None # Directory(path, dirs, files)
@@ -78,23 +82,32 @@ class Environment:
         if self.file_to_open != file_to_open:
             self.file_to_open = file_to_open
             if self.edit_allowed:
-                self.windows.right.reset()
+                self.windows.edit.reset()
             else:
-                self.windows.right_up.reset()
-            self.windows.right_down.reset_shifts()
-            self.windows.right_down.set_cursor(0,0)
+                self.windows.view.reset()
+            self.windows.tag.reset(0,0)
+            self.windows.notes.reset(0,0)
 
 
     def get_screen_for_current_mode(self):
         if self.is_brows_mode():
-            return self.screens.left, self.windows.left
+            return self.screens.left, self.windows.brows
         if self.is_view_mode():
             if self.edit_allowed:
-                return self.screens.right, self.windows.right
+                return self.screens.right, self.windows.edit
             else:
-                return self.screens.right_up, self.windows.right_up
+                return self.screens.right_up, self.windows.view
         if self.is_tag_mode():
-            return self.screens.right_down, self.windows.right_down
+            return self.screens.right_down, self.windows.tag
+        if self.is_notes_mode():
+            return self.screens.left, self.windows.notes
+
+    def get_center_win(self, reset=False):
+        if reset:
+            self.windows.center.reset()
+            self.windows.center.set_position(self.win_center_pos, screen=self.screens.center)
+        return self.screens.center, self.windows.center
+
 
     """ filter """
     def filter_not_empty(self):
@@ -120,25 +133,34 @@ class Environment:
             if self.filter.tag:
                 return True
         return False
+    
+    def prepare_browsing_after_filter(self):
+        self.set_brows_mode()
+        self.quick_view = True
+        self.windows.brows.reset(0,0)
+
 
     """ update data """
     def update_browsing_data(self, win, cwd):
-        self.windows.left = win
+        self.windows.brows = win
         self.cwd = cwd
 
     def update_viewing_data(self, win, buffer, report=None):
         if self.edit_allowed:
-            self.windows.right = win
+            self.windows.edit = win
         else:
-            self.windows.right_up = win
+            self.windows.view = win
         self.buffer = buffer
         if report:
             self.report = report
 
     def update_tagging_data(self, win, tags):
-        self.windows.right_down = win
+        self.windows.tag = win
         self.tags = tags
 
+    def update_report_data(self, win, report):
+        self.windows.notes = win
+        self.report = report
 
     def enable_file_edit(self):
         self.edit_allowed = True
@@ -146,6 +168,14 @@ class Environment:
 
     def disable_file_edit(self):
         self.edit_allowed = False
+
+
+    def enable_note_management(self):
+        self.note_management = True
+
+    def disable_note_management(self):
+        self.note_management = False
+
 
     def disable_line_numbers(self):
         self.line_numbers = None
@@ -164,8 +194,29 @@ class Environment:
     def set_tag_mode(self):
         self.mode = TAG
 
+    def set_notes_mode(self):
+        self.mode = NOTES
+
     def set_exit_mode(self):
         self.mode = EXIT
+
+    """ cycling between modes """
+    def switch_to_next_mode(self):
+        if self.is_brows_mode():
+            self.mode = VIEW # Brows -> View
+        elif self.is_view_mode():
+            if self.edit_allowed:
+                if self.note_management:
+                    self.mode = NOTES # View -> Notes
+                else:
+                    self.mode = BROWS # View -> Brows
+            else:
+                self.mode = TAG # View -> Tag
+        elif self.is_tag_mode():
+            self.mode = BROWS # Tag -> Brows
+        elif self.is_notes_mode():
+            self.mode = VIEW # Notes -> View
+
 
     """ check mode """
     def is_brows_mode(self):
@@ -176,6 +227,9 @@ class Environment:
 
     def is_tag_mode(self):
         return self.mode == TAG
+
+    def is_notes_mode(self):
+        return self.mode == NOTES
 
     def is_exit_mode(self):
         return self.mode == EXIT

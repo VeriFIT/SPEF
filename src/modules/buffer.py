@@ -76,6 +76,14 @@ class Report:
     def __str__(self):
         return str(self.code_review)
 
+    def __len__(self):
+        i = 0
+        for line in self.code_review:
+            for col in self.code_review[line]:
+                for note in self.code_review[line][col]:
+                    i += 1
+        return i
+
     def add_note(self, row, col, text):
         if row in self.code_review:
             if col in self.code_review[row]:

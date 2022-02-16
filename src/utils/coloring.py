@@ -34,8 +34,9 @@ def init_color_pairs():
 
     curses.init_pair(TAG_MGMT, 10, -1)
 
-    curses.init_pair(NOTE_MGMT, 11, -1)
     curses.init_pair(NOTE_HIGHLIGHT, curses.COLOR_BLACK, 11)
+    curses.init_pair(NOTE_MGMT, curses.COLOR_BLACK, 221)
+    # curses.init_pair(NOTE_MGMT, 11, -1)
     curses.init_pair(LINE_NUM, 12, -1)
 
     # curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLACK)
