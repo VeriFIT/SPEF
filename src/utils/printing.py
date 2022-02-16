@@ -475,12 +475,10 @@ def show_file_content(env):
                 if (row+1+win.row_shift in colored_lines):
                     color = curses.color_pair(NOTE_HIGHLIGHT)            
                 else:
-                    color = curses.A_NORMAL
-                
+                    color = curses.A_NORMAL 
                 if env.specific_line_highlight is not None:
-                    # highlight current line in file so that user can see where he is typing note
                     highlight_line, highlight_col = env.specific_line_highlight
-                    if (row == highlight_line):
+                    if (row+1 == highlight_line):
                         color = highlight_col
 
                 """ print line """
@@ -488,11 +486,6 @@ def show_file_content(env):
                     screen.addstr(row+1, 1, str(row+1+win.row_shift), curses.color_pair(LINE_NUM))
                 screen.addstr(row+1, 1+shift, line, color)
 
-        """ show user input from note entering """
-        # TODO: prerobit note management na center okno
-        # if user_input:
-            # color=curses.color_pair(NOTE_MGMT)
-            # show_filter(screen, user_input, max_rows, max_cols, env, color=color)
         
         """ show content filter if there is one """
         if env.content_filter_on():

@@ -143,6 +143,10 @@ class Report:
                     new_code_review[new_y] = shifted_notes                    
         self.code_review = new_code_review
 
+    def save_to_file(self):
+        if self.code_review:
+            with open(self.path, 'w+', encoding='utf8') as f:
+                yaml.dump(self.code_review, f, default_flow_style=False, allow_unicode=True)
 
 class UserInput:
     def __init__(self):

@@ -98,10 +98,5 @@ def save_buffer(file_name, buffer, report=None):
     buffer.set_save_status(True)
     buffer.last_save = buffer.lines.copy()
     if report:
-        save_report_to_file(report)
+        report.save_to_file()
         report.last_save = report.code_review.copy()
-
-
-def save_report_to_file(report):
-    with open(report.path, 'w+', encoding='utf8') as f:
-        yaml.dump(report.code_review, f, default_flow_style=False, allow_unicode=True)

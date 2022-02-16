@@ -41,6 +41,7 @@ def notes_management(stdscr, env):
                 env.disable_note_management()
                 env.update_report_data(win, report)
                 env.switch_to_next_mode()
+                report.save_to_file()
                 return env
             # ======================= FOCUS =======================
             elif key == curses.ascii.TAB:
@@ -71,22 +72,19 @@ def notes_management(stdscr, env):
                     # log(text)
 
             elif key == curses.KEY_F3: # create new note
-                # TODO !!! zvyrazni sa riadok kde sa ide aktualne vo file editore pridat poznamka !!!
-                file_cursor = env.windows.edit.cursor if env.edit_allowed else env.windows.view.cursor
-                line, col = file_cursor.row, file_cursor.col
-                # line, col = file_cursor.row-1, file_cursor.col
-                # report.add_note(line, col, text):
+                file_win = env.windows.edit if env.edit_allowed else env.windows.view
+                line, col = file_win.cursor.row, file_win.cursor.col - file_win.begin_x
 
-                # env.note_edit = True
+                # define specific highlight for current line which is related to the new note
                 env.specific_line_highlight = (line, curses.color_pair(NOTE_MGMT))
+
                 title = "Enter new note:"
                 env, text = get_user_input(stdscr, env, title=title)
-                # env.note_edit = False
                 env.specific_line_highlight = None
-
                 curses.curs_set(0)
                 if text is not None:
-                    log(text)
+                    report.add_note(line, col, ''.join(text))
+    
             # elif key == curses.KEY_F4: # insert note from typical notes
             # elif key == curses.KEY_F5: # go to current note in file
             # elif key == curses.KEY_F6: # save note as typical
