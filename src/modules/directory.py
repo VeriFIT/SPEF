@@ -11,10 +11,10 @@ from utils.logger import *
 
 """ represents content of current working directory (cwd)"""
 class Directory:
-    def __init__(self, path, dirs=[], files=[]):
+    def __init__(self, path, dirs=None, files=None):
         self.path = path
-        self.dirs = dirs
-        self.files = files
+        self.dirs = [] if dirs is None else dirs
+        self.files = [] if files is None else files
 
     def __len__(self):
         return len(self.dirs) + len(self.files)

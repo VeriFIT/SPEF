@@ -250,7 +250,7 @@ class Window:
         self.reset()
         try:
             if screen:
-                screen.mvwin(self.begin_y, position_x)
+                screen.mvwin(self.begin_y - self.border, position_x)
         except Exception as err:
             log("win set position | "+str(err))
 

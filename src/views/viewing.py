@@ -67,7 +67,8 @@ def file_viewing(stdscr, env):
                     return env
 
     """ calculate line numbers """
-    if env.line_numbers:
+    if env.line_numbers or env.start_with_line_numbers:
+        env.start_with_line_numbers = False
         env.enable_line_numbers(buffer)
         env = resize_all(stdscr, env, True)
         screen, win = env.get_screen_for_current_mode()
@@ -170,9 +171,6 @@ def file_viewing(stdscr, env):
                             env.disable_file_edit()
                             return env
                     elif key == curses.KEY_F4: # add note
-                        pass
-                        # if report:
-                            # note_entering = True
                         env.update_viewing_data(win, buffer, report)
                         env.enable_note_management()
                         env.switch_to_next_mode()
@@ -183,7 +181,7 @@ def file_viewing(stdscr, env):
                         if file_changes_are_saved(stdscr, env, RELOAD_FILE_WITHOUT_SAVING, exit_key):
                             buffer.lines = buffer.last_save.copy()
                             if report:
-                                report.code_review = report.last_save.copy()
+                                report.data = report.last_save.copy()
                     # ------------------------ CTRL KEYS - EDIT ------------------------
                     elif curses.ascii.ismeta(key): # jump between notes in file
                         ctrl_key = curses.ascii.unctrl(key)
@@ -204,7 +202,7 @@ def file_viewing(stdscr, env):
                         if ctrl_key == '^L': # reload from original buffer
                             buffer.lines = buffer.original_buff.copy()
                             if report:
-                                report.code_review = report.original_report.copy()
+                                report.data = report.original_report.copy()
                         elif ctrl_key == '^N':
                             pass
                         elif ctrl_key == '^H':

@@ -4,7 +4,7 @@ env:
   edit_allowed: False
   note_highlight: True
   show_cached_files: False
-
+  start_with_line_numbers: True
 window:
   position: 2 # 1 left, 2 center, 3 right
   left_edge: 2

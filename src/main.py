@@ -70,15 +70,14 @@ def main(stdscr):
     windows.tag.set_cursor(0,0)
 
     """ load config from file and create framework environment """
-    dir_path = os.path.dirname(__file__)
-    conf_file = os.path.join(dir_path, "config.yaml")
-    try:
-        with open(conf_file, 'r') as f:
-            config = yaml.safe_load(f)
-        env = Environment(screens, windows, config)
-    except Exception as err:
-        log("cannot load config file | "+str(err))
+    config = load_config_from_file()
+    if config is None:
         exit(-1)
+    env = Environment(screens, windows, config)
+
+    """ load saved typical notes from file """
+    env.typical_notes = load_typical_notes_from_file()
+
 
     """ show all main screens """
     stdscr.erase()
@@ -101,6 +100,9 @@ def main(stdscr):
             env = tag_management(stdscr, env)
         elif env.is_notes_mode():
             env = notes_management(stdscr, env)
+
+    """ save typical notes to file """
+    save_typical_notes_to_file(env.typical_notes)
 
     log("END")
 """ ======================= END MAIN ========================= """

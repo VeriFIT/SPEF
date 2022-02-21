@@ -16,25 +16,28 @@ from utils.logger import *
 ESC = 27
 
 
-def get_user_input(stdscr, env, title=None):
+def get_user_input(stdscr, env, title=None, user_input=None):
     curses.curs_set(1)
 
     screen, win = env.get_center_win(reset=True)
     position = win.position
 
-    user_input = UserInput()
+    if user_input is None:
+        user_input = UserInput()
 
     rewrite_all_wins(env)
 
     while True:
         """ show user input """
-        max_cols = win.end_x - win.begin_x
-        max_rows = win.end_y - win.begin_y
+        max_cols = win.end_x - win.begin_x - 1
+        max_rows = win.end_y - win.begin_y - 1
         color = curses.color_pair(TAG_MGMT)
 
 
+        """ move cursor to correct position """
         row, col = show_user_input(screen, user_input, max_rows, max_cols, env, color=color, title=title)
         stdscr.move(win.begin_y + row, win.begin_x + col)
+
 
 
         key = stdscr.getch()
@@ -48,6 +51,19 @@ def get_user_input(stdscr, env, title=None):
             win.set_position(position, screen)
             rewrite_all_wins(env)
         # ======================= INPUT =======================
+        elif key == curses.KEY_LEFT:
+            user_input.left(win)
+        elif key == curses.KEY_RIGHT:
+            user_input.right(win)
+        elif key == curses.KEY_DOWN:
+            pass
+            # end_of_input = len(user_input)
+            # user_input.pointer = end_of_input
+            # user_input.horizontal_shift(win)
+        elif key == curses.KEY_UP:
+            pass
+            # user_input.pointer = 0
+            # user_input.col_shift = 0
         elif key == curses.KEY_DC:
             user_input.delete_symbol(win)
         elif key == curses.KEY_BACKSPACE:

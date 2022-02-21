@@ -9,18 +9,23 @@ from views.help import show_help
 
 from modules.directory import Directory
 
-from utils.loading import load_buffer_and_tags
+from utils.loading import load_buffer_and_tags, REPORT_SUFFIX, TAGS_SUFFIX
 from utils.screens import *
 from utils.printing import *
 from utils.logger import *
 
 
 
-def get_directory_content():
-    path = os.getcwd() # current working directory
+def get_directory_content(show_cached_files=True):
+    path = os.getcwd() # current working directory path
     files, dirs = [], []
     for dir_path, dir_names, file_names in os.walk(path):
-        files.extend(file_names)
+        if show_cached_files:
+            files.extend(file_names)
+        else:
+            for file_name in file_names:
+                if not file_name.endswith((REPORT_SUFFIX,TAGS_SUFFIX)):
+                    files.append(file_name)
         dirs.extend(dir_names)
         break
     dirs.sort()
@@ -37,7 +42,7 @@ def directory_browsing(stdscr, env):
     if env.filter_not_empty():
         cwd = Directory(env.filter.project, files=env.filter.files)
     else:
-        cwd = get_directory_content()
+        cwd = get_directory_content(env.show_cached_files)
     env.cwd = cwd
 
 
@@ -90,14 +95,14 @@ def directory_browsing(stdscr, env):
                 if not env.filter_not_empty() and idx < len(cwd.dirs):
                     """ go to subdirectory """
                     os.chdir(os.path.join(cwd.path, cwd.dirs[idx]))
-                    cwd = get_directory_content()
+                    cwd = get_directory_content(env.show_cached_files)
                     win.reset(0,0) # set cursor on first position (first item)
             elif key == curses.KEY_LEFT:
                 current_dir = os.path.basename(cwd.path) # get directory name
                 if not env.filter_not_empty() and current_dir: # if its not root
                     """ go to parent directory """
                     os.chdir('..')
-                    cwd = get_directory_content()
+                    cwd = get_directory_content(env.show_cached_files)
                     win.reset(0,0)
                     """ set cursor position to prev directory """
                     dir_position = cwd.dirs.index(current_dir) # find position of prev directory
@@ -135,7 +140,7 @@ def directory_browsing(stdscr, env):
                 if env.filter_not_empty():
                     cwd = Directory(env.filter.project, files=env.filter.files)
                 else:
-                    env.cwd = get_directory_content()
+                    env.cwd = get_directory_content(env.show_cached_files)
                     cwd = env.cwd
                 win.reset(0,0)
         except Exception as err:

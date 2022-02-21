@@ -150,7 +150,7 @@ def create_screens_and_windows(height, width, line_numbers=None):
 
 
     """ create windows """
-    center_win = Window(c_win_h, c_win_w, c_win_y, c_win_x)
+    center_win = Window(c_win_h, c_win_w, c_win_y, c_win_x, border=1)
     brows_win = Window(l_win_h, l_win_w, l_win_y, l_win_x)
     notes_win = Window(l_win_h, l_win_w, l_win_y, l_win_x)
     tag_win = Window(right_down_h, r_win_w, r_win_y+right_up_h, r_win_x)

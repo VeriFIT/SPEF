@@ -35,7 +35,8 @@ class Environment:
         self.quick_view = conf['env']['quick_view']
         self.edit_allowed = conf['env']['edit_allowed']
         self.note_highlight = conf['env']['note_highlight']
-        self.show_cached_files = conf['env']['show_cached_files'] # files for tags and report
+        self.show_cached_files = conf['env']['show_cached_files']
+        self.start_with_line_numbers = conf['env']['start_with_line_numbers']
 
         self.tab_size = conf['editor']['tab_size']
         self.messages = conf['messages'] # {'empty_path_filter': txt, 'empty_tag_filter': txt, ... }
@@ -49,26 +50,20 @@ class Environment:
         self.cwd = None # Directory(path, dirs, files)
         self.buffer = None # Buffer(path, lines)
         self.tags = None # Tags(path, data)
-        self.report = None # Report(path, code_review)
 
         """ filter """
         self.filter = None # Filter()
-        self.filtered_files = None # Directory(path, [], files)
 
+        self.report = None # Report(path, data)
 
-    def get_all_screens(self):
-        screens = {"LS": self.screens.left, "RS": self.screens.right, "DS": self.screens.down,
-                "CS": self.screens.center, "RUS": self.screens.right_up, "RDS": self.screens.right_down}
-        return screens
+        """ reports """
+        self.code_review = None # Report(path, data) for current file
+        # self.other_notes = None # Report(path, data) for current project TODO
+        # self.auto_notes = None # Report(path, data) for current project TODO
+        # self.auto_report = None # TODO
 
-    def get_visible_screens(self):
-        screens = {"LS": self.screens.left, "RS": self.screens.right, "DS": self.screens.down} # main screens
-        if not self.edit_allowed:
-            screens["RUS"] = self.screens.right_up
-            screens["RDS"] = self.screens.right_down
-        if self.show_menu:
-            screens["CS"] = self.screens.center
-        return screens
+        self.typical_notes = [] # [notes] all saved typical notes (from all projects)
+
 
 
     # TODO: get current project dir
@@ -164,7 +159,7 @@ class Environment:
 
     def enable_file_edit(self):
         self.edit_allowed = True
-        self.quick_view = False
+        self.quick_view = False # TODO ???
 
     def disable_file_edit(self):
         self.edit_allowed = False
@@ -213,7 +208,10 @@ class Environment:
             else:
                 self.mode = TAG # View -> Tag
         elif self.is_tag_mode():
-            self.mode = BROWS # Tag -> Brows
+            if self.note_management:
+                self.mode = NOTES # Tag -> Notes
+            else:
+                self.mode = BROWS # Tag -> Brows
         elif self.is_notes_mode():
             self.mode = VIEW # Notes -> View
 

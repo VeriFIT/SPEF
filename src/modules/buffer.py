@@ -15,7 +15,7 @@ data = {'documentation': ['ok'],
 class Tags:
     def __init__(self, path, data):
         self.path = path
-        self.data = data
+        self.data = data # {"tag_name": [param1, param2], "tag_name": []}
 
     def __str__(self):
         return str(self.data)
@@ -56,103 +56,157 @@ class Tags:
                 return False
         return True
 
+
+""" report for current project """
+# class Report:
+#     def __init__(self, code_review=None):
+#         """ data """
+#         self.code_review = code_review # {"file": [notes], "file": [notes]}
+#         self.auto_report = None # TODO
+#         self.auto_notes = None # [notes]
+#         self.other_notes = None # [notes]
+
+#         """ project identification """
+#         self.project_path = None
+
+
+"""
+poznamka nemusi mat line,col ak ide o poznamku mimo code review
+napr "chybajuca dokumentacia" je poznamka nepatriaca k ziadnemu konkretnemu riadku v kode
+- jedine poznamky ktore su ulozene v subore ako dict (yaml) a maju row,col su poznamky z code_review
+- vsetky ostatne poznamky su ulozene v subore ako pole stringov (txt) a nemaju ziaden row,col
+"""
+class Note:
+    def __init__(self, text, row=None, col=None):
+        self.row = row
+        self.col = col
+        self.text = text
+
+        # self.score = None # pridanie/odobranie bodoveho hodnotenia z celkoveho skore
+
+    def is_typical(self, env):
+        for note in env.typical_notes:
+            if note.text == self.text:
+                return True
+        return False
+
+    def set_as_typical(self, env):
+        env.typical_notes.append(self)
+
+    def remove_from_typical(self, env):
+        for idx, note in enumerate(env.typical_notes):
+            if note.text == self.text:
+                del env.typical_notes[idx]
+
+
+
+"""
+report by mal byt k celemu studentskemu projektu v podadresari reports
+celkovy report sa sklada zo suborov:
+    * automaticke hodnotenie z automatickych testov
+    * poznamky k automatickym testom
+    * poznamky z code review
+    * dalsie nezavisle poznamky
+tieto casti su ulozene v env ako:
+    * auto_report = ??? # je z nich mozne vygenerovat tagy
+    * auto_notes = Report(path, data)
+    * code_review = Report(path, data)
+    * other_notes = Report(path, data)
+-auto_report, auto_notes, other_notes sa nacitava s kazdym novym projektom
+-code_review sa nacitava s kazdym novym suborom
+"""
+
 """
 code_review = { 4: { 5: ['my first note'],
                      10: ['next note on same line']},
                 7: { 1: ['another line'] },
                 11: { 4: ['velmi dlha', 'poznamka k voziku', 'na viac riadkov'] }}
+data = {line : { row1: ['note1'], row2: ['note2', 'note3']} }
 """
 class Report:
-    def __init__(self, path, code_review={}):
-        self.path = path
-        self.code_review = code_review # {line : { row1: ['note1'], row2: ['note2', 'note3']} }
+    def __init__(self, path, data=None):
+        self.path = path # cesta k suboru ktory obsahuje report (typicky fileXYZ_report.yaml)
+        self.data = [] if data is None else data # [notes]
 
-        self.original_report = code_review.copy()
-        self.last_save = code_review.copy()
+        self.original_report = data.copy()
+        self.last_save = data.copy()
 
-        self.project_name = None
-        self.login = None
 
     def __str__(self):
-        return str(self.code_review)
+        return str(self.data)
 
     def __len__(self):
-        i = 0
-        for line in self.code_review:
-            for col in self.code_review[line]:
-                for note in self.code_review[line][col]:
-                    i += 1
-        return i
+        return len(self.data)
 
     def add_note(self, row, col, text):
-        if row in self.code_review:
-            if col in self.code_review[row]:
-                self.code_review[row][col].append(text)
-            else:
-                self.code_review[row][col] = [text]
-        else:
-            self.code_review[row] = {col: [text]}
+        note = Note(text, row=row, col=col)
+        self.data.append(note)
+        """ sort notes by col and row """
+        self.data.sort(key=lambda note: note.col)
+        self.data.sort(key=lambda note: note.row)
 
     def delete_notes_on_line(self, row):
-        if row in self.code_review:
-            del self.code_review[row]
+        for idx, note in enumerate(list(self.data)):
+            if note.row == row:
+                del self.data[idx]
+
 
     def get_notes_on_line(self, row):
-        return self.code_review[row]
+        notes = []
+        for note in enumerate(self.data):
+            if note.row == row:
+                notes.append(note)
+        return notes
+
 
     def get_next_line_with_note(self, row):
-        for key in sorted(self.code_review):
-            if key > row:
-                return key
+        self.data.sort(key=lambda note: note.row)
+        for note in self.data:
+            if note.row > row:
+                return note.row
         return row
 
     def get_prev_line_with_note(self, row):
         prev_line = row
-        for key in sorted(self.code_review):
-            if key >= row:
+        self.data.sort(key=lambda note: note.row)
+        for note in self.data:
+            if note.row >= row:
                 return prev_line
-            prev_line = key
+            prev_line = note.row
         return prev_line
 
 
     """ move notes to correct line after adding/removing line in buffer """
     def notes_lines_shift(self, row, col, row_shift=0, col_shift=0):
-        new_code_review = self.code_review.copy()
-        for y in self.code_review:
-            # x shift
-            shifted_notes = self.code_review[y].copy()
-            for x in self.code_review[y]:
-                notes = self.code_review[y][x].copy()
-                if y > row or (row_shift >= 0 and y == row and x > col):
-                    del shifted_notes[x]
-                    new_x = int(x)+col_shift
-                    if new_x in shifted_notes:
-                        shifted_notes[new_x].extend(notes)
-                    else:
-                        shifted_notes[new_x] = notes
-                if y == row and x == col:
-                    del shifted_notes[x]
-
-            # y shift
-            if y > row or (row_shift >= 0 and y == row and x > col):
-                del new_code_review[y]
-                new_y = int(y)+row_shift
-                if new_y in new_code_review:
-                    new_code_review[new_y].update(shifted_notes)
-                else:
-                    new_code_review[new_y] = shifted_notes                    
-        self.code_review = new_code_review
+        for note in self.data:
+            if (note.row>row) or (row_shift>=0 and note.row==row and note.col>col):
+                note.col += col_shift
+                note.row += row_shift
 
     def save_to_file(self):
-        if self.code_review:
-            with open(self.path, 'w+', encoding='utf8') as f:
-                yaml.dump(self.code_review, f, default_flow_style=False, allow_unicode=True)
+        notes = {}
+        for note in self.data:
+            if note.row is not None and note.col is not None:
+                if note.row in notes:
+                    if note.col in notes[note.row]:
+                        notes[note.row][note.col].append(note.text)
+                    else:
+                        notes[note.row][note.col] = [text]
+                else:
+                    notes[note.row] = {note.col: [text]}
+            else:
+                notes[0][0].append(note.text)
+        with open(self.path, 'w+', encoding='utf8') as f:
+            yaml.dump(notes, f, default_flow_style=False, allow_unicode=True)
+
 
 class UserInput:
     def __init__(self):
         self.text = []
+
         self.pointer = 0
         self.col_shift = 0
+        self.row_shift = 0
 
         self.pages = 0
 
@@ -173,6 +227,12 @@ class UserInput:
         if self.pointer < len(self):
             self.pointer += 1
         self.horizontal_shift(win)
+
+    # def up(self, win):
+        # self.row_shift -= 1
+
+    # def down(self, win):
+        # self.row_shift += 1
 
     def delete_symbol(self, win):
         if self.pointer < len(self):
@@ -195,6 +255,34 @@ class UserInput:
     def get_shifted_pointer(self):
         return self.pointer - self.col_shift - (1 if self.col_shift > 0 else 0)
 
+    def process_to_lines(self, max_cols):
+        user_input_str = ''.join(self.text)
+        words = re.split(r'(\S+)', user_input_str) # split string into list of words and spaces
+        split_words = []
+        for word in words:
+            # if any single word is longer than window, split it (otherwise it would never be printed)
+            if len(word) >= max_cols:
+                while len(word) >= max_cols:
+                    part = word[:max_cols-1]
+                    split_words.append(part)
+                    word = word[max_cols-1:]
+            split_words.append(word)
+
+        lines = []
+        words = split_words
+        while words:
+            line = ""
+            word = words[0] # get first word
+            while len(line)+len(word) < max_cols: # check if the word fits in the line
+                """ add word to the line """
+                line += word
+                del words[0]
+                if not words:
+                    break
+                word = words[0] # get next word
+            lines.append(line)
+
+        return lines
 
 
 class Buffer:

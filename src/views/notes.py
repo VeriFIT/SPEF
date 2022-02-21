@@ -8,7 +8,7 @@ from views.help import show_help
 
 from modules.buffer import Tags, UserInput
 
-from utils.loading import load_tags_from_file
+from utils.loading import save_report_to_file
 from utils.input import get_user_input
 from utils.screens import *
 from utils.printing import *
@@ -22,7 +22,7 @@ def notes_management(stdscr, env):
 
     report = env.report
     if report is None:
-        log("unexpected error in note manatemeng - there is no report in env")
+        log("unexpected error in note management - there is no report in env")
         env.disable_note_management()
         env.set_view_mode()
         return env
@@ -37,11 +37,17 @@ def notes_management(stdscr, env):
         key = stdscr.getch()
         try:
             # ======================= EXIT =======================
-            if key in (curses.ascii.ESC, curses.KEY_F10): # exit note manatement
+            if key == curses.ascii.ESC: # exit note manatement
                 env.disable_note_management()
                 env.update_report_data(win, report)
                 env.switch_to_next_mode()
-                report.save_to_file()
+                save_report_to_file(report)
+                return env
+            if key == curses.KEY_F10: # exit program
+                env.disable_note_management()
+                env.update_report_data(win, report)
+                env.set_exit_mode()
+                save_report_to_file(report)
                 return env
             # ======================= FOCUS =======================
             elif key == curses.ascii.TAB:
@@ -64,33 +70,65 @@ def notes_management(stdscr, env):
                 screen, win = env.get_screen_for_current_mode()
                 curses.curs_set(0)
             elif key == curses.KEY_F2: # edit current note
-                pass
-                # title = "Edit note:"
-                # env, text = get_user_input(stdscr, env, title=title)
-                # curses.curs_set(0)
-                # if text is not None:
-                    # log(text)
+                current_note = report.data[win.cursor.row]
+                user_input = UserInput()
+                user_input.text = list(current_note.text)
+
+                # define specific highlight for current line which is related to the new note
+                env.specific_line_highlight = (current_note.row, curses.color_pair(NOTE_MGMT))
+
+                title = "Edit note:"
+                env, text = get_user_input(stdscr, env, title=title, user_input=user_input)
+                env.specific_line_highlight = None
+                curses.curs_set(0)
+                if text is not None:
+                    report.data[win.cursor.row].text = ''.join(text)
 
             elif key == curses.KEY_F3: # create new note
                 file_win = env.windows.edit if env.edit_allowed else env.windows.view
-                line, col = file_win.cursor.row, file_win.cursor.col - file_win.begin_x
+                note_row, note_col = file_win.cursor.row, file_win.cursor.col - file_win.begin_x
+                current_note_row = report.data[win.cursor.row].row
+                current_note_col = report.data[win.cursor.row].col
 
                 # define specific highlight for current line which is related to the new note
-                env.specific_line_highlight = (line, curses.color_pair(NOTE_MGMT))
+                env.specific_line_highlight = (note_row, curses.color_pair(NOTE_MGMT))
 
                 title = "Enter new note:"
                 env, text = get_user_input(stdscr, env, title=title)
                 env.specific_line_highlight = None
                 curses.curs_set(0)
                 if text is not None:
-                    report.add_note(line, col, ''.join(text))
-    
-            # elif key == curses.KEY_F4: # insert note from typical notes
-            # elif key == curses.KEY_F5: # go to current note in file
-            # elif key == curses.KEY_F6: # save note as typical
-            # elif key == curses.KEY_F8: # delete note
-                # if report:
-                    # report.delete_notes_on_line(win.cursor.row)
+                    report.add_note(note_row, note_col, ''.join(text))
+
+                    """ move cursor down if new note is lower then current item (current cursor position) """
+                    if note_row < current_note_row or (note_row == current_note_row and note_col < current_note_col):
+                        win.down(report, filter_on=env.tag_filter_on(), use_restrictions=False)
+
+            elif key == curses.KEY_F4: # insert note from typical notes
+                pass
+            elif key == curses.KEY_F5: # go to current note in file
+                current_note = report.data[win.cursor.row]
+                env.update_report_data(win, report)
+                env.switch_to_next_mode()
+                _, view_win = env.get_screen_for_current_mode()
+                if current_note.row < view_win.cursor.row:
+                    while current_note.row != view_win.cursor.row:
+                        view_win.up(env.buffer, use_restrictions=True)
+                else:
+                    while current_note.row != view_win.cursor.row:
+                        view_win.down(env.buffer, filter_on=env.content_filter_on(), use_restrictions=True)
+                return env
+            elif key == curses.KEY_F6: # save note as typical
+                current_note = report.data[win.cursor.row]
+                if current_note.is_typical(env):
+                    current_note.remove_from_typical(env)
+                else:
+                    current_note.set_as_typical(env)
+            elif key == curses.KEY_F8: # delete note
+                if len(report.data) >= win.cursor.row:
+                    del report.data[win.cursor.row]
+                    win.up(report, use_restrictions=False)
+
 
         except Exception as err:
             log("note management | "+str(err))

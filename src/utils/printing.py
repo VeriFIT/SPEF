@@ -68,6 +68,11 @@ def print_hint(env, filter_mode=False):
     view_switch = "off" if env.quick_view else "on"
     line_nums_switch = "hide" if env.line_numbers else "show"
     note_switch = "hide" if env.note_highlight else "show"
+    typical_note = "save as"
+    if env.report is not None:
+        if len(env.report.data) >= env.windows.notes.cursor.row:
+            if env.report.data[env.windows.notes.cursor.row].is_typical(env):
+                typical_note = "unsave from"
     B_HELP = {"F1":"help", "F2":"menu", "F3":f"view {view_switch}","F4":"edit", "F5":"copy",
                 "F6":"rename", "F8":"delete", "F9":"filter", "F10":"exit"}
     E_HELP = {"F1":"help", "F2":"save", "F3":"view/tag", "F4":"note", "F5":f"{line_nums_switch} lines",
@@ -76,7 +81,7 @@ def print_hint(env, filter_mode=False):
                 "F6":f"{note_switch} notes", "F9":"filter", "F10":"exit"}
     T_HELP = {"F1":"help", "F4":"edit tags", "F9":"filter", "F10":"exit"}
     N_HELP = {"F1":"help", "F2":"edit", "F3":"create new", "F4":"insert from menu", 
-                "F5":"go to", "F6":"save as typical", "F8":"delete", "F10":"exit"}
+                "F5":"go to", "F6":f"{typical_note} typical", "F8":"delete", "F10":"exit"}
 
     if filter_mode:
         if env.is_brows_mode(): filter_type = "path"
@@ -280,25 +285,25 @@ def show_user_input(screen, user_input, max_rows, max_cols, env, color=None, tit
     screen.erase()
     screen.border(0)
 
-    row = 1
+    row = 0
     if title:
-        screen.addstr(row, 1, title[:max_cols-1], color if color else curses.A_NORMAL)
+        screen.addstr(row+1, 1, title[:max_cols], color if color else curses.A_NORMAL)
         row += 1
 
-    last_row = row
-    last_col = 1
+    cnt_total = 0 # counter of total processed (printed) characters
+    cnt_on_line = 0 # counter of processed characters on one line
+    current_cursor = row, cnt_on_line
+
     if user_input:
-        max_cols -= 1
         user_input_str = ''.join(user_input.text)
         # if len(user_input_str) > max_cols:
-        words = re.split(r'(\S+)',user_input_str) # split string into list of words and spaces
+        words = re.split(r'(\S+)', user_input_str) # split string into list of words and spaces
         split_words = []
         for word in words:
-            # if any word is longer than window, split it
+            # if any single word is longer than window, split it (otherwise it would never be printed)
             if len(word) >= max_cols:
                 while len(word) >= max_cols:
                     part = word[:max_cols-1]
-                    # log(part)
                     split_words.append(part)
                     word = word[max_cols-1:]
             split_words.append(word)
@@ -307,22 +312,30 @@ def show_user_input(screen, user_input, max_rows, max_cols, env, color=None, tit
         while words:
             if row >= max_rows:
                 break
-            part = ""
-            word = words[0]
-            while len(part)+len(word) < max_cols:
-                part += word
+            line = ""
+            word = words[0] # get first word
+            cnt_on_line = 0 # reset counter on new line
+            while len(line)+len(word) < max_cols: # check if the word fits in the line
+                """ add word to the line """
+                line += word
                 del words[0]
+
+                """ get cursor position """
+                if cnt_total == user_input.pointer: # all characters (from begining to current pointer) were processed
+                    current_cursor = row, cnt_on_line # save current cursor position: row + counter of characters on this row (as column)
+                for _ in word: # process new added word in line, by its symbols (characters)
+                    cnt_total += 1
+                    cnt_on_line += 1
+                    if cnt_total == user_input.pointer: # with each character check if all were processed
+                        current_cursor = row, cnt_on_line
                 if not words:
                     break
-                word = words[0]
-            # log(part)
-            screen.addstr(row, 1, str(part), curses.A_NORMAL)
-            last_col = 1+len(part)
-            last_row = row
+                word = words[0] # get next word
+            screen.addstr(row+1, 1, str(line), curses.A_NORMAL)
             row +=1
 
     screen.refresh()
-    return last_row, last_col
+    return current_cursor
 
 
 """ filter on last row in screen """
@@ -449,8 +462,8 @@ def show_file_content(env):
     """ highlight lines with notes """
     colored_lines = []
     if env.note_highlight and report:
-        for key in report.code_review:
-            colored_lines.append(int(key))
+        for note in report.data:
+            colored_lines.append(int(note.row))
 
 
     try:
@@ -587,38 +600,33 @@ def show_notes(env):
         show_path(screen, report.path, max_cols)
 
         """ show report """
-        # if False:
-        if report.code_review:
-            row = 0
-            # {line : { row1: ['note1'], row2: ['note2', 'note3']} }
-            notes = get_visible_notes(report, max_rows)
-            for row, note in enumerate(notes):
+        if report.data:
+            for row, note in enumerate(report.data[win.row_shift : max_rows + win.row_shift]):
+                if row > max_rows:
+                    break
+
+                """ replace tab with spaces in note """
+                text = note.text.replace("\t", " "*env.tab_size)
+
+                star = "*" if note.is_typical(env) else " "
+                line = star + str(note.row) + ":" + str(note.col) + ":" + text
+
+                if (row + win.begin_y == win.cursor.row - win.row_shift) and (win.col_shift > 0):
+                    line = line[win.col_shift + 1:]
+                if len(line) > max_cols - 1:
+                    line = line[:max_cols - 1]
+
                 """ set color """
                 if row+win.row_shift == win.cursor.row and env.is_notes_mode():
-                    coloring = curses.color_pair(SELECT)
+                    color = curses.color_pair(SELECT)
                 else:
-                    coloring = curses.A_NORMAL
+                    color = curses.A_NORMAL
 
-                if len(note) > max_cols - 1:
-                    note = note[:max_cols - 1]
-                screen.addstr(row+1, 1, note, coloring)
+                """ print line """
+                screen.addstr(row+1, 1, line, color)
 
     except Exception as err:
         log("show notes | "+str(err))
     finally:
         screen.refresh()
 
-
-def get_visible_notes(report, max_rows):
-    row = 0
-    result = []
-    for line in sorted(report.code_review):
-        for col in sorted(report.code_review[line]):
-            notes = report.code_review[line][col]
-            for note in notes:
-                if row >= max_rows:
-                    return result
-                text = str(line)+":"+str(col)+":"+str(note)
-                result.append(text)
-                row +=1
-    return result
