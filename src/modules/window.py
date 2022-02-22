@@ -107,10 +107,10 @@ class Cursor:
 class Window:
     def __init__(self, height, width, begin_y, begin_x, border=0, line_num_shift=0):
         """ location """
-        self.begin_x = begin_x+border # width (max_cols = end_x - begin_x)
-        self.begin_y = begin_y+border # height (max_rows = end_y - begin_y)
-        self.end_x = begin_x+border + width - 1
-        self.end_y = begin_y+border + height - 1
+        self._begin_x = begin_x # width (max_cols = end_x - begin_x)
+        self._begin_y = begin_y # height (max_rows = end_y - begin_y)
+        self._end_x = begin_x + width - 1
+        self._end_y = begin_y + height - 1
 
         self.border = border
         self.line_num_shift = line_num_shift
@@ -126,7 +126,7 @@ class Window:
         self.col_shift = 0 # x
 
         """ cursor """
-        self.cursor = Cursor(self.begin_y,self.begin_x) # for working with buffer
+        self.cursor = Cursor(self.begin_y, self.begin_x) # for working with buffer
         self.tab_shift = 0 # used only in file view/edit
 
         """ edges - default values """
@@ -134,6 +134,23 @@ class Window:
         self.right_edge = 2
         self.top_edge = 1
         self.bottom_edge = 1 # ak chces posuvat okno az ked je kurzor na poslednom riadku, nastav na 0
+
+
+    @property
+    def begin_x(self):
+        return self._begin_x + self.border
+
+    @property
+    def begin_y(self):
+        return self._begin_y + self.border
+
+    @property
+    def end_x(self):
+        return self._end_x + self.border
+
+    @property
+    def end_y(self):
+        return self._end_y + self.border
 
     @property
     def bottom(self):
@@ -148,6 +165,9 @@ class Window:
         self.right_edge = right
         self.top_edge = top
         self.bottom_edge = bottom
+
+    def set_border(self, border):
+        self.border = border
 
     def up(self, buffer, use_restrictions=True, ):
         self.cursor.up(buffer, self, use_restrictions)
@@ -243,8 +263,8 @@ class Window:
         else:
             position_x = self.right_position_x
         width = self.end_x - self.begin_x + 1
-        self.begin_x = position_x + self.border
-        self.end_x = position_x + self.border + width - 1
+        self._begin_x = position_x
+        self._end_x = position_x + width - 1
         self.center_position_x = int((self.end_x - self.begin_x + 1)/2)
         self.right_position_x = self.end_x - self.begin_x + 1
         self.reset()

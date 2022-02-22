@@ -23,6 +23,9 @@ NOTE_MGMT = 30
 NOTE_HIGHLIGHT = 31
 LINE_NUM = 32
 
+# basic colors
+GREEN_COL = 40
+
 def init_color_pairs():
     curses.init_pair(BKGD, curses.COLOR_WHITE, -1)
     curses.init_pair(SELECT, curses.COLOR_BLACK, curses.COLOR_CYAN)
@@ -40,3 +43,5 @@ def init_color_pairs():
     curses.init_pair(LINE_NUM, 12, -1)
 
     # curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLACK)
+
+    curses.init_pair(GREEN_COL, curses.COLOR_GREEN, -1)

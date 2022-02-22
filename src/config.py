@@ -82,7 +82,7 @@ class Environment:
                 self.windows.view.reset()
             self.windows.tag.reset(0,0)
             self.windows.notes.reset(0,0)
-
+            self.report = None
 
     def get_screen_for_current_mode(self):
         if self.is_brows_mode():
@@ -97,10 +97,10 @@ class Environment:
         if self.is_notes_mode():
             return self.screens.left, self.windows.notes
 
-    def get_center_win(self, reset=False):
+    def get_center_win(self, reset=False, row=None, col=None):
         if reset:
-            self.windows.center.reset()
             self.windows.center.set_position(self.win_center_pos, screen=self.screens.center)
+            self.windows.center.reset(row=row, col=col)
         return self.screens.center, self.windows.center
 
 
@@ -131,6 +131,7 @@ class Environment:
     
     def prepare_browsing_after_filter(self):
         self.set_brows_mode()
+        self.disable_note_management()
         self.quick_view = True
         self.windows.brows.reset(0,0)
 

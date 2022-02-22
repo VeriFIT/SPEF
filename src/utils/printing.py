@@ -65,23 +65,29 @@ def print_hint(env, filter_mode=False):
     screen.border(0)
     size = screen.getmaxyx()
 
-    view_switch = "off" if env.quick_view else "on"
     line_nums_switch = "hide" if env.line_numbers else "show"
     note_switch = "hide" if env.note_highlight else "show"
+    view_switch = "off" if env.quick_view else "on"
+
     typical_note = "save as"
-    if env.report is not None:
+    if env.is_notes_mode() and env.report is not None:
         if len(env.report.data) >= env.windows.notes.cursor.row:
             if env.report.data[env.windows.notes.cursor.row].is_typical(env):
                 typical_note = "unsave from"
-    B_HELP = {"F1":"help", "F2":"menu", "F3":f"view {view_switch}","F4":"edit", "F5":"copy",
-                "F6":"rename", "F8":"delete", "F9":"filter", "F10":"exit"}
-    E_HELP = {"F1":"help", "F2":"save", "F3":"view/tag", "F4":"note", "F5":f"{line_nums_switch} lines",
-                "F6":f"{note_switch} notes", "F8":"reload", "F9":"filter", "F10":"exit"}
-    V_HELP = {"F1":"help", "F4":"edit", "F5":f"{line_nums_switch} lines",
-                "F6":f"{note_switch} notes", "F9":"filter", "F10":"exit"}
-    T_HELP = {"F1":"help", "F4":"edit tags", "F9":"filter", "F10":"exit"}
+
     N_HELP = {"F1":"help", "F2":"edit", "F3":"create new", "F4":"insert from menu", 
                 "F5":"go to", "F6":f"{typical_note} typical", "F8":"delete", "F10":"exit"}
+
+    B_HELP = {"F1":"help", "F2":"menu", "F3":f"view {view_switch}","F4":"edit", "F5":"copy",
+                "F6":"rename", "F8":"delete", "F9":"filter", "F10":"exit"}
+
+    E_HELP = {"F1":"help", "F2":"save", "F3":"view/tag", "F4":"note", "F5":f"{line_nums_switch} lines",
+                "F6":f"{note_switch} notes", "F8":"reload", "F9":"filter", "F10":"exit"}
+
+    V_HELP = {"F1":"help", "F4":"edit", "F5":f"{line_nums_switch} lines",
+                "F6":f"{note_switch} notes", "F9":"filter", "F10":"exit"}
+
+    T_HELP = {"F1":"help", "F4":"edit tags", "F9":"filter", "F10":"exit"}
 
     if filter_mode:
         if env.is_brows_mode(): filter_type = "path"
@@ -89,11 +95,9 @@ def print_hint(env, filter_mode=False):
         elif env.is_tag_mode(): filter_type = "tag"
         else: filter_type = None
 
-        if not filter_type:
-            help_dict = {}
-        else:
-            help_dict = {"F1":"help", "ESC":"exit filter mode", 
-                        "F8":"remove all filters", "F9":f"edit {filter_type} filter"}
+        F_HELP = {"F1":"help", "ESC":"exit filter mode", 
+                "F8":"remove all filters", "F9":f"edit {filter_type} filter"}
+        help_dict = {} if not filter_type else F_HELP
     elif env.is_brows_mode():
         help_dict = B_HELP
     elif env.is_view_mode():
@@ -630,3 +634,35 @@ def show_notes(env):
     finally:
         screen.refresh()
 
+
+def show_menu(screen, win, menu_options, max_rows, max_cols, env, color=None, title=None):
+    screen.erase()
+    screen.border(0)
+
+    row = 0
+    if title:
+        screen.addstr(row+1, 1, title[:max_cols], color if color else curses.A_NORMAL)
+        row += 1
+
+    try:
+        """ show options """
+        if len(menu_options) > 0:
+            for option in menu_options:
+                if row > max_rows:
+                    break
+
+                """ set color """
+                if row+win.row_shift == win.cursor.row+1: # +1
+                    coloring = curses.color_pair(SELECT)
+                else:
+                    coloring = curses.A_NORMAL
+
+                screen.addstr(row+1, 1, str(option[:max_cols-1]), coloring)
+                row += 1
+        else:
+            screen.addstr(row+1, 1, "* There is no option to select from menu *", curses.A_NORMAL | curses.A_BOLD)
+
+    except Exception as err:
+        log("show menu | "+str(err))
+    finally:
+        screen.refresh()

@@ -8,12 +8,14 @@ from views.help import show_help
 
 from modules.buffer import Tags, UserInput
 
+from views.menu import brows_menu
+
 from utils.loading import save_report_to_file
 from utils.input import get_user_input
 from utils.screens import *
 from utils.printing import *
 from utils.logger import *
-
+from utils.coloring import *
 
 
 def notes_management(stdscr, env):
@@ -37,7 +39,7 @@ def notes_management(stdscr, env):
         key = stdscr.getch()
         try:
             # ======================= EXIT =======================
-            if key == curses.ascii.ESC: # exit note manatement
+            if key == curses.ascii.ESC: # exit note management
                 env.disable_note_management()
                 env.update_report_data(win, report)
                 env.switch_to_next_mode()
@@ -105,7 +107,30 @@ def notes_management(stdscr, env):
                         win.down(report, filter_on=env.tag_filter_on(), use_restrictions=False)
 
             elif key == curses.KEY_F4: # insert note from typical notes
-                pass
+                file_win = env.windows.edit if env.edit_allowed else env.windows.view
+                note_row, note_col = file_win.cursor.row, file_win.cursor.col - file_win.begin_x
+                current_note_row = report.data[win.cursor.row].row
+                current_note_col = report.data[win.cursor.row].col
+
+                # define specific highlight for current line which is related to the new note
+                env.specific_line_highlight = (note_row, curses.color_pair(NOTE_MGMT))
+
+                title = "Select from typical notes: "
+                color = curses.color_pair(GREEN_COL)
+                menu_options = [note.text for note in env.typical_notes]
+                env, option_idx = brows_menu(stdscr, env, menu_options, color=color, title=title)
+                env.specific_line_highlight = None
+                curses.curs_set(0)
+                if option_idx is not None:
+                    if len(env.typical_notes) >= option_idx:
+                        str_text = env.typical_notes[option_idx].text
+                        report.add_note(note_row, note_col, str_text)
+
+                        """ move cursor down if new note is lower then current item (current cursor position) """
+                        if note_row < current_note_row or (note_row == current_note_row and note_col < current_note_col):
+                            win.down(report, filter_on=env.tag_filter_on(), use_restrictions=False)
+
+
             elif key == curses.KEY_F5: # go to current note in file
                 current_note = report.data[win.cursor.row]
                 env.update_report_data(win, report)
@@ -128,8 +153,6 @@ def notes_management(stdscr, env):
                 if len(report.data) >= win.cursor.row:
                     del report.data[win.cursor.row]
                     win.up(report, use_restrictions=False)
-
-
         except Exception as err:
             log("note management | "+str(err))
             env.set_exit_mode()

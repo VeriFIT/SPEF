@@ -68,7 +68,8 @@ def resize_all(stdscr, env, force_resize=False):
             """ screen resize """
             y,x = stdscr.getmaxyx()
             stdscr.clear()
-            curses.resizeterm(y,x)
+            if curses.is_term_resized(curses.LINES,curses.COLS):
+                curses.resizeterm(y,x)
             stdscr.refresh()
 
             """ create screens with new size """
