@@ -77,7 +77,7 @@ def file_viewing(stdscr, env):
     while True:
         """ print all screens """
         env.update_viewing_data(win, buffer, report)
-        rewrite_all_wins(env)
+        rewrite_all_wins(stdscr, env)
 
         try:
             """ move cursor to correct position """
@@ -94,14 +94,14 @@ def file_viewing(stdscr, env):
             # ======================= EXIT =======================
             if key == curses.KEY_F10:
                 env.update_viewing_data(win, buffer, report)
-                if file_changes_are_saved(stdscr, env):
+                if file_changes_are_saved(stdscr, win, env):
                     env.set_exit_mode()
                     return env
             # ======================= FOCUS =======================
             elif key == curses.ascii.TAB:
                 env.update_viewing_data(win, buffer, report)
                 if env.edit_allowed:
-                    if file_changes_are_saved(stdscr, env):
+                    if file_changes_are_saved(stdscr, win, env):
                         env.switch_to_next_mode()
                         return env
                 else:
@@ -167,7 +167,7 @@ def file_viewing(stdscr, env):
                         save_buffer(env.file_to_open, buffer, report)
                     elif key == curses.KEY_F3: # change to view/tag mode
                         env.update_viewing_data(win, buffer, report)
-                        if file_changes_are_saved(stdscr, env):
+                        if file_changes_are_saved(stdscr, win, env):
                             env.disable_file_edit()
                             return env
                     elif key == curses.KEY_F4: # add note
@@ -178,7 +178,7 @@ def file_viewing(stdscr, env):
                     elif key == curses.KEY_F8: # reload from last save
                         env.update_viewing_data(win, buffer, report)
                         exit_key = (curses.KEY_F8, "F8")
-                        if file_changes_are_saved(stdscr, env, RELOAD_FILE_WITHOUT_SAVING, exit_key):
+                        if file_changes_are_saved(stdscr, win, env, RELOAD_FILE_WITHOUT_SAVING, exit_key):
                             buffer.lines = buffer.last_save.copy()
                             if report:
                                 report.data = report.last_save.copy()

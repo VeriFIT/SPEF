@@ -70,7 +70,7 @@ def directory_browsing(stdscr, env):
 
         """ print all screens """
         env.update_browsing_data(win, cwd)
-        rewrite_all_wins(env)
+        rewrite_all_wins(stdscr, env)
 
         key = stdscr.getch()
 

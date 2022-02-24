@@ -22,18 +22,18 @@ def show_help(stdscr, env, filter_mode=False):
         """ print help """
         max_cols = win.end_x - win.begin_x
         max_rows = win.end_y - win.begin_y
-        print_help(screen, max_cols, max_rows, env, filter_mode=filter_mode)
+        print_help(stdscr, screen, win, env, filter_mode=filter_mode)
 
         key = stdscr.getch()
         if key == curses.KEY_F1 or key == ESC:
-            rewrite_all_wins(env)
+            rewrite_all_wins(stdscr, env)
             return env
         elif key == curses.KEY_RESIZE:
             env = resize_all(stdscr, env)
             screen, win = env.get_center_win()
             win.reset()
             win.set_position(position, screen)
-            rewrite_all_wins(env)
+            rewrite_all_wins(stdscr, env)
         elif curses.ascii.ismeta(key):
             """ CTRL + LEFT / CTRL + RIGHT """
             # https://asecuritysite.com/coding/asc2?val=512%2C768
@@ -49,5 +49,5 @@ def show_help(stdscr, env, filter_mode=False):
                     elif position == 2:
                         position = 3
                 win.set_position(position, screen)
-                rewrite_all_wins(env)
+                rewrite_all_wins(stdscr, env)
 

@@ -24,38 +24,45 @@ RELOAD_FILE_WITHOUT_SAVING = """WARNING: Reload file will discard changes.\n\
 
 
 
-""" used for tag input or note input """
-def show_input(env):
-    pass
+""" show rectangle (instead of win borders) """
+def show_borders(stdscr, win):
+    stdscr.vline(win.uly+1, win.ulx, curses.ACS_VLINE, win.lry - win.uly - 1)
+    stdscr.hline(win.uly, win.ulx+1, curses.ACS_HLINE, win.lrx - win.ulx - 1)
+    stdscr.hline(win.lry, win.ulx+1, curses.ACS_HLINE, win.lrx - win.ulx - 1)
+    stdscr.vline(win.uly+1, win.lrx, curses.ACS_VLINE, win.lry - win.uly - 1)
 
-def show_menu(env):
-    pass
+    stdscr.addch(win.uly, win.ulx, curses.ACS_ULCORNER)
+    stdscr.addch(win.uly, win.lrx, curses.ACS_URCORNER)
+    stdscr.addch(win.lry, win.lrx, curses.ACS_LRCORNER)
+    stdscr.addch(win.lry, win.ulx, curses.ACS_LLCORNER)
+    stdscr.refresh()
 
 
-
-def refresh_main_screens(env):
-    env.screens.left.erase()
-    env.screens.right.erase()
+def refresh_main_screens(stdscr, env):
+    # env.screens.left.erase()
+    # env.screens.right.erase()
     env.screens.down.erase()
 
-    env.screens.left.border(0)
-    env.screens.right.border(0)
+    # env.screens.left.border(0)
+    # env.screens.right.border(0)
+    show_borders(stdscr, env.windows.brows)
+    show_borders(stdscr, env.windows.edit)
     env.screens.down.border(0)
 
-    env.screens.left.refresh()
-    env.screens.right.refresh()
+    # env.screens.left.refresh()
+    # env.screens.right.refresh()
     env.screens.down.refresh()
 
 
-def rewrite_all_wins(env):
-    # refresh_main_screens(env)
+def rewrite_all_wins(stdscr, env):
+    # refresh_main_screens(stdscr, env)
     if env.note_management:
-        show_notes(env)
+        show_notes(stdscr, env)
     else:
-        show_directory_content(env)
-    show_file_content(env)
+        show_directory_content(stdscr, env)
+    show_file_content(stdscr, env)
     if not env.edit_allowed:
-        show_tags(env)
+        show_tags(stdscr, env)
 
 
 
@@ -120,9 +127,13 @@ def print_hint(env, filter_mode=False):
 
 
 
-def print_help(screen, max_cols, max_rows, env, filter_mode=False):
+def print_help(stdscr, screen, win, env, filter_mode=False):
+    max_cols = win.end_x - win.begin_x
+    max_rows = win.end_y - win.begin_y
     screen.erase()
-    screen.border(0)
+    # screen.border(0)
+    show_borders(stdscr, win)
+
     mode = ""
     if filter_mode:
         mode = "FILTER MANAGEMENT"
@@ -246,7 +257,7 @@ def print_help(screen, max_cols, max_rows, env, filter_mode=False):
 
 
 """ check if file changes are saved or user want to save or discard them """
-def file_changes_are_saved(stdscr, env, warning=None, exit_key=None):
+def file_changes_are_saved(stdscr, win, env, warning=None, exit_key=None):
     if env.buffer:
         if (env.buffer.is_saved) or (env.buffer.original_buff == env.buffer.lines):
             return True
@@ -258,7 +269,9 @@ def file_changes_are_saved(stdscr, env, warning=None, exit_key=None):
             screen = env.screens.right
             screen.erase()
             screen.addstr(1, 1, str(message.format(str_key)), curses.A_BOLD)
-            screen.border(0)
+            # screen.border(0)
+            show_borders(stdscr, win)
+
             screen.refresh()
 
             key = stdscr.getch()
@@ -285,9 +298,13 @@ def show_path(screen, path, max_cols):
 
 
 """ center screen """
-def show_user_input(screen, user_input, max_rows, max_cols, env, color=None, title=None):
+def show_user_input(stdscr, screen, win, user_input, env, color=None, title=None):
+    max_cols = win.end_x - win.begin_x - 1
+    max_rows = win.end_y - win.begin_y - 1
+
     screen.erase()
-    screen.border(0)
+    # screen.border(0)
+    show_borders(stdscr, win)
 
     row = 0
     if title:
@@ -366,7 +383,7 @@ def show_filter(screen, user_input, max_rows, max_cols, env):
 
 
 """ browsing directory """
-def show_directory_content(env):
+def show_directory_content(stdscr, env):
     screen, win = env.screens.left, env.windows.brows
 
     max_cols = win.end_x - win.begin_x
@@ -377,13 +394,17 @@ def show_directory_content(env):
 
 
     """ print borders """
-    screen.erase()
     if env.is_brows_mode():
-        screen.attron(curses.color_pair(BORDER))
-        screen.border(0)
-        screen.attroff(curses.color_pair(BORDER))
+        stdscr.attron(curses.color_pair(BORDER))
+        # screen.border(0)
+        show_borders(stdscr, win)
+        stdscr.attroff(curses.color_pair(BORDER))
     else:
-        screen.border(0)
+        show_borders(stdscr, win)
+        # screen.border(0)
+
+    screen.erase()
+    screen.border(0)
 
     """ print hint for user """
     print_hint(env)
@@ -434,7 +455,7 @@ def show_directory_content(env):
 
 
 """ view file content """
-def show_file_content(env):
+def show_file_content(stdscr, env):
     screen = env.screens.right if env.edit_allowed else env.screens.right_up
     win = env.windows.edit if env.edit_allowed else env.windows.view
 
@@ -449,11 +470,13 @@ def show_file_content(env):
     """ print borders """
     screen.erase()
     if env.is_view_mode():
-        screen.attron(curses.color_pair(BORDER))
-        screen.border(0)
-        screen.attroff(curses.color_pair(BORDER))
+        stdscr.attron(curses.color_pair(BORDER))
+        # screen.border(0)
+        show_borders(stdscr, win)
+        stdscr.attroff(curses.color_pair(BORDER))
     else:
-        screen.border(0)
+        show_borders(stdscr, win)
+        # screen.border(0)
 
     """ print hint for user """
     print_hint(env)
@@ -517,7 +540,7 @@ def show_file_content(env):
 
 
 """ tag management """
-def show_tags(env):
+def show_tags(stdscr, env):
     screen, win = env.screens.right_down, env.windows.tag
 
     max_cols = win.end_x - win.begin_x
@@ -529,11 +552,13 @@ def show_tags(env):
     """ print borders """
     screen.erase()
     if env.is_tag_mode():
-        screen.attron(curses.color_pair(BORDER))
-        screen.border(0)
-        screen.attroff(curses.color_pair(BORDER))
+        stdscr.attron(curses.color_pair(BORDER))
+        # screen.border(0)
+        show_borders(stdscr, win)
+        stdscr.attroff(curses.color_pair(BORDER))
     else:
-        screen.border(0)
+        show_borders(stdscr, win)
+        # screen.border(0)
 
     """ if there is no tags, then show empty window """
     if tags is None:
@@ -577,7 +602,7 @@ def show_tags(env):
         screen.refresh()
 
 
-def show_notes(env):
+def show_notes(stdscr, env):
     screen, win = env.screens.left, env.windows.notes
 
     max_cols = win.end_x - win.begin_x
@@ -588,11 +613,13 @@ def show_notes(env):
     """ print borders """
     screen.erase()
     if env.is_notes_mode():
-        screen.attron(curses.color_pair(BORDER))
-        screen.border(0)
-        screen.attroff(curses.color_pair(BORDER))
+        stdscr.attron(curses.color_pair(BORDER))
+        # screen.border(0)
+        show_borders(stdscr, win)
+        stdscr.attroff(curses.color_pair(BORDER))
     else:
-        screen.border(0)
+        show_borders(stdscr, win)
+        # screen.border(0)
 
     """ if there is no report with notes, then show empty window """
     if report is None:
@@ -635,9 +662,14 @@ def show_notes(env):
         screen.refresh()
 
 
-def show_menu(screen, win, menu_options, max_rows, max_cols, env, color=None, title=None):
+""" center screen """
+def show_menu(stdscr, screen, win, menu_options, env, color=None, title=None):
+    max_cols = win.end_x - win.begin_x - 1
+    max_rows = win.end_y - win.begin_y - 1
+
     screen.erase()
-    screen.border(0)
+    # screen.border(0)
+    show_borders(stdscr, win)
 
     row = 0
     if title:

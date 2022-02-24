@@ -43,7 +43,7 @@ def tag_management(stdscr, env):
     while True:
         """ print all screens """
         env.update_tagging_data(win, tags)
-        rewrite_all_wins(env)
+        rewrite_all_wins(stdscr, env)
 
         key = stdscr.getch()
         try:

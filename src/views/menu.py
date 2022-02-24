@@ -26,7 +26,7 @@ def brows_menu(stdscr, env, menu_options, color=None, title=None):
     position = win.position
     win.set_border(0)
 
-    rewrite_all_wins(env)
+    rewrite_all_wins(stdscr, env)
 
 
     while True:
@@ -34,7 +34,7 @@ def brows_menu(stdscr, env, menu_options, color=None, title=None):
         max_cols = win.end_x - win.begin_x - 1
         max_rows = win.end_y - win.begin_y - 1
 
-        show_menu(screen, win, menu_options, max_rows, max_cols, env, color=color, title=title)
+        show_menu(stdscr, screen, win, menu_options, env, color=color, title=title)
 
 
         key = stdscr.getch()
@@ -42,7 +42,7 @@ def brows_menu(stdscr, env, menu_options, color=None, title=None):
         try:
             # ======================= EXIT =======================
             if key == curses.KEY_F1 or key == ESC:
-                rewrite_all_wins(env)
+                rewrite_all_wins(stdscr, env)
                 return env, None
             # ======================= RESIZE =======================
             elif key == curses.KEY_RESIZE:
@@ -50,7 +50,7 @@ def brows_menu(stdscr, env, menu_options, color=None, title=None):
                 screen, win = env.get_center_win()
                 win.reset()
                 win.set_position(position, screen)
-                rewrite_all_wins(env)
+                rewrite_all_wins(stdscr, env)
             # ======================= INPUT =======================
             elif key == curses.KEY_UP:
                 win.up(menu_options, use_restrictions=False)
@@ -73,7 +73,7 @@ def brows_menu(stdscr, env, menu_options, color=None, title=None):
                         elif position == 2:
                             position = 3
                     win.set_position(position, screen)
-                    rewrite_all_wins(env)
+                    rewrite_all_wins(stdscr, env)
         except Exception as err:
             log("brows menu | "+str(err))
             env.set_exit_mode()

@@ -33,7 +33,7 @@ def notes_management(stdscr, env):
     while True:
         """ print notes """
         env.update_report_data(win, report)
-        rewrite_all_wins(env)
+        rewrite_all_wins(stdscr, env)
 
 
         key = stdscr.getch()

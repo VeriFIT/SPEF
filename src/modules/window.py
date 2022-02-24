@@ -112,6 +112,12 @@ class Window:
         self._end_x = begin_x + width - 1
         self._end_y = begin_y + height - 1
 
+        """ rectangle coordinates """
+        self.uly = begin_y-1 # upper left y
+        self.ulx = begin_x-1 # upper left x
+        self.lry = begin_y+height # lower right y
+        self.lrx = begin_x+width # lower right x
+
         self.border = border
         self.line_num_shift = line_num_shift
 

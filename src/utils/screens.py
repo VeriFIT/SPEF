@@ -73,7 +73,7 @@ def resize_all(stdscr, env, force_resize=False):
             stdscr.refresh()
 
             """ create screens with new size """
-            screens, windows = create_screens_and_windows(y, x, env.line_numbers)
+            screens, windows = create_screens_and_windows(stdscr, y, x, env.line_numbers)
             windows.set_edges(env.win_left_edge, env.win_right_edge, env.win_top_edge, env.win_bottom_edge)
 
             new_env = env
@@ -119,26 +119,26 @@ def resize_all(stdscr, env, force_resize=False):
         return result_env
 
 
-def create_screens_and_windows(height, width, line_numbers=None):
+def create_screens_and_windows(stdscr, height, width, line_numbers=None):
     half_height = int(height/2)
     quarter_height = int(height/4)
     half_width = int(width/2)
     quarter_width = int(width/4)
-    d_win_lines = 1
+    d_win_lines = 1 + 2 # one line + 2 borders from windows above
 
-    """ set window size and position """
-    d_win_h, d_win_w = d_win_lines + 2, width # 2 stands for borders
-    l_win_h, l_win_w = height - d_win_h , half_width
-    r_win_h, r_win_w = height - d_win_h , half_width
-    c_win_h, c_win_w = half_height, half_width
+    """ set window size and position (with border correction) """
+    d_win_h, d_win_w = d_win_lines, width
+    l_win_h, l_win_w = height - d_win_h - 2, half_width - 2
+    r_win_h, r_win_w = height - d_win_h - 2 , half_width - 2
+    c_win_h, c_win_w = half_height - 2, half_width - 2
+    right_up_h = int(r_win_h / 2) + int(r_win_h % 2 != 0) - 2
+    right_down_h = int(r_win_h / 2) - 2
 
-    d_win_y, d_win_x = l_win_h, 0
-    l_win_y, l_win_x = 0, 0
-    r_win_y, r_win_x = 0, l_win_w
-    c_win_y, c_win_x = quarter_height, quarter_width
-
-    right_up_h = int(r_win_h / 2) + int(r_win_h % 2 != 0)
-    right_down_h = int(r_win_h / 2)
+    d_win_y, d_win_x = height - d_win_h, 0 # this window doesnt include border correction
+    l_win_y, l_win_x = 0 + 1, 0 + 1
+    r_win_y, r_win_x = 0 + 1, l_win_w + 1 + 2
+    c_win_y, c_win_x = quarter_height + 1, quarter_width + 1
+    rd_y = r_win_y + right_up_h + 1
 
 
     """ create screens """
@@ -147,14 +147,13 @@ def create_screens_and_windows(height, width, line_numbers=None):
     down_screen = curses.newwin(d_win_h, d_win_w, d_win_y, d_win_x) # hint
     center_screen = curses.newwin(c_win_h, c_win_w, c_win_y, c_win_x) # help, menu
     right_up_screen = curses.newwin(right_up_h, r_win_w, r_win_y, r_win_x)
-    right_down_screen = curses.newwin(right_down_h, r_win_w, r_win_y + right_up_h, r_win_x)
-
+    right_down_screen = curses.newwin(right_down_h, r_win_w, rd_y, r_win_x)
 
     """ create windows """
     center_win = Window(c_win_h, c_win_w, c_win_y, c_win_x, border=1)
     brows_win = Window(l_win_h, l_win_w, l_win_y, l_win_x)
     notes_win = Window(l_win_h, l_win_w, l_win_y, l_win_x)
-    tag_win = Window(right_down_h, r_win_w, r_win_y+right_up_h, r_win_x)
+    tag_win = Window(right_down_h, r_win_w, rd_y, r_win_x)
 
     shift = 0 if line_numbers is None else len(line_numbers)+1 # +1 stands for a space between line number and text
     edit_win = Window(r_win_h, r_win_w-shift, r_win_y, r_win_x+shift, border=1, line_num_shift=shift) # +1 stands for bordes at first line and col

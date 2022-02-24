@@ -25,7 +25,7 @@ def get_user_input(stdscr, env, title=None, user_input=None):
     if user_input is None:
         user_input = UserInput()
 
-    rewrite_all_wins(env)
+    rewrite_all_wins(stdscr, env)
 
     while True:
         """ show user input """
@@ -35,7 +35,7 @@ def get_user_input(stdscr, env, title=None, user_input=None):
 
 
         """ move cursor to correct position """
-        row, col = show_user_input(screen, user_input, max_rows, max_cols, env, color=color, title=title)
+        row, col = show_user_input(stdscr, screen, win, user_input, env, color=color, title=title)
         stdscr.move(win.begin_y + row, win.begin_x + col)
 
 
@@ -44,7 +44,7 @@ def get_user_input(stdscr, env, title=None, user_input=None):
         try:
             # ======================= EXIT =======================
             if key == curses.KEY_F1 or key == ESC:
-                rewrite_all_wins(env)
+                rewrite_all_wins(stdscr, env)
                 return env, None
             # ======================= RESIZE =======================
             elif key == curses.KEY_RESIZE:
@@ -52,7 +52,7 @@ def get_user_input(stdscr, env, title=None, user_input=None):
                 screen, win = env.get_center_win()
                 win.reset()
                 win.set_position(position, screen)
-                rewrite_all_wins(env)
+                rewrite_all_wins(stdscr, env)
             # ======================= INPUT =======================
             elif key == curses.KEY_LEFT:
                 user_input.left(win)
@@ -74,7 +74,7 @@ def get_user_input(stdscr, env, title=None, user_input=None):
                     user_input.left(win)
                     user_input.delete_symbol(win)
             elif key == curses.ascii.NL:
-                rewrite_all_wins(env)
+                rewrite_all_wins(stdscr, env)
                 return env, user_input.text
             elif curses.ascii.isprint(key):
                 user_input.insert_symbol(win, chr(key))
@@ -93,7 +93,7 @@ def get_user_input(stdscr, env, title=None, user_input=None):
                         elif position == 2:
                             position = 3
                     win.set_position(position, screen)
-                    rewrite_all_wins(env)
+                    rewrite_all_wins(stdscr, env)
         except Exception as err:
             log("user input | "+str(err))
             env.set_exit_mode()
