@@ -34,6 +34,8 @@ HL_GREEN = 45
 HL_PASTEL_GREEN = 46
 HL_ORANGE = 47
 HL_RED = 48
+HL_LIGHT_GRAY = 49
+HL_GRAY = 50
 
 
 
@@ -62,9 +64,12 @@ def init_color_pairs():
     curses.init_pair(HL_YELLOW, 229, -1)
 
     curses.init_pair(HL_CYAN, 49, -1)
-    curses.init_pair(HL_GREEN, 28, -1) # 34
+    curses.init_pair(HL_GREEN, 22, -1) # 34 or 28
     curses.init_pair(HL_PASTEL_GREEN, 193, -1)
     curses.init_pair(HL_ORANGE, 209, -1)
     curses.init_pair(HL_RED, 160, -1)
+
+    curses.init_pair(HL_LIGHT_GRAY, 15, -1)
+    curses.init_pair(HL_GRAY, 7, -1)
 
 

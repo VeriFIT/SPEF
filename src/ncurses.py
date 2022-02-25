@@ -8,7 +8,7 @@ from pygments.token import Keyword, Name, Comment, String, Error, Text, \
 """
 styles_dir = /home/naty/.local/lib/python3.9/site-packages/pygments/styles
 
-cp curses.py /home/naty/.local/lib/python3.9/site-packages/pygments/styles/
+cp ncurses.py /home/naty/.local/lib/python3.9/site-packages/pygments/styles/
 
 """
 

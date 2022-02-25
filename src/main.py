@@ -51,6 +51,7 @@ from config import Environment
 from pygments import highlight
 from pygments import lexers
 from pygments.formatter import Formatter
+from pygments.formatters import TerminalTrueColorFormatter
 
 
 """ ======================= SYNTAX HIGHLIGHT ========================= """
@@ -132,94 +133,54 @@ class CursesFormatter(Formatter):
             outfile.write(str(last_style)+"|"+str(same_style_text)+'\n')
 
 
-"""
-'45|#!/usr/bin/env python3', 
-'00|', 
-'', 
-'', 
-'40|import', 
-'00| requests', 
-'', 
-'40|from', 
-'00| pyowm.utils ', 
-'40|import', 
-'00| formatting, timestamps', 
-'', 
-'API_KEY = ', 
-"47|'9b5549d18adf2bd5a1953d5389876ada'", 
-'00|', 
-'Brno_LAT = ', 
-'46|49.195061', 
-'00|', 
-'Brno_LON = ', 
-'46|16.606836', 
-'00|', 
-'', 
-'', 
-'41|def', 
-'00| ', 
-'43|get_city_location', 
-'00|(city):', 
-'    ', 
-'41|try', 
-'00|:', 
-'        reg = owm.city_id_registry()', 
-'        locations = reg.locations_for(city) ', 
-'    ', 
-'41|except', 
-'00| ', 
-'44|Exception', 
-'00| ', 
-'41|as', 
-'00| err:', 
-'        ', 
-'41|pass', 
-'00|', 
-'    city_location = locations[', 
-'46|0', 
-'00|]', 
-'    ', 
-'41|return'
+def parse_token(file_name, code):
 
-"""
+    try:
+        lexer = lexers.get_lexer_for_filename(file_name)
+        # curses_format = TerminalTrueColorFormatter(style='curses')
+        # curses_format = TerminalTrueColorFormatter()
+        curses_format = CursesFormatter(style='curses')
+        # print(highlight(code, lexer, curses_format))
+        # return
 
-def parse_token():
+        text = highlight(code, lexer, curses_format)
+        raw_tokens = text.splitlines()
+        raw_tokens = raw_tokens[:-1] # remove last new line
 
-    with open('/home/naty/MIT/DP/src/example.py','r') as f:
-        code = f.read()
+        # print(tokens)
+        # for token in tokens:
+            # print(token)
 
-    lexer = lexers.get_lexer_by_name("python")
-    curses_format = CursesFormatter(style='curses')
+        parsed_tokens = []
 
-    text = highlight(code, lexer, curses_format)
-    tokens = text.splitlines()
-    tokens = tokens[:-1] # remove last new line
+        """ parse string tokens to list of tuples (style, text) """
+        last_style = ""
+        while raw_tokens:
+            token = raw_tokens.pop(0)
+            parts = token.split("|",1)
+            if len(parts) == 2:
+                style, text = parts
+                last_style = style
+                parsed_tokens.append((int(style), text))
+            else:
+                parsed_tokens.append((int(last_style), '\n'+str(token)))
 
-    # print(tokens)
-    # for token in tokens:
-        # print(token)
+        """ split tokens to separate lines """
+        result = []
+        for token in parsed_tokens:
+            style, text = token
+            text_lines = text.splitlines(True) # keep separator (new line)
+            for text_line in text_lines:
+                result.append((style, text_line))
 
-    result = []
+        # print(result)
+        # for res in result:
+            # print(res)
 
-
-    last_style = ""
-    while tokens:
-        token = tokens.pop(0)
-        parts = token.split("|",1)
-        if len(parts) == 2:
-            style, text = parts
-            last_style = style
-            result.append((int(style), text))
-        else:
-            result.append((int(last_style), '\n'+str(token)))
-
-
-    # print(result)
-    # for res in result:
-        # print(res)
-
-    return result
-
+        return result
+    except Exception as err:
+        # log("get syntax highlight for code | "+str(err))
+        return None
 
 
 """
@@ -280,45 +241,74 @@ def main(stdscr):
     half_width = int(x/2)
 
     # with correction (-2 borders)
-    max_col = half_width-2
-    max_row = 25-2
-    win_y = 0+1
-    win_x = 0+1
+    # max_col = half_width-2
+    # max_row = 25-2
+    # win_y = 0+1
+    # win_x = 0+1
+    
+    max_col = half_width
+    # max_col = 70
+    max_row = 27
+    win_y = 5
+    win_x = 5
     screen = curses.newwin(max_row, max_col, win_y, win_x)
 
+
     """ rectangle """
-    uly, ulx = win_y-1, win_x-1
-    lry, lrx = win_y+max_row, win_x+max_col
+    # uly, ulx = win_y-1, win_x-1
+    # lry, lrx = win_y+max_row, win_x+max_col
 
-    stdscr.vline(uly+1, ulx, curses.ACS_VLINE, lry - uly - 1)
-    stdscr.hline(uly, ulx+1, curses.ACS_HLINE, lrx - ulx - 1)
-    stdscr.hline(lry, ulx+1, curses.ACS_HLINE, lrx - ulx - 1)
-    stdscr.vline(uly+1, lrx, curses.ACS_VLINE, lry - uly - 1)
+    # stdscr.vline(uly+1, ulx, curses.ACS_VLINE, lry - uly - 1)
+    # stdscr.hline(uly, ulx+1, curses.ACS_HLINE, lrx - ulx - 1)
+    # stdscr.hline(lry, ulx+1, curses.ACS_HLINE, lrx - ulx - 1)
+    # stdscr.vline(uly+1, lrx, curses.ACS_VLINE, lry - uly - 1)
 
-    stdscr.addch(uly, ulx, curses.ACS_ULCORNER)
-    stdscr.addch(uly, lrx, curses.ACS_URCORNER)
-    stdscr.addch(lry, lrx, curses.ACS_LRCORNER)
-    stdscr.addch(lry, ulx, curses.ACS_LLCORNER)
+    # stdscr.addch(uly, ulx, curses.ACS_ULCORNER)
+    # stdscr.addch(uly, lrx, curses.ACS_URCORNER)
+    # stdscr.addch(lry, lrx, curses.ACS_LRCORNER)
+    # stdscr.addch(lry, ulx, curses.ACS_LLCORNER)
+    # stdscr.refresh()
 
-    stdscr.refresh()
 
     screen.erase()
     # screen.border(0)
-    # screen.move(1,0)
+    screen.move(1,1)
 
     key = stdscr.getch()
 
-    tokens = parse_token()
-    for token in tokens:
-        style, text = token
-        y,x = screen.getyx()
-        if y+text.count('\n') >= max_row:
-            break
+    """ get code from file """
+    file_name = '/home/naty/MIT/DP/src/example_c.h'
+    # file_name = '/home/naty/MIT/DP/src/example.py'
 
-        screen.addstr(str(text), curses.color_pair(style))
-        # screen.addstr(str(y)+','+str(x)+' '+str(text), curses.color_pair(style))
+    with open(file_name,'r') as f:
+        lines = f.read().splitlines()
+        # code = f.read()
 
+
+    """ try to get syntax highlight """
+    tokens = parse_token(file_name, '\n'.join(lines))
+    if tokens is not None:
+        for token in tokens:
+            style, text = token
+            y,x = screen.getyx()
+            if y >= max_row-1:
+                break
+            if x == 0:
+                x += 1
+            if x+len(text)>max_col-2:
+                screen.addstr(y,x,str(text[:max_col-x-1]), curses.color_pair(style))
+                if y+1 < max_row-1:
+                    screen.move(y+1,1)
+            else:
+                screen.addstr(y,x,str(text), curses.color_pair(style))
+    else:
+        # print witout highlight
+        pass
+
+
+    screen.border(0)
     screen.refresh()
+
 
     key = stdscr.getch()
     return
@@ -362,7 +352,12 @@ def preparation():
 if __name__ == "__main__":
     preparation()
 
-    # tokens = parse_token()
+    c_file = '/home/naty/MIT/DP/src/example_c.h'
+    python_file = '/home/naty/MIT/DP/src/example.py'
+    with open(python_file,'r') as f:
+        code = f.read()
+
+    # tokens = parse_token(python_file, code)
     # exit()
 
     stdscr = curses.initscr()
