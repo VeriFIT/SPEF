@@ -89,13 +89,14 @@ def tag_management(stdscr, env):
                         tags.set_tag(tag_name, args)
                         tags.save_to_file()
             elif key == curses.KEY_F4: # open tags file for edit
-                env.update_tagging_data(win, tags)
-                if not os.path.exists(tags.path):
-                    with open(tags.path, 'a+') as f: pass
-                env.set_view_mode()
-                env.enable_file_edit()
-                env.set_file_to_open(tags.path)
-                return env
+                pass
+                # env.update_tagging_data(win, tags)
+                # if not os.path.exists(tags.path):
+                #     with open(tags.path, 'a+') as f: pass
+                # env.set_view_mode()
+                # env.enable_file_edit()
+                # env.set_file_to_open(tags.path)
+                # return env
             elif key == curses.KEY_F8: # delete current tag
                 tags.remove_tag_by_idx(win.cursor.row)
                 tags.save_to_file()

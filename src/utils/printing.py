@@ -87,7 +87,7 @@ def print_hint(env, filter_mode=False):
     V_HELP = {"F1":"help", "F4":"edit", "F5":f"{line_nums_switch} lines",
                 "F6":f"{note_switch} notes", "F9":"filter", "F10":"exit"}
 
-    T_HELP = {"F1":"help", "F4":"edit tags", "F9":"filter", "F10":"exit"}
+    T_HELP = {"F1":"help", "F3":"new tag", "F4":"edit tags", "F8":"delete", "F9":"filter", "F10":"exit"}
 
     if filter_mode:
         if env.is_brows_mode(): filter_type = "path"
