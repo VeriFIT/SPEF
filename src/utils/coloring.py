@@ -35,9 +35,13 @@ HL_PASTEL_GREEN = 46
 HL_ORANGE = 47
 HL_RED = 48
 HL_LIGHT_GRAY = 49
-HL_GRAY = 50
+HL_DARK_GRAY = 50
+HL_GRAY = 51
+HL_OLIVE = 52
+HL_PINK = 53
 
 
+# https://stackoverflow.com/questions/18551558/how-to-use-terminal-color-palette-with-curses
 
 def init_color_pairs():
     curses.init_pair(BKGD, curses.COLOR_WHITE, -1)
@@ -58,18 +62,26 @@ def init_color_pairs():
     # curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLACK)
     curses.init_pair(GREEN_COL, curses.COLOR_GREEN, -1)
 
+    # curses.init_pair(HL_PURPLE, 133, -1)
     curses.init_pair(HL_PURPLE, 171, -1)
-    curses.init_pair(HL_BLUE, 39, -1) # 27
+    # curses.init_pair(HL_BLUE, 75, -1)
+    # curses.init_pair(HL_BLUE, 27, -1)
+    curses.init_pair(HL_BLUE, 39, -1)
     curses.init_pair(HL_LIGHT_BLUE, 117, -1)
     curses.init_pair(HL_YELLOW, 229, -1)
 
-    curses.init_pair(HL_CYAN, 49, -1)
-    curses.init_pair(HL_GREEN, 22, -1) # 34 or 28
-    curses.init_pair(HL_PASTEL_GREEN, 193, -1)
+    # curses.init_pair(HL_CYAN, 36, -1)
+    curses.init_pair(HL_CYAN, 43, -1)
+    # curses.init_pair(HL_GREEN, 22, -1)
+    curses.init_pair(HL_GREEN, 71, -1)
+    curses.init_pair(HL_PASTEL_GREEN, 151, -1)
     curses.init_pair(HL_ORANGE, 209, -1)
     curses.init_pair(HL_RED, 160, -1)
 
     curses.init_pair(HL_LIGHT_GRAY, 15, -1)
+    curses.init_pair(HL_DARK_GRAY, 8, -1)
     curses.init_pair(HL_GRAY, 7, -1)
+    curses.init_pair(HL_OLIVE, 94, -1)
 
+    curses.init_pair(HL_PINK, 219, -1)
 

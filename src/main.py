@@ -48,140 +48,6 @@ from config import Environment
 """
 
 
-from pygments import highlight
-from pygments import lexers
-from pygments.formatter import Formatter
-from pygments.formatters import TerminalTrueColorFormatter
-
-
-""" ======================= SYNTAX HIGHLIGHT ========================= """
-
-# https://pygments.org/docs/formatterdevelopment/
-
-class CursesFormatter(Formatter):
-    def __init__(self, **options):
-        Formatter.__init__(self, **options)
-        self.styles = {}
-
-        for token, style in self.style:
-            col_number = ''
-            # a style item is a tuple in the following form:
-            # colors are readily specified in hex: 'RRGGBB'
-            if style['color']:
-                full_col = '%s' % style['color']
-                col_number = full_col[-2:] # only last two numbers
-            # if style['bold']:
-            #     start += 'curses.A_BOLD+'
-            # if style['italic']:
-            #     start += 'curses.A_ITALIC+'
-            # if style['underline']:
-            #     start += 'curses.A_UNDERLINE+'
-            # else:
-                # start += 'curses.A_NORMAL'
-            # start = start[:-1] # remove last '+'
-            self.styles[token] = col_number # style['color'] returns number of curses.color_pair
-
-
-    def format(self, tokensource, outfile):
-        lastval = ''
-        lasttype = None
-
-        tokens = [] # [ (style, text), (style, text), ... ]
-
-
-        for ttype, value in tokensource:
-            while ttype not in self.styles:
-                ttype = ttype.parent
-
-            if ttype == lasttype: # if current token type is the same as the last one
-                lastval += value
-            else:
-                if lastval:
-                    tokens.append((self.styles[lasttype], lastval))
-                    # outfile.write(self.styles[lasttype] + '|' + lastval + '\n')
-                lastval = value
-                lasttype = ttype
-
-        if lastval:
-            tokens.append((self.styles[lasttype], lastval))
-            # outfile.write(self.styles[lasttype] + '|' + lastval + '\n')
-
-        # print(tokens)
-
-        """ correction """
-        same_style_text = ''
-        last_style = None
-        if tokens != []:
-            style, text = tokens.pop(0)
-            if style == '':
-                style = "00"
-            same_style_text = text
-            last_style = style
-
-        while tokens:
-            style, text = tokens.pop(0)
-            if style == '':
-                style = "00"
-            if style == last_style: # same style
-                same_style_text += text
-            else: # new style
-                outfile.write(str(last_style)+"|"+str(same_style_text)+'\n')
-                last_style = style
-                same_style_text = text
-    
-        if same_style_text:
-            outfile.write(str(last_style)+"|"+str(same_style_text)+'\n')
-
-
-def parse_token(file_name, code):
-
-    try:
-        lexer = lexers.get_lexer_for_filename(file_name)
-        # curses_format = TerminalTrueColorFormatter(style='curses')
-        # curses_format = TerminalTrueColorFormatter()
-        curses_format = CursesFormatter(style='curses')
-        # print(highlight(code, lexer, curses_format))
-        # return
-
-        text = highlight(code, lexer, curses_format)
-        raw_tokens = text.splitlines()
-        raw_tokens = raw_tokens[:-1] # remove last new line
-
-        # print(tokens)
-        # for token in tokens:
-            # print(token)
-
-        parsed_tokens = []
-
-        """ parse string tokens to list of tuples (style, text) """
-        last_style = ""
-        while raw_tokens:
-            token = raw_tokens.pop(0)
-            parts = token.split("|",1)
-            if len(parts) == 2:
-                style, text = parts
-                last_style = style
-                parsed_tokens.append((int(style), text))
-            else:
-                parsed_tokens.append((int(last_style), '\n'+str(token)))
-
-        """ split tokens to separate lines """
-        result = []
-        for token in parsed_tokens:
-            style, text = token
-            text_lines = text.splitlines(True) # keep separator (new line)
-            for text_line in text_lines:
-                result.append((style, text_line))
-
-        # print(result)
-        # for res in result:
-            # print(res)
-
-        return result
-    except Exception as err:
-        # log("get syntax highlight for code | "+str(err))
-        return None
-
 
 """
 -spracovat to tak aby text obsahoval len jeden riadok (nesmie tam byt ziaden \n)
@@ -193,7 +59,6 @@ def parse_token(file_name, code):
 -prvy riadok vzdy skipnut a nechat ho na zobrazenie nazvu suboru
 -nakreslit okolo win ramcek
 """
-
 
 
 
@@ -237,19 +102,14 @@ def main(stdscr):
     env.cwd = get_directory_content()
 
 
+
     y,x = stdscr.getmaxyx()
     half_width = int(x/2)
-
-    # with correction (-2 borders)
-    # max_col = half_width-2
-    # max_row = 25-2
-    # win_y = 0+1
-    # win_x = 0+1
-    
+ 
     max_col = half_width
     # max_col = 70
-    max_row = 27
-    win_y = 5
+    max_row = 47
+    win_y = 1
     win_x = 5
     screen = curses.newwin(max_row, max_col, win_y, win_x)
 
@@ -271,23 +131,33 @@ def main(stdscr):
 
 
     screen.erase()
-    # screen.border(0)
     screen.move(1,1)
 
     key = stdscr.getch()
 
     """ get code from file """
-    file_name = '/home/naty/MIT/DP/src/example_c.h'
-    # file_name = '/home/naty/MIT/DP/src/example.py'
+    file_name = '/home/naty/MIT/DP/src/syntax_highlight_test_files/ex.c'
+    # file_name = '/home/naty/MIT/DP/src/syntax_highlight_test_files/ex.cpp'
+    # file_name = '/home/naty/MIT/DP/src/syntax_highlight_test_files/ex.go'
+    # file_name = '/home/naty/MIT/DP/src/syntax_highlight_test_files/ex.h'
+    # file_name = '/home/naty/MIT/DP/src/syntax_highlight_test_files/ex.hs' # nepodporuje
+    # file_name = '/home/naty/MIT/DP/src/syntax_highlight_test_files/ex.java'
+    # file_name = '/home/naty/MIT/DP/src/syntax_highlight_test_files/ex.pl'
+    # file_name = '/home/naty/MIT/DP/src/syntax_highlight_test_files/ex.py'
+    # file_name = '/home/naty/MIT/DP/src/syntax_highlight_test_files/ex.sh'
+    # file_name = '/home/naty/MIT/DP/src/syntax_highlight_test_files/ex.swift'
+    # file_name = '/home/naty/MIT/DP/src/syntax_highlight_test_files/ex.ts'
+
 
     with open(file_name,'r') as f:
         lines = f.read().splitlines()
         # code = f.read()
 
-
     """ try to get syntax highlight """
-    tokens = parse_token(file_name, '\n'.join(lines))
+    tokens = parse_code(file_name, '\n'.join(lines))
     if tokens is not None:
+        screen.erase()
+        screen.move(1,1)
         for token in tokens:
             style, text = token
             y,x = screen.getyx()
@@ -301,13 +171,16 @@ def main(stdscr):
                     screen.move(y+1,1)
             else:
                 screen.addstr(y,x,str(text), curses.color_pair(style))
+        screen.border(0)
+        screen.refresh()
     else:
-        # print witout highlight
-        pass
+        screen.erase()
+        screen.border(0)
 
+        # print without highlight
+        
+        screen.refresh()
 
-    screen.border(0)
-    screen.refresh()
 
 
     key = stdscr.getch()
@@ -352,12 +225,12 @@ def preparation():
 if __name__ == "__main__":
     preparation()
 
-    c_file = '/home/naty/MIT/DP/src/example_c.h'
-    python_file = '/home/naty/MIT/DP/src/example.py'
-    with open(python_file,'r') as f:
-        code = f.read()
+    # c_file = '/home/naty/MIT/DP/src/example_c.h'
+    # python_file = '/home/naty/MIT/DP/src/example.py'
+    # with open(c_file,'r') as f:
+        # code = f.read()
 
-    # tokens = parse_token(python_file, code)
+    # tokens = parse_token(c_file, code)
     # exit()
 
     stdscr = curses.initscr()
