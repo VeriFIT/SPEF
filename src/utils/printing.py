@@ -8,6 +8,7 @@ from modules.directory import Directory
 from utils.loading import save_buffer
 from utils.coloring import *
 from utils.logger import *
+from utils.highlighter import parse_code
 
 ESC = 27
 
@@ -446,8 +447,8 @@ def show_file_content(env):
     shift = len(env.line_numbers)+1 if env.line_numbers else 0 # shift for line numbers
 
 
-    """ print borders """
     screen.erase()
+    """ print border """
     if env.is_view_mode():
         screen.attron(curses.color_pair(BORDER))
         screen.border(0)
@@ -455,13 +456,17 @@ def show_file_content(env):
     else:
         screen.border(0)
 
-    """ print hint for user """
-    print_hint(env)
-
     """ if there is no buffer, show empty window """
     if buffer is None:
         screen.refresh()
         return
+
+    """ show file name """
+    show_path(screen, buffer.path, max_cols+(shift if env.line_numbers else 1))
+
+    """ print hint for user """
+    print_hint(env)
+
 
     """ highlight lines with notes """
     colored_lines = []
@@ -471,39 +476,80 @@ def show_file_content(env):
 
 
     try:
-        """ show file name """
-        show_path(screen, buffer.path, max_cols+(shift if env.line_numbers else 1))
-
         """ show file content """
         if buffer:
-            for row, line in enumerate(buffer[win.row_shift : max_rows + win.row_shift]):
-                if row > max_rows or (row == max_rows and env.tag_filter_on()):
-                    break
+            lines = buffer[win.row_shift : max_rows + win.row_shift]
 
-                """ replace tab with spaces in line """
-                line = line.replace("\t", " "*env.tab_size)
+            """ try to get syntax highlight """
+            tokens = parse_code(buffer.path, '\n'.join(lines))
 
-                if (row + win.begin_y == win.cursor.row - win.row_shift) and (win.col_shift > 0):
-                    line = line[win.col_shift + 1:]
-                if len(line) > max_cols - 1:
-                    line = line[:max_cols - 1]
+            if tokens is not None:
+                # =============== print with syntax highlight ===============
+                screen.move(1,1+shift)
+                skip = False
+                for token in tokens:
+                    style, text = token
+                    y,x = screen.getyx()
+                    if y > max_rows:
+                        break
 
-                """ set color """
-                if (row+1+win.row_shift in colored_lines):
-                    color = curses.color_pair(NOTE_HIGHLIGHT)            
-                else:
-                    color = curses.A_NORMAL 
-                if env.specific_line_highlight is not None:
-                    highlight_line, highlight_col = env.specific_line_highlight
-                    if (row+1 == highlight_line):
-                        color = highlight_col
+                    if skip:
+                        # skip tokens with no newline bcs we are over screen horizontally
+                        if text.startswith('\n'):
+                            skip = False
+                        else:
+                            continue
 
-                """ print line """
-                if env.line_numbers: # row+1 bcs row starts from 0
-                    screen.addstr(row+1, 1, str(row+1+win.row_shift), curses.color_pair(LINE_NUM))
-                screen.addstr(row+1, 1+shift, line, color)
+                    if x == 0:
+                        x = 1+shift
 
-        
+                    # if (y + win.begin_y == win.cursor.row - win.row_shift) and (win.col_shift > 0): # TODO: col shift
+                        # text = text[win.col_shift + 1:]
+
+                    """ print line """
+                    if env.line_numbers:
+                        screen.addstr(y, 1, str(y+win.row_shift), curses.color_pair(LINE_NUM))
+
+                    if text == '\n':
+                        screen.move(y+1,1+shift)
+                    else:
+                        if x+len(text) > max_cols:
+                            screen.addstr(y, x, str(text[:max_cols-x]), curses.color_pair(style))
+                            skip = True
+                        else:
+                            screen.addstr(y, x, str(text), curses.color_pair(style))
+
+            else:
+                # =============== print without syntax highlight ===============
+
+                for row, line in enumerate(lines):
+                    if row > max_rows or (row == max_rows and env.tag_filter_on()):
+                        break
+
+                    """ replace tab with spaces in line """
+                    line = line.replace("\t", " "*env.tab_size)
+
+                    if (row + win.begin_y == win.cursor.row - win.row_shift) and (win.col_shift > 0):
+                        line = line[win.col_shift + 1:]
+                    if len(line) > max_cols - 1:
+                        line = line[:max_cols - 1]
+
+                    """ set color """
+                    if (row+1+win.row_shift in colored_lines):
+                        color = curses.color_pair(NOTE_HIGHLIGHT)            
+                    else:
+                        color = curses.A_NORMAL 
+                    if env.specific_line_highlight is not None:
+                        highlight_line, highlight_col = env.specific_line_highlight
+                        if (row+1 == highlight_line):
+                            color = highlight_col
+
+                    """ print line """
+                    if env.line_numbers: # row+1 bcs row starts from 0
+                        screen.addstr(row+1, 1, str(row+1+win.row_shift), curses.color_pair(LINE_NUM))
+                    screen.addstr(row+1, 1+shift, line, color)
+
+
         """ show content filter if there is one """
         if env.content_filter_on():
             user_input = UserInput()

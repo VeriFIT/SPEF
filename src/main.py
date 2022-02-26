@@ -49,6 +49,19 @@ from config import Environment
 
 
 
+"""
+-spracovat to tak aby text obsahoval len jeden riadok (nesmie tam byt ziaden \n)
+-text musi byt indenticky s lines
+-idealne spravit lines ako pole objektov: text, style
+
+
+-win zmensit o jeden riadok a dva stlpce
+-prvy riadok vzdy skipnut a nechat ho na zobrazenie nazvu suboru
+-nakreslit okolo win ramcek
+"""
+
+
+
 """ ======================= START MAIN ========================= """
 def main(stdscr):
     log("START")
