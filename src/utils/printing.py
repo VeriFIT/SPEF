@@ -575,7 +575,18 @@ def show_file_content(env):
 
                     """ print line """
                     screen.addstr(row+1, 1+shift, line, text_color)
+        else:
+            """ set color for line numbers """
+            if (1 in colored_lines):
+                line_num_color = curses.color_pair(NOTE_HIGHLIGHT)            
+            else:
+                line_num_color = curses.color_pair(LINE_NUM)
 
+            """ print line number """
+            if env.line_numbers:
+                screen.addstr(1, 1, "1", line_num_color)
+            else:
+                screen.addstr(1, 1, " ", line_num_color)
 
         """ show content filter if there is one """
         if env.content_filter_on():

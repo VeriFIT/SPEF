@@ -79,18 +79,20 @@ class Cursor:
                 self._restrict_col(buffer, win)
 
     def left(self, buffer, win):
-        if self.col > win.begin_x: # if not start of the line (if col > 0)
-            self.col -= 1
-        elif self.row > win.begin_y: # (if row > 0) move to the end of prev line if there is one
-            self.row -= 1
-            self.col = len(buffer[self.row - win.begin_y]) + win.begin_x
+        if len(buffer) > 0:
+            if self.col > win.begin_x: # if not start of the line (if col > 0)
+                self.col -= 1
+            elif self.row > win.begin_y: # (if row > 0) move to the end of prev line if there is one
+                self.row -= 1
+                self.col = len(buffer[self.row - win.begin_y]) + win.begin_x
 
     def right(self, buffer, win):
-        if self.col < len(buffer[self.row - win.begin_y]) + win.begin_x: # if its not end of the line
-            self.col += 1
-        elif self.row < len(buffer) - 1 + win.border: # else go to the start of next line if there is one
-            self.row += 1
-            self.col = win.begin_x
+        if len(buffer) > 0:
+            if self.col < len(buffer[self.row - win.begin_y]) + win.begin_x: # if its not end of the line
+                self.col += 1
+            elif self.row < len(buffer) - 1 + win.border: # else go to the start of next line if there is one
+                self.row += 1
+                self.col = win.begin_x
 
     """ restrict the cursors column to be within the line we move to """
     def _restrict_col(self, buffer, win):
@@ -226,9 +228,10 @@ class Window:
         row = self.cursor.row - self.begin_y
         col = self.cursor.col - self.begin_x
 
-        current_line = buffer.lines[row]
-        tab_count = current_line.count("\t", 0, col)
-        self.tab_shift = (tab_size-1)*tab_count # -1 cursor shift (right/left) correction
+        if len(buffer) > 0:
+            current_line = buffer.lines[row]
+            tab_count = current_line.count("\t", 0, col)
+            self.tab_shift = (tab_size-1)*tab_count # -1 cursor shift (right/left) correction
 
 
     def get_cursor_position(self):

@@ -8,7 +8,7 @@ import re
 import sys
 import fnmatch
 import glob
-
+import traceback
 
 from views.filtering import filter_management
 from views.help import show_help
@@ -227,7 +227,7 @@ def file_viewing(stdscr, env):
                         elif ctrl_key == '^H':
                             pass
         except Exception as err:
-            log("viewing Exception | "+str(err))
+            log("viewing Exception | "+str(err)+" | "+str(traceback.format_exc()))
             env.set_exit_mode()
             return env
 
