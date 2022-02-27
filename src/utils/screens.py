@@ -156,7 +156,8 @@ def create_screens_and_windows(height, width, line_numbers=None):
     notes_win = Window(l_win_h, l_win_w, l_win_y, l_win_x)
     tag_win = Window(right_down_h, r_win_w, r_win_y+right_up_h, r_win_x)
 
-    shift = 0 if line_numbers is None else len(line_numbers)+1 # +1 stands for a space between line number and text
+    # shift = 0 if line_numbers is None else len(line_numbers)+1 # +1 stands for a space between line number and text
+    shift = 1 if line_numbers is None else len(line_numbers)+1 # +1 stands for a space between line number and text
     edit_win = Window(r_win_h, r_win_w-shift, r_win_y, r_win_x+shift, border=1, line_num_shift=shift) # +1 stands for bordes at first line and col
     view_win = Window(right_up_h, r_win_w-shift, r_win_y, r_win_x+shift, border=1, line_num_shift=shift)
 

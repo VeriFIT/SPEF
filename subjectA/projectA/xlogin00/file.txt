@@ -2,7 +2,7 @@ Causes:
 1: nalozi neprioritny material
 2: nalozi prioritny material
 t1: po prvej minute
-t2: po druhej minute
+	t2: po druhej minute
 30: vozik ma nalozeny prioritny material
 31: vozik ma nalozeny neprioritny material
 4: vozik je na cielovej stanici
@@ -24,7 +24,7 @@ Rules:
 11 = !1
 12 = !2
 18 = !8
-65= 8 || 9
+65 = 8 || 9
 66 = 18 || 9
 70 = 30 || 31
 67 = 6 && 7

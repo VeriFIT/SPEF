@@ -101,5 +101,5 @@ def parse_code(file_name, code):
         return result
 
     except Exception as err:
-        log("get syntax highlight for code | "+str(err))
+        # log("get syntax highlight for code | "+str(err))
         return None

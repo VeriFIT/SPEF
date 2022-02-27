@@ -43,12 +43,6 @@ class Windows:
         self.notes = win
 
     def set_edges(self, left, right, top, bottom):
-        # self.left.set_edges(left, right, top, bottom)
-        # self.right.set_edges(left, right, top, bottom)
-        # self.center.set_edges(left, right, top, bottom)
-        # self.right_up.set_edges(left, right, top, bottom)
-        # self.right_down.set_edges(left, right, top, bottom)
-
         self.brows.set_edges(left, right, top, bottom)
         self.edit.set_edges(left, right, top, bottom)
         self.center.set_edges(left, right, top, bottom)

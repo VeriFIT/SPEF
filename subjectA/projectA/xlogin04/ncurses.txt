@@ -1,0 +1,16 @@
+
+/* prints stats about all tries during game, wrong guesses and used letters */
+void print_stats(WINDOW *win, int row, int col, int tries, int wrong, int max, char *used){
+    string tries_mess = "Tries: " + to_string(tries);
+    string wrong_mess = "Wrong: " + to_string(wrong) + "/" + to_string(max);
+    string used_mess = "Used: ";
+    for(int i=0;i<tries;i++){
+        if(i==0)
+            used_mess = used_mess + used[i];
+        else
+            used_mess = used_mess + ", " + used[i];
+    }
+
+
+
+

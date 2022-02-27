@@ -72,25 +72,24 @@ def notes_management(stdscr, env):
                 screen, win = env.get_screen_for_current_mode()
                 curses.curs_set(0)
             elif key == curses.KEY_F2: # edit current note
-                current_note = report.data[win.cursor.row]
-                user_input = UserInput()
-                user_input.text = list(current_note.text)
+                if len(report.data) > 0 and len(report.data) >= win.cursor.row:
+                    current_note = report.data[win.cursor.row]
+                    user_input = UserInput()
+                    user_input.text = list(current_note.text)
 
-                # define specific highlight for current line which is related to the new note
-                env.specific_line_highlight = (current_note.row, curses.color_pair(NOTE_MGMT))
+                    # define specific highlight for current line which is related to the new note
+                    env.specific_line_highlight = (current_note.row, curses.color_pair(NOTE_MGMT))
 
-                title = "Edit note:"
-                env, text = get_user_input(stdscr, env, title=title, user_input=user_input)
-                env.specific_line_highlight = None
-                curses.curs_set(0)
-                if text is not None:
-                    report.data[win.cursor.row].text = ''.join(text)
+                    title = "Edit note:"
+                    env, text = get_user_input(stdscr, env, title=title, user_input=user_input)
+                    env.specific_line_highlight = None
+                    curses.curs_set(0)
+                    if text is not None:
+                        report.data[win.cursor.row].text = ''.join(text)
 
             elif key == curses.KEY_F3: # create new note
                 file_win = env.windows.edit if env.edit_allowed else env.windows.view
                 note_row, note_col = file_win.cursor.row, file_win.cursor.col - file_win.begin_x
-                current_note_row = report.data[win.cursor.row].row
-                current_note_col = report.data[win.cursor.row].col
 
                 # define specific highlight for current line which is related to the new note
                 env.specific_line_highlight = (note_row, curses.color_pair(NOTE_MGMT))
@@ -100,17 +99,19 @@ def notes_management(stdscr, env):
                 env.specific_line_highlight = None
                 curses.curs_set(0)
                 if text is not None:
-                    report.add_note(note_row, note_col, ''.join(text))
-
                     """ move cursor down if new note is lower then current item (current cursor position) """
-                    if note_row < current_note_row or (note_row == current_note_row and note_col < current_note_col):
-                        win.down(report, filter_on=env.tag_filter_on(), use_restrictions=False)
+                    if len(report.data) > 0:
+                        current_note_row = report.data[win.cursor.row].row
+                        current_note_col = report.data[win.cursor.row].col
+                        if note_row < current_note_row or (note_row == current_note_row and note_col < current_note_col):
+                            win.down(report, filter_on=env.tag_filter_on(), use_restrictions=False)
+
+                    """ add note to report """
+                    report.add_note(note_row, note_col, ''.join(text))
 
             elif key == curses.KEY_F4: # insert note from typical notes
                 file_win = env.windows.edit if env.edit_allowed else env.windows.view
                 note_row, note_col = file_win.cursor.row, file_win.cursor.col - file_win.begin_x
-                current_note_row = report.data[win.cursor.row].row
-                current_note_col = report.data[win.cursor.row].col
 
                 # define specific highlight for current line which is related to the new note
                 env.specific_line_highlight = (note_row, curses.color_pair(NOTE_MGMT))
@@ -123,34 +124,39 @@ def notes_management(stdscr, env):
                 curses.curs_set(0)
                 if option_idx is not None:
                     if len(env.typical_notes) >= option_idx:
+                        """ move cursor down if new note is lower then current item (current cursor position) """
+                        if len(report.data) > 0:
+                            current_note_row = report.data[win.cursor.row].row
+                            current_note_col = report.data[win.cursor.row].col
+                            if note_row < current_note_row or (note_row == current_note_row and note_col < current_note_col):
+                                win.down(report, filter_on=env.tag_filter_on(), use_restrictions=False)
+
+                        """ add note to report """
                         str_text = env.typical_notes[option_idx].text
                         report.add_note(note_row, note_col, str_text)
 
-                        """ move cursor down if new note is lower then current item (current cursor position) """
-                        if note_row < current_note_row or (note_row == current_note_row and note_col < current_note_col):
-                            win.down(report, filter_on=env.tag_filter_on(), use_restrictions=False)
-
-
             elif key == curses.KEY_F5: # go to current note in file
-                current_note = report.data[win.cursor.row]
-                env.update_report_data(win, report)
-                env.switch_to_next_mode()
-                _, view_win = env.get_screen_for_current_mode()
-                if current_note.row < view_win.cursor.row:
-                    while current_note.row != view_win.cursor.row:
-                        view_win.up(env.buffer, use_restrictions=True)
-                else:
-                    while current_note.row != view_win.cursor.row:
-                        view_win.down(env.buffer, filter_on=env.content_filter_on(), use_restrictions=True)
-                return env
+                if len(report.data) > 0:
+                    current_note = report.data[win.cursor.row]
+                    env.update_report_data(win, report)
+                    env.switch_to_next_mode()
+                    _, view_win = env.get_screen_for_current_mode()
+                    if current_note.row < view_win.cursor.row:
+                        while current_note.row != view_win.cursor.row:
+                            view_win.up(env.buffer, use_restrictions=True)
+                    else:
+                        while current_note.row != view_win.cursor.row:
+                            view_win.down(env.buffer, filter_on=env.content_filter_on(), use_restrictions=True)
+                    return env
             elif key == curses.KEY_F6: # save note as typical
-                current_note = report.data[win.cursor.row]
-                if current_note.is_typical(env):
-                    current_note.remove_from_typical(env)
-                else:
-                    current_note.set_as_typical(env)
+                if len(report.data) > 0:
+                    current_note = report.data[win.cursor.row]
+                    if current_note.is_typical(env):
+                        current_note.remove_from_typical(env)
+                    else:
+                        current_note.set_as_typical(env)
             elif key == curses.KEY_F8: # delete note
-                if len(report.data) >= win.cursor.row:
+                if len(report.data) > 0 and len(report.data) >= win.cursor.row:
                     del report.data[win.cursor.row]
                     win.up(report, use_restrictions=False)
         except Exception as err:

@@ -1,4 +1,4 @@
-
+""" first line """
 class Request:
     def __init__(self, time, src, dst, weight, content):
         self.req_time = time
@@ -10,22 +10,21 @@ class Request:
         self.to_unload = False # vozik je v cielovej stanici, teda treba vylozit naklad
         self.loaded = False
         self.unloaded = False
+	def foo(self):
+        pass
 
-     def __str__(self):
+    def __str__(self):
         return '%s: %s -> %s (%d) %s %s' % (self.content, self.src, self.dst, self.weight, 
         "loaded on %s" %(self.slot) if self.slot >= 0 else "", "- to unload " if self.to_unload else "")
 
-   def loading(self,slot_id):
+    def loading(self,slot_id):
         self.slot = slot_id
         self.loaded = True
-abc 
  
- 
- 
-d
-asdasdasdasdasdeasd
-f
- unloading(self):
+# d
+# asdasdasdasdasdeasd
+# f
+    def unloading(self):
         self.slot = -1
         self.to_unload = False
         self.unloaded = True  ef on_destination(self):
