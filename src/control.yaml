@@ -1,0 +1,49 @@
+# You can use these supported implemented keys:
+#   * F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12
+#   * ESC, TAB, DELETE, BACKSPACE, ENTER
+#   * UP, DOWN, LEFT, RIGHT
+#   * BACKSLASH
+#   * ASCII
+#   * 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+#   * CTRL+UP, CTRL+DOWN
+#   * CTRL+L, CTRL+N, CTRL+R
+# If you want to use other keys, you need to modify these files:
+#   * 
+#   *
+# If you want to add new function, you need to modify these files:
+#   * control.yaml -- define config name and key to execute this function
+#   * control.py -- define global const name/int representation to this function
+#   * control.py -- in mapping function add map for config name of this function to its name/int value
+#   * xxx.py -- implement this function in xxx file (ex: views/browsing.py or views/tags.py file...)
+#   * printing.py -- add this function to `print_help` and (optional) to `print_hint` 
+
+
+file_functions:
+  show_help: 'F1'
+  save_file: 'F2'
+  show_or_hide_tags: 'F3'
+  set_edit_file_mode: 'F4'
+  show_or_hide_line_numbers: 'F5'
+  show_or_hide_note_highlight: 'F6'
+  open_note_management: 'F7'
+  reload_file_from_last_save: 'F8'
+  show_typical_notes: 'F9'
+  exit_program: 'F10'
+  set_manage_file_mode: 'ESC'
+  change_focus: 'TAB'
+  cursor_up: 'UP'
+  cursor_down: 'DOWN'
+  cursor_left: 'LEFT'
+  cursor_right: 'RIGHT'
+  go_to_prev_note: 'CTRL+UP'
+  go_to_next_note: 'CTRL+DOWN'
+  reload_original_buff: 'CTRL+L'
+edit_file_functions:
+  delete: 'DELETE'
+  backspace: 'BACKSPACE'
+  print_new_line: 'ENTER'
+  print_char: 'ASCII'
+manage_file_functions:
+  filter: 'BACKSLASH'
+  add_custom_note: '0'
+  add_typical_note: ['1','2','3','4','5','6','7','8','9']

@@ -40,6 +40,7 @@ HL_DARK_GRAY = 50
 HL_GRAY = 51
 HL_OLIVE = 52
 HL_PINK = 53
+HL_DARK_YELLOW = 54
 
 
 # https://stackoverflow.com/questions/18551558/how-to-use-terminal-color-palette-with-curses
@@ -60,9 +61,9 @@ def init_color_pairs():
     # curses.init_pair(NOTE_MGMT, 11, -1)
     curses.init_pair(LINE_NUM, 12, -1)
 
-    # curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLACK)
     curses.init_pair(GREEN_COL, curses.COLOR_GREEN, -1)
 
+    """ syntax highlight colors """
     # curses.init_pair(HL_PURPLE, 133, -1)
     curses.init_pair(HL_PURPLE, 171, -1)
     # curses.init_pair(HL_BLUE, 75, -1)
@@ -85,4 +86,5 @@ def init_color_pairs():
     curses.init_pair(HL_OLIVE, 94, -1)
 
     curses.init_pair(HL_PINK, 219, -1)
+    curses.init_pair(HL_DARK_YELLOW, 11, -1)
 

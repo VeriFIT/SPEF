@@ -2,7 +2,7 @@
 import curses
 import curses.ascii
 import os
-
+import traceback
 
 from views.filtering import filter_management
 from views.help import show_help
@@ -144,6 +144,6 @@ def directory_browsing(stdscr, env):
                     cwd = env.cwd
                 win.reset(0,0)
         except Exception as err:
-            log("browsing with quick view | "+str(err))
+            log("browsing with quick view | "+str(err)+" | "+str(traceback.format_exc()))
             env.set_exit_mode()
             return env

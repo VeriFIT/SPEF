@@ -1,5 +1,6 @@
 import curses
 import curses.ascii
+import traceback
 
 from views.help import show_help
 
@@ -90,6 +91,6 @@ def filter_management(stdscr, screen, win, env):
                 curses.curs_set(0)
                 return env
         except Exception as err:
-            log("filter management | "+str(err))
+            log("filter management | "+str(err)+" | "+str(traceback.format_exc()))
             env.set_exit_mode()
             return env

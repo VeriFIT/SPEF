@@ -13,6 +13,7 @@ class Request:
 	def foo(self):
         pass
 
+
     def __str__(self):
         return '%s: %s -> %s (%d) %s %s' % (self.content, self.src, self.dst, self.weight, 
         "loaded on %s" %(self.slot) if self.slot >= 0 else "", "- to unload " if self.to_unload else "")

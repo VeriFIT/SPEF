@@ -2,7 +2,7 @@ import os
 import yaml
 
 from utils.logger import *
-
+from control import *
 
 """ modes """
 BROWS = 1
@@ -33,7 +33,8 @@ class Environment:
         """ environment """
         self.mode = conf['env']['mode']
         self.quick_view = conf['env']['quick_view']
-        self.edit_allowed = conf['env']['edit_allowed']
+        self.edit_allowed = conf['env']['edit_allowed'] # TODO: REMOVE
+        self.show_tags = conf['env']['edit_allowed'] # TODO: edit_allowed --> show_tags
         self.note_highlight = conf['env']['note_highlight']
         self.show_cached_files = conf['env']['show_cached_files']
         self.start_with_line_numbers = conf['env']['start_with_line_numbers']
@@ -41,6 +42,7 @@ class Environment:
         self.tab_size = conf['editor']['tab_size']
         self.messages = conf['messages'] # {'empty_path_filter': txt, 'empty_tag_filter': txt, ... }
 
+        self.file_edit_mode = False # file edit or file management
         self.show_menu = False
         self.line_numbers = None # None or str(number_of_lines_in_buffer)
         self.note_management = False
@@ -64,6 +66,14 @@ class Environment:
 
         self.typical_notes = [] # [notes] all saved typical notes (from all projects)
 
+        self.control = Control()
+
+    def set_user_control(self, contr):
+        self.control.set_file_functions(contr)
+        # self.control.set_brows_functions(contr)
+        # self.control.set_tags_functions(contr)
+        # self.control.set_notes_functions(contr)
+        # self.control.set_filter_functions(contr)
 
 
     # TODO: get current project dir
@@ -76,6 +86,7 @@ class Environment:
     def set_file_to_open(self, file_to_open):
         if self.file_to_open != file_to_open:
             self.file_to_open = file_to_open
+            # if self.show_tags:
             if self.edit_allowed:
                 self.windows.edit.reset()
             else:
@@ -88,6 +99,7 @@ class Environment:
         if self.is_brows_mode():
             return self.screens.left, self.windows.brows
         if self.is_view_mode():
+            # if self.show_tags:
             if self.edit_allowed:
                 return self.screens.right, self.windows.edit
             else:
@@ -96,6 +108,20 @@ class Environment:
             return self.screens.right_down, self.windows.tag
         if self.is_notes_mode():
             return self.screens.left, self.windows.notes
+
+    def update_win_for_current_mode(self, win):
+        if self.is_brows_mode():
+            self.windows.brows = win
+        if self.is_view_mode():
+            # if self.show_tags:
+            if self.edit_allowed:
+                self.windows.edit = win
+            else:
+                self.windows.view = win
+        if self.is_tag_mode():
+            self.windows.tag = win
+        if self.is_notes_mode():
+            self.windows.notes = win
 
     def get_center_win(self, reset=False, row=None, col=None):
         if reset:
@@ -142,6 +168,7 @@ class Environment:
         self.cwd = cwd
 
     def update_viewing_data(self, win, buffer, report=None):
+        # if self.show_tags:
         if self.edit_allowed:
             self.windows.edit = win
         else:
@@ -158,14 +185,26 @@ class Environment:
         self.windows.notes = win
         self.report = report
 
+
+    """ file management """
+    def change_to_file_edit_mode(self):
+        self.file_edit_mode = True
+
+    def change_to_file_management(self):
+        self.file_edit_mode = False
+
+
+    # TO REMOVE
     def enable_file_edit(self):
         self.edit_allowed = True
         self.quick_view = False # TODO ???
 
+    # TO REMOVE
     def disable_file_edit(self):
         self.edit_allowed = False
 
 
+    """ note management """
     def enable_note_management(self):
         self.note_management = True
 
@@ -173,11 +212,12 @@ class Environment:
         self.note_management = False
 
 
-    def disable_line_numbers(self):
-        self.line_numbers = None
-
+    """ line numbers """
     def enable_line_numbers(self, buffer):
         self.line_numbers = str(len(buffer))
+
+    def disable_line_numbers(self):
+        self.line_numbers = None
 
 
     """ set mode """
@@ -201,6 +241,7 @@ class Environment:
         if self.is_brows_mode():
             self.mode = VIEW # Brows -> View
         elif self.is_view_mode():
+            # if self.show_tags:
             if self.edit_allowed:
                 if self.note_management:
                     self.mode = NOTES # View -> Notes

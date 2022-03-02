@@ -1,5 +1,5 @@
 import time
-
+import traceback
 
 from utils.logger import *
 
@@ -269,7 +269,7 @@ class Window:
             if screen:
                 screen.mvwin(self.begin_y - self.border, position_x)
         except Exception as err:
-            log("win set position | "+str(err))
+            log("win set position | "+str(err)+" | "+str(traceback.format_exc()))
 
 
     def reset_shifts(self):

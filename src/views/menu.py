@@ -1,7 +1,7 @@
 
 import curses
 import curses.ascii
-
+import traceback
 
 from modules.directory import Directory
 from modules.window import Window
@@ -75,7 +75,7 @@ def brows_menu(stdscr, env, menu_options, color=None, title=None):
                     win.set_position(position, screen)
                     rewrite_all_wins(env)
         except Exception as err:
-            log("brows menu | "+str(err))
+            log("brows menu | "+str(err)+" | "+str(traceback.format_exc()))
             env.set_exit_mode()
             return env, None
 

@@ -2,7 +2,7 @@ import curses
 import curses.ascii
 import yaml
 import os
-
+import traceback
 
 from views.filtering import filter_management
 from views.help import show_help
@@ -107,6 +107,6 @@ def tag_management(stdscr, env):
                 env.prepare_browsing_after_filter()
                 return env
         except Exception as err:
-            log("tagging | "+str(err))
+            log("tagging | "+str(err)+" | "+str(traceback.format_exc()))
             env.set_exit_mode()
             return env

@@ -3,7 +3,7 @@ import curses
 import curses.ascii
 import yaml
 import os
-
+import traceback
 
 from modules.buffer import Buffer, Report, Tags, Note
 
@@ -13,6 +13,7 @@ from utils.logger import *
 REPORT_SUFFIX = "_report.yaml"
 TAGS_SUFFIX = "_tags.yaml"
 CONFIG_FILE = "config.yaml"
+CONTROL_FILE = "control.yaml"
 TYPICAL_NOTES_FILE = "typical_notes.txt"
 
 
@@ -27,7 +28,19 @@ def load_config_from_file():
             config = yaml.safe_load(f)
         return config
     except Exception as err:
-        log("cannot load config file | "+str(err))
+        log("cannot load config file | "+str(err)+" | "+str(traceback.format_exc()))
+        return None
+
+def load_control_from_file():
+    utils_dir = os.path.dirname(__file__)
+    src_dir = os.path.abspath(os.path.join(utils_dir, os.pardir))
+    control_file = os.path.join(src_dir, CONTROL_FILE)
+    try:
+        with open(control_file, 'r') as f:
+            control = yaml.safe_load(f)
+        return control
+    except Exception as err:
+        log("cannot load control file | "+str(err)+" | "+str(traceback.format_exc()))
         return None
 
 
@@ -52,7 +65,7 @@ def load_typical_notes_from_file():
     except FileNotFoundError:
         return []
     except Exception as err:
-        log("cannot load file with typical notes | "+str(err))
+        log("cannot load file with typical notes | "+str(err)+" | "+str(traceback.format_exc()))
 
     return notes
 
@@ -96,7 +109,7 @@ def load_report_from_file(path):
     except FileNotFoundError:
         report = Report(report_file, [])
     except Exception as err:
-        log("load report | "+str(err))
+        log("load report | "+str(err)+" | "+str(traceback.format_exc()))
     finally:
         return report
 
@@ -122,7 +135,7 @@ def save_report_to_file(report):
             yaml.dump(notes, f, default_flow_style=False, allow_unicode=True)
         report.last_save = report.data.copy()
     except Exception as err:
-        log("save report to file | "+str(err))
+        log("save report to file | "+str(err)+" | "+str(traceback.format_exc()))
 
 
 """ **************** TAGS **************** """
@@ -142,7 +155,7 @@ def load_tags_from_file(path):
     except FileNotFoundError:
         tags = Tags(tags_file, {})
     except Exception as err:
-        log("load tags | "+str(err))
+        log("load tags | "+str(err)+" | "+str(traceback.format_exc()))
 
     return tags
 
@@ -162,7 +175,7 @@ def load_buffer_and_tags(env):
             buffer = Buffer(env.file_to_open, lines)
             env.buffer = buffer
         except Exception as err:
-            log("load file content | "+str(err))
+            log("load file content | "+str(err)+" | "+str(traceback.format_exc()))
             env.set_exit_mode()
             return env, None, False
 

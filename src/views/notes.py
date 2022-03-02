@@ -2,6 +2,7 @@ import curses
 import curses.ascii
 import yaml
 import os
+import traceback
 
 
 from views.help import show_help
@@ -80,10 +81,11 @@ def notes_management(stdscr, env):
                     # define specific highlight for current line which is related to the new note
                     env.specific_line_highlight = (current_note.row, curses.color_pair(NOTE_MGMT))
 
-                    title = "Edit note:"
+                    title = f"Edit note at {current_note.row}:{current_note.col}"
                     env, text = get_user_input(stdscr, env, title=title, user_input=user_input)
-                    env.specific_line_highlight = None
+                    screen, win = env.get_screen_for_current_mode()
                     curses.curs_set(0)
+                    env.specific_line_highlight = None
                     if text is not None:
                         report.data[win.cursor.row].text = ''.join(text)
 
@@ -94,10 +96,11 @@ def notes_management(stdscr, env):
                 # define specific highlight for current line which is related to the new note
                 env.specific_line_highlight = (note_row, curses.color_pair(NOTE_MGMT))
 
-                title = "Enter new note:"
+                title = f"Enter new note at {note_row}:{note_col}"
                 env, text = get_user_input(stdscr, env, title=title)
-                env.specific_line_highlight = None
+                screen, win = env.get_screen_for_current_mode()
                 curses.curs_set(0)
+                env.specific_line_highlight = None
                 if text is not None:
                     """ move cursor down if new note is lower then current item (current cursor position) """
                     if len(report.data) > 0:
@@ -120,8 +123,9 @@ def notes_management(stdscr, env):
                 color = curses.color_pair(GREEN_COL)
                 menu_options = [note.text for note in env.typical_notes]
                 env, option_idx = brows_menu(stdscr, env, menu_options, color=color, title=title)
-                env.specific_line_highlight = None
+                screen, win = env.get_screen_for_current_mode()
                 curses.curs_set(0)
+                env.specific_line_highlight = None
                 if option_idx is not None:
                     if len(env.typical_notes) >= option_idx:
                         """ move cursor down if new note is lower then current item (current cursor position) """
@@ -160,6 +164,6 @@ def notes_management(stdscr, env):
                     del report.data[win.cursor.row]
                     win.up(report, use_restrictions=False)
         except Exception as err:
-            log("note management | "+str(err))
+            log("note management | "+str(err)+" | "+str(traceback.format_exc()))
             env.set_exit_mode()
             return env

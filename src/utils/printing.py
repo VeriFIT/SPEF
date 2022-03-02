@@ -1,6 +1,7 @@
 import curses
 import os
 import re
+import traceback
 
 from modules.buffer import UserInput
 from modules.directory import Directory
@@ -25,15 +26,6 @@ RELOAD_FILE_WITHOUT_SAVING = """WARNING: Reload file will discard changes.\n\
 
 
 
-""" used for tag input or note input """
-def show_input(env):
-    pass
-
-def show_menu(env):
-    pass
-
-
-
 def refresh_main_screens(env):
     env.screens.left.erase()
     env.screens.right.erase()
@@ -50,6 +42,9 @@ def refresh_main_screens(env):
 
 def rewrite_all_wins(env):
     # refresh_main_screens(env)
+    """ print hint for user """
+    print_hint(env)
+
     if env.note_management:
         show_notes(env)
     else:
@@ -57,6 +52,26 @@ def rewrite_all_wins(env):
     show_file_content(env)
     if not env.edit_allowed:
         show_tags(env)
+
+def rewrite_brows(env, hint=True):
+    if hint:
+        print_hint(env)
+    show_directory_content(env)
+
+def rewrite_tags(env, hint=True):
+    if hint:
+        print_hint(env)
+    show_tags(env)
+
+def rewrite_file(env, hint=True):
+    if hint:
+        print_hint(env)
+    show_file_content(env)
+
+def rewrite_notes(env, hint=True):
+    if hint:
+        print_hint(env)
+    show_notes(env)
 
 
 
@@ -67,14 +82,13 @@ def print_hint(env, filter_mode=False):
     size = screen.getmaxyx()
 
     line_nums_switch = "hide" if env.line_numbers else "show"
-    note_switch = "hide" if env.note_highlight else "show"
+    # note_switch = "hide" if env.note_highlight else "show"
+    tags_switch = "hide" if env.show_tags else "show"
     view_switch = "off" if env.quick_view else "on"
 
     typical_note = "save as"
     if env.is_notes_mode() and env.report is not None:
         if len(env.report.data) > 0 and len(env.report.data) >= env.windows.notes.cursor.row:
-            # log(str(len(env.report.data)))
-            # log(str(env.windows.notes.cursor.row))
             if env.report.data[env.windows.notes.cursor.row].is_typical(env):
                 typical_note = "unsave from"
 
@@ -84,11 +98,8 @@ def print_hint(env, filter_mode=False):
     B_HELP = {"F1":"help", "F2":"menu", "F3":f"view {view_switch}","F4":"edit", "F5":"copy",
                 "F6":"rename", "F8":"delete", "F9":"filter", "F10":"exit"}
 
-    E_HELP = {"F1":"help", "F2":"save", "F3":"view/tag", "F4":"note", "F5":f"{line_nums_switch} lines",
-                "F6":f"{note_switch} notes", "F8":"reload", "F9":"filter", "F10":"exit"}
-
-    V_HELP = {"F1":"help", "F4":"edit", "F5":f"{line_nums_switch} lines",
-                "F6":f"{note_switch} notes", "F9":"filter", "F10":"exit"}
+    E_HELP = {"F1":"help", "F2":"save", "F3":f"{tags_switch} tags", "F4":"edit file", "F5":f"{line_nums_switch} lines",
+                "F6":"note highlight", "F7":"note mgmt", "F8":"reload", "F9":"show typical notes", "ESC":"manage file", "F10":"exit"}
 
     T_HELP = {"F1":"help", "F3":"new tag", "F4":"edit tags", "F8":"delete", "F9":"filter", "F10":"exit"}
 
@@ -104,7 +115,7 @@ def print_hint(env, filter_mode=False):
     elif env.is_brows_mode():
         help_dict = B_HELP
     elif env.is_view_mode():
-        help_dict = E_HELP if env.edit_allowed else V_HELP
+        help_dict = E_HELP
     elif env.is_tag_mode():
         help_dict = T_HELP
     elif env.is_notes_mode():
@@ -122,129 +133,140 @@ def print_hint(env, filter_mode=False):
     screen.refresh()
 
 
-
-def print_help(screen, max_cols, max_rows, env, filter_mode=False):
+""" custom_help = (exit_message, title, dictionary)"""
+def print_help(screen, max_cols, max_rows, env, filter_mode=False, custom_help=None):
     screen.erase()
     screen.border(0)
     mode = ""
-    if filter_mode:
-        mode = "FILTER MANAGEMENT"
-        actions = {
-        "F1": "show this user help",
-        "F8": "delete/remove all filters",
-        "ESC, F10": "exit filter management",
-        "Arrows": "move cursor in user input",
-        "Delete, Backspace": "delete symbol in user input",
-        "Ascii character": "insert symbol in user input",
-        "Enter": "set filter and exit filter management"}
-
-    elif env.is_brows_mode():
-        mode = "DIRECTORY BROWSING"
-        actions = {
-        "F1": "show this user help",
-        "F2": "open menu with other functions",
-        "F3": "set quick view mode on/off",
-        "F4": "opent file for edit",
-        "F6": "show/hide cached files (tags, report)",
-        "F7": "show/hide project info",
-        "F9": "set filter by path",
-        "F10": "exit program",
-        "TAB": "change focus to file view or edit",
-        "Arrows": "brows between files and dirs"}
-    elif env.is_view_mode():
-        if env.edit_allowed:
-            mode = "FILE EDIT"
+    if custom_help is None:
+        if filter_mode:
+            mode = "FILTER MANAGEMENT"
             actions = {
             "F1": "show this user help",
-            "F2": "save file changes",
-            "F3": "change to file view/tag mode",
-            "F4": "open note management",
-            "F5": "show/hide line numbers",
-            "F6": "show/hide note highlight",
-            "F8": "reload file content from last save",
-            "F9": "set filter by content",
+            "F8": "delete/remove all filters",
+            "ESC, F10": "exit filter management",
+            "Arrows": "move cursor in user input",
+            "Delete, Backspace": "delete symbol in user input",
+            "Ascii character": "insert symbol in user input",
+            "Enter": "set filter and exit filter management"}
+        elif env.is_brows_mode():
+            mode = "DIRECTORY BROWSING"
+            actions = {
+            "F1": "show this user help",
+            "F2": "open menu with other functions",
+            "F3": "set quick view mode on/off",
+            "F4": "opent file for edit",
+            "F6": "show/hide cached files (tags, report)",
+            "F7": "show/hide project info",
+            "F9": "set filter by path",
             "F10": "exit program",
-            "TAB": "change focus to directory browsing or note management",
-            "Arrows": "move cursor in file content",
-            "Delete, Backspace": "delete symbol in file on current cursor position",
-            "Ascii character": "insert symbol in file on current cursor position",
-            "Enter": "insert new line in file on current cursor position",
-            "CTRL + Up/Down": "jump to prev/next line with note in file",
-            "CTRL + L": "reload file content from original buffer",
-            "CTRL + R": "remove all notes on current line"}
+            "TAB": "change focus to file view or edit",
+            "Arrows": "brows between files and dirs"}
+        elif env.is_view_mode():
+            if env.edit_allowed:
+                mode = "FILE EDIT"
+                actions = {
+                "F1": "show this user help",
+                "F2": "save file changes",
+                "F3": "change to file view/tag mode",
+                "F4": "open note management",
+                "F5": "show/hide line numbers",
+                "F6": "show/hide note highlight",
+                "F8": "reload file content from last save",
+                "F9": "set filter by content",
+                "F10": "exit program",
+                "TAB": "change focus to directory browsing or note management",
+                "Arrows": "move cursor in file content",
+                "Delete, Backspace": "delete symbol in file on current cursor position",
+                "Ascii character": "insert symbol in file on current cursor position",
+                "Enter": "insert new line in file on current cursor position",
+                "CTRL + Up/Down": "jump to prev/next line with note in file",
+                "CTRL + L": "reload file content from original buffer",
+                "CTRL + R": "remove all notes on current line"}
+            else:
+                mode = "FILE VIEW"
+                actions = {
+                "F1": "show this user help",
+                "F4": "change to file edit mode",
+                "F5": "show/hide line numbers",
+                "F6": "show/hide note highlight",
+                "F9": "set filter by content",
+                "F10": "exit program",
+                "TAB": "change focus to tag management",
+                "Arrows": "move cursor in file content"}
+        elif env.is_tag_mode():
+            mode = "TAG MANAGEMENT"
+            actions = {
+            "F1": "show this user help",
+            "F2": "edit current tag",
+            "F3": "create new tag",
+            "F4": "open file with tags for edit",
+            "F8": "delete current tag",
+            "F9": "set filter by tag",
+            "F10": "exit program",
+            "TAB": "change focus to directory browsing",
+            "Arrows": "brows between tags"}
+        elif env.is_notes_mode():
+            mode = "NOTES MANAGEMENT"
+            actions = {
+            "F1": "show this user help",
+            "F2": "edit current note",
+            "F3": "create new note",
+            "F4": "insert note from saved (typical) notes",
+            "F5": "go to current note in file",
+            "F6": "save note as typical",
+            "F8": "delete current note",
+            "F10": "exit note management",
+            "TAB": "change focus to file view or edit",
+            "Arrows": "brows between notes"}
         else:
-            mode = "FILE VIEW"
-            actions = {
-            "F1": "show this user help",
-            "F4": "change to file edit mode",
-            "F5": "show/hide line numbers",
-            "F6": "show/hide note highlight",
-            "F9": "set filter by content",
-            "F10": "exit program",
-            "TAB": "change focus to tag management",
-            "Arrows": "move cursor in file content"}
-    elif env.is_tag_mode():
-        mode = "TAG MANAGEMENT"
-        actions = {
-        "F1": "show this user help",
-        "F2": "edit current tag",
-        "F3": "create new tag",
-        "F4": "open file with tags for edit",
-        "F8": "delete current tag",
-        "F9": "set filter by tag",
-        "F10": "exit program",
-        "TAB": "change focus to directory browsing",
-        "Arrows": "brows between tags"}
-    elif env.is_notes_mode():
-        mode = "NOTES MANAGEMENT"
-        actions = {
-        "F1": "show this user help",
-        "F2": "edit current note",
-        "F3": "create new note",
-        "F4": "insert note from saved (typical) notes",
-        "F5": "go to current note in file",
-        "F6": "save note as typical",
-        "F8": "delete current note",
-        "F10": "exit note management",
-        "TAB": "change focus to file view or edit",
-        "Arrows": "brows between notes"}
-    if mode and actions:
+            screen.refresh()
         exit_message = "Press ESC or F1 to hide user help."
-        message = f"*** USER HELP FOR {mode} ***"
-        if len(message) >= max_cols:
-            message = message[:max_cols-1]
+        title = f"*** USER HELP FOR {mode} ***"
+
+    else:
+        exit_message = custom_help[0]
+        title = custom_help[1]
+        actions = custom_help[2]
+
+    line = 1
+    if exit_message:
         if len(exit_message) >= max_cols:
             exit_message = exit_message[:max_cols-1]
-        screen.addstr(1, 1, exit_message, curses.color_pair(HELP))
-        screen.addstr(2, int(max_cols/2-len(message)/2)+1, message, curses.A_NORMAL)
-        line = 3
-        for key in actions:
-            action = actions[key]
-            if line < max_rows:
-                if len(key)+2 > max_cols:
-                    break
-                screen.addstr(line, 1, str(key), curses.color_pair(HELP))
-                # if it doesnt fit to windows weight
-                free_space = max_cols-len(key)-3
-                if len(action) > free_space:
-                    words = action.split()
-                    while words:
-                        if line >= max_rows:
+        screen.addstr(line, 1, exit_message, curses.color_pair(HELP))
+        line += 1
+    if title:
+        if len(title) >= max_cols:
+            title = title[:max_cols-1]
+        screen.addstr(line, int(max_cols/2-len(title)/2)+1, title, curses.A_NORMAL)
+        line += 1
+    for key in actions:
+        action = actions[key]
+        if line < max_rows:
+            if len(key)+2 > max_cols:
+                break
+            screen.addstr(line, 1, str(key), curses.color_pair(HELP))
+            # if it doesnt fit to windows weight
+            free_space = max_cols-len(key)-3
+            if len(action) > free_space:
+                words = action.split()
+                while words:
+                    if line >= max_rows:
+                        break
+                    part = ""
+                    word = words[0]
+                    while len(part)+len(word)+1 < free_space:
+                        part += " "+word
+                        del words[0]
+                        if not words:
                             break
-                        part = ""
                         word = words[0]
-                        while len(part)+len(word)+1 < free_space:
-                            part += " "+word
-                            del words[0]
-                            if not words:
-                                break
-                            word = words[0]
-                        screen.addstr(line, 3+len(key), str(part), curses.A_NORMAL)
-                        line +=1
-                else:
-                    screen.addstr(line, 3+len(key), str(action), curses.A_NORMAL)
-                    line += 1
-        screen.refresh()
+                    screen.addstr(line, 3+len(key), str(part), curses.A_NORMAL)
+                    line +=1
+            else:
+                screen.addstr(line, 3+len(key), str(action), curses.A_NORMAL)
+                line += 1
+    screen.refresh()
 
 
 
@@ -388,10 +410,6 @@ def show_directory_content(env):
     else:
         screen.border(0)
 
-    """ print hint for user """
-    print_hint(env)
-
-
     try:
         """ show dir name """
         show_path(screen, cwd.path, max_cols)
@@ -425,7 +443,7 @@ def show_directory_content(env):
                 show_filter(screen, user_input, max_rows, max_cols, env)
 
     except Exception as err:
-        log("show directory | "+str(err))
+        log("show directory | "+str(err)+" | "+str(traceback.format_exc()))
     finally:
         screen.refresh()
 
@@ -435,12 +453,17 @@ def show_file_content(env):
     screen = env.screens.right if env.edit_allowed else env.screens.right_up
     win = env.windows.edit if env.edit_allowed else env.windows.view
 
+
     max_cols = win.end_x - win.begin_x
     max_rows = win.end_y - win.begin_y - 1
 
     buffer = env.buffer
     report = env.report
+
+    #  OPTION A : note highlight on full line + screens.py line 160 shift
     # shift = len(env.line_numbers)+1 if env.line_numbers else 0 # shift for line numbers
+    #  OPTION B : note highlight on line number
+    #  OPTION C : note highlight on symbol '|' before line + screens.py line 160 shift
     shift = len(env.line_numbers)+1 if env.line_numbers else 1 # shift for line numbers
 
 
@@ -460,10 +483,6 @@ def show_file_content(env):
 
     """ show file name """
     show_path(screen, buffer.path, max_cols+(shift if env.line_numbers else 1))
-
-    """ print hint for user """
-    print_hint(env)
-
 
     """ highlight lines with notes """
     colored_lines = []
@@ -502,9 +521,26 @@ def show_file_content(env):
                     """ replace tab with spaces in line """
                     text = text.replace("\t", " "*env.tab_size)
 
+                    #  OPTION A : note highlight on full line
+                    # """ set color for line numbers and for line text """
+                    # if (y + win.row_shift in colored_lines):
+                    #     text_color = curses.color_pair(NOTE_HIGHLIGHT)
+                    # else:
+                    #     text_color = curses.color_pair(style)
+                    # if env.specific_line_highlight is not None:
+                    #     highlight_line, highlight_color = env.specific_line_highlight
+                    #     if (y == highlight_line):
+                    #         text_color = highlight_color
+
+                    # """ print line number """
+                    # if env.line_numbers:
+                    #     screen.addstr(y, 1, str(y+win.row_shift), curses.color_pair(LINE_NUM))
+
+
+                    #  OPTION B : note highlight on line number
                     """ set color for line numbers and for line text """
                     if (y + win.row_shift in colored_lines):
-                        line_num_color = curses.color_pair(NOTE_HIGHLIGHT)            
+                        line_num_color = curses.color_pair(NOTE_HIGHLIGHT)
                     else:
                         line_num_color = curses.color_pair(LINE_NUM)
 
@@ -519,6 +555,28 @@ def show_file_content(env):
                         screen.addstr(y, 1, str(y+win.row_shift), line_num_color)
                     else:
                         screen.addstr(y, 1, " ", line_num_color)
+
+
+                    #  OPTION C : note highlight on symbol '|' before line
+                    # """ set color for line numbers and for line text """
+                    # if (y + win.row_shift in colored_lines):
+                    #     line_num_color = curses.color_pair(HL_DARK_YELLOW)
+                    # else:
+                    #     line_num_color = curses.color_pair(HL_DARK_GRAY)
+
+                    # text_color = curses.color_pair(style)
+                    # if env.specific_line_highlight is not None:
+                    #     highlight_line, highlight_color = env.specific_line_highlight
+                    #     if (y == highlight_line):
+                    #         text_color = highlight_color
+
+                    # """ print line number """
+                    # if env.line_numbers:
+                    #     screen.addstr(y, 1, str(y+win.row_shift), curses.color_pair(LINE_NUM))
+                    #     screen.addstr(y, shift, "|", line_num_color)
+                    # else:
+                    #     screen.addstr(y, 1, "|", line_num_color)
+
 
                     """ column shift correction """
                     if (y-1+win.begin_y == win.cursor.row-win.row_shift) and (win.col_shift > 0): # y-1 bcs we start at line 1 not 0
@@ -555,9 +613,27 @@ def show_file_content(env):
                     if len(line) > max_cols - 1:
                         line = line[:max_cols - 1]
 
+
+                    #  OPTION A : note highlight on full line
+                    # """ set color for line numbers and for line text """
+                    # if (row+1+win.row_shift in colored_lines):
+                        # text_color = curses.color_pair(NOTE_HIGHLIGHT)
+                    # else:
+                    #     text_color = curses.A_NORMAL
+                    # if env.specific_line_highlight is not None:
+                    #     highlight_line, highlight_color = env.specific_line_highlight
+                    #     if (row+1 == highlight_line):
+                    #         text_color = highlight_color
+
+                    # """ print line number """
+                    # if env.line_numbers: # row+1 bcs row starts from 0
+                    #     screen.addstr(row+1, 1, str(row+1+win.row_shift), curses.color_pair(LINE_NUM))
+
+
+                    #  OPTION B : note highlight on line number
                     """ set color for line numbers and for line text """
                     if (row+1+win.row_shift in colored_lines):
-                        line_num_color = curses.color_pair(NOTE_HIGHLIGHT)            
+                        line_num_color = curses.color_pair(NOTE_HIGHLIGHT)
                     else:
                         line_num_color = curses.color_pair(LINE_NUM)
 
@@ -573,9 +649,38 @@ def show_file_content(env):
                     else:
                         screen.addstr(row+1, 1, " ", line_num_color)
 
+
+                    #  OPTION C : note highlight on symbol '|' before line
+                    # """ set color for line numbers and for line text """
+                    # if (row+1+win.row_shift in colored_lines):
+                    #     line_num_color = curses.color_pair(HL_DARK_YELLOW)
+                    # else:
+                    #     line_num_color = curses.color_pair(HL_DARK_GRAY)
+
+                    # text_color = curses.A_NORMAL
+                    # if env.specific_line_highlight is not None:
+                    #     highlight_line, highlight_color = env.specific_line_highlight
+                    #     if (row+1 == highlight_line):
+                    #         text_color = highlight_color
+
+                    # """ print line number """
+                    # if env.line_numbers: # row+1 bcs row starts from 0
+                    #     screen.addstr(row+1, 1, str(row+1+win.row_shift), curses.color_pair(LINE_NUM))
+                    #     screen.addstr(row+1, shift, "|", line_num_color)
+                    # else:
+                    #     screen.addstr(row+1, 1, "|", line_num_color)
+
+
                     """ print line """
                     screen.addstr(row+1, 1+shift, line, text_color)
         else:
+            #  OPTION A : note highlight on full line
+            # """ print line number """
+            # if env.line_numbers:
+            #     screen.addstr(1, 1, "1", curses.color_pair(LINE_NUM))
+
+
+            #  OPTION B : note highlight on line number
             """ set color for line numbers """
             if (1 in colored_lines):
                 line_num_color = curses.color_pair(NOTE_HIGHLIGHT)            
@@ -588,6 +693,22 @@ def show_file_content(env):
             else:
                 screen.addstr(1, 1, " ", line_num_color)
 
+
+            #  OPTION C : note highlight on symbol '|' before line
+            # """ set color for line numbers and for line text """
+            # if (1 in colored_lines):
+            #     line_num_color = curses.color_pair(HL_DARK_YELLOW)
+            # else:
+            #     line_num_color = curses.color_pair(HL_DARK_GRAY)
+
+            # """ print line number """
+            # if env.line_numbers:
+            #     screen.addstr(1, 1, "1", curses.color_pair(LINE_NUM))
+            #     screen.addstr(1, 2, "|", line_num_color)
+            # else:
+            #     screen.addstr(1, 1, "|", line_num_color)
+
+
         """ show content filter if there is one """
         if env.content_filter_on():
             user_input = UserInput()
@@ -595,7 +716,7 @@ def show_file_content(env):
             show_filter(screen, user_input, max_rows, max_cols, env)
 
     except Exception as err:
-        log("show file | "+str(err))
+        log("show file | "+str(err)+" | "+str(traceback.format_exc()))
     finally:
         screen.refresh()
 
@@ -656,7 +777,7 @@ def show_tags(env):
             show_filter(screen, user_input, max_rows, max_cols, env)
 
     except Exception as err:
-        log("show tags | "+str(err))
+        log("show tags | "+str(err)+" | "+str(traceback.format_exc()))
     finally:
         screen.refresh()
 
@@ -714,7 +835,7 @@ def show_notes(env):
                 screen.addstr(row+1, 1, line, color)
 
     except Exception as err:
-        log("show notes | "+str(err))
+        log("show notes | "+str(err)+" | "+str(traceback.format_exc()))
     finally:
         screen.refresh()
 
@@ -747,6 +868,6 @@ def show_menu(screen, win, menu_options, max_rows, max_cols, env, color=None, ti
             screen.addstr(row+1, 1, "* There is no option to select from menu *", curses.A_NORMAL | curses.A_BOLD)
 
     except Exception as err:
-        log("show menu | "+str(err))
+        log("show menu | "+str(err)+" | "+str(traceback.format_exc()))
     finally:
         screen.refresh()

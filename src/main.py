@@ -88,6 +88,13 @@ def main(stdscr):
         exit(-1)
     env = Environment(screens, windows, config)
 
+    """ load control from file """
+    control = load_control_from_file()
+    if control is None:
+        exit(-1)
+    env.set_user_control(control)
+
+
     """ load saved typical notes from file """
     env.typical_notes = load_typical_notes_from_file()
 
