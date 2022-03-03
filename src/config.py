@@ -71,7 +71,7 @@ class Environment:
     def set_user_control(self, contr):
         self.control.set_file_functions(contr)
         self.control.set_brows_functions(contr)
-        # self.control.set_tags_functions(contr)
+        self.control.set_tags_functions(contr)
         # self.control.set_notes_functions(contr)
         # self.control.set_filter_functions(contr)
 

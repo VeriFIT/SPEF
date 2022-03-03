@@ -159,6 +159,7 @@ def run_function(stdscr, env, fce, key):
         else:
             env.cwd = get_directory_content(env.show_cached_files)
         win.reset(0,0)
+        curses.curs_set(0)
 
     env.update_win_for_current_mode(win)
     return env, False

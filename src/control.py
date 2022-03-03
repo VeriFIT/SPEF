@@ -40,36 +40,43 @@ SAVE_FILE = 27
 QUICK_VIEW_ON_OFF = 100
 OPEN_FILE = 101
 
+""" tag management control """
+EDIT_TAG = 200
+ADD_TAG = 201
+DELETE_TAG = 202
+OPEN_TAG_FILE = 203
+
 
 
 class Control():
     def __init__(self):
-        self.directory_brows = {} # TODO
+        self.directory_brows = {}
         self.file_edit = {}
         self.file_management = {}
-        self.tag_management = {} # TODO
+        self.tag_management = {}
         self.note_management = {} # TODO
         self.filter_management = {} # TODO
-        self.menu_brows = {} # TODO
-        self.user_input = {} # TODO
-        self.help_show = {} # TODO
+        # self.menu_brows = {} # TODO
+        # self.user_input = {} # TODO
+        # self.help_show = {} # TODO
 
 
-    def get_function(self, env, key):
+    def get_function(self, env, key, filter_mode=False):
         dict_funcions = {}
-        # if env.filter_on:
-            # dict_funcions = self.filter_management
-        if env.is_brows_mode():
-            dict_funcions = self.directory_brows
-        elif env.is_view_mode():
-            if env.file_edit_mode:
-                dict_funcions = self.file_edit
-            else:
-                dict_funcions = self.file_management
-        elif env.is_tag_mode():
-            dict_funcions = self.tag_management
-        elif env.is_notes_mode():
-            dict_funcions = self.note_management
+        if filter_mode:
+            dict_funcions = self.filter_management
+        else:
+            if env.is_brows_mode():
+                dict_funcions = self.directory_brows
+            elif env.is_view_mode():
+                if env.file_edit_mode:
+                    dict_funcions = self.file_edit
+                else:
+                    dict_funcions = self.file_management
+            elif env.is_tag_mode():
+                dict_funcions = self.tag_management
+            elif env.is_notes_mode():
+                dict_funcions = self.note_management
 
         if key in dict_funcions:
             return dict_funcions[key]
@@ -128,6 +135,20 @@ class Control():
                 else:
                     keys[key] = fce
         self.directory_brows = keys
+
+    def set_tags_functions(self, control):
+        tags_functions = control['tags_functions']
+        keys = {}
+        for str_fce, key in tags_functions.items():
+            fce = map_tags_function(str_fce)
+            if fce is not None:
+                if isinstance(key,list):
+                    for k in key:
+                        keys[k] = fce
+                else:
+                    keys[key] = fce
+        self.tag_management = keys
+
 
 
 def get_function_for_key(env, key):
@@ -265,3 +286,21 @@ def map_brows_function(str_fce):
     else:
         return None
 
+
+def map_tags_function(str_fce):
+    functions = {
+        'show_help': SHOW_HELP,
+        'edit_tag': EDIT_TAG,
+        'add_tag': ADD_TAG,
+        'delete_tag': DELETE_TAG,
+        'open_tag_file': OPEN_TAG_FILE,
+        'change_focus': CHANGE_FOCUS,
+        'resize_win': RESIZE_WIN,
+        'cursor_up': CURSOR_UP,
+        'cursor_down': CURSOR_DOWN,
+        'filter': FILTER,
+        'exit_program': EXIT_PROGRAM}
+    if str_fce in functions:
+        return functions[str_fce]
+    else:
+        return None

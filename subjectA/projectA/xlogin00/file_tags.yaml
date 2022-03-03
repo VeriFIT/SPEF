@@ -1,5 +1,7 @@
 documentation:
 - ok
+score:
+- '10'
 test1:
 - '0'
 test2:

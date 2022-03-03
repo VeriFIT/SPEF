@@ -278,12 +278,13 @@ def run_function(stdscr, env, fce, key):
                 else:
                     rewrite = True
         else:
-            # ======================= MANAGE FILE =======================
+            # ======================= FILTER =======================
             if fce == FILTER:
                 env = filter_management(stdscr, screen, win, env)
                 if env.is_exit_mode() or env.is_brows_mode():
                     return env, rewrite, True
                 rewrite = True
+            # ======================= ADD NOTES =======================
             elif fce == ADD_CUSTOM_NOTE:
                 if env.report:
                     note_row, note_col = win.cursor.row, win.cursor.col - win.begin_x

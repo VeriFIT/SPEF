@@ -52,14 +52,24 @@ brows_functions:
   show_help: 'F1'
   quick_view_on_off: 'F3'
   open_file: 'F4'
-  filter: 'BACKSLASH'
   exit_program: 'F10'
   change_focus: 'TAB'
+  filter: 'BACKSLASH'
   cursor_up: 'UP'
   cursor_down: 'DOWN'
   cursor_left: 'LEFT'
   cursor_right: 'RIGHT'
-# tags functions
+tags_functions:
+  show_help: 'F1'
+  edit_tag: 'F2'
+  add_tag: 'F3'
+  open_tag_file: 'F4'
+  delete_tag: 'F8'
+  exit_program: 'F10'
+  change_focus: 'TAB'
+  filter: 'BACKSLASH'
+  cursor_up: 'UP'
+  cursor_down: 'DOWN'
 
 # notes functions
 
