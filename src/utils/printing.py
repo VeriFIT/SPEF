@@ -58,15 +58,12 @@ def rewrite_brows(env, hint=True):
         print_hint(env)
     show_directory_content(env)
 
-def rewrite_tags(env, hint=True):
-    if hint:
-        print_hint(env)
-    show_tags(env)
-
 def rewrite_file(env, hint=True):
     if hint:
         print_hint(env)
     show_file_content(env)
+    if not env.edit_allowed:
+        show_tags(env)
 
 def rewrite_notes(env, hint=True):
     if hint:
@@ -306,7 +303,7 @@ def show_path(screen, path, max_cols):
         path = "/".join(path)
     dir_name = " "+str(path)+" "
     screen.addstr(0, int(max_cols/2-len(dir_name)/2), dir_name)
-    screen.refresh()
+    # screen.refresh()
 
 
 """ center screen """
@@ -448,6 +445,83 @@ def show_directory_content(env):
         screen.refresh()
 
 
+def rewrite_one_line_in_file(env, line_num):
+    screen = env.screens.right if env.edit_allowed else env.screens.right_up
+    win = env.windows.edit if env.edit_allowed else env.windows.view
+    max_cols = win.end_x - win.begin_x
+    max_rows = win.end_y - win.begin_y - 1
+
+    buffer = env.buffer
+    report = env.report
+
+    shift = len(env.line_numbers)+1 if env.line_numbers else 1 # shift for line numbers
+
+    if buffer is not None:
+        line = buffer[line_num-1]
+        tokens = parse_code(buffer.path, line)
+
+        if tokens is not None:
+            screen.move(line_num,1+shift)
+            y = line_num
+            position = 0
+            text_color = curses.A_NORMAL
+            for token in tokens:
+                style, text = token
+                _,x = screen.getyx()
+
+                """ replace tab with spaces in line """
+                text = text.replace("\t", " "*env.tab_size)
+
+                text_color = curses.color_pair(style)
+                if env.specific_line_highlight is not None:
+                    highlight_line, highlight_color = env.specific_line_highlight
+                    if (y == highlight_line):
+                        text_color = highlight_color
+
+                """ column shift correction """
+                if (y-1+win.begin_y == win.cursor.row-win.row_shift) and (win.col_shift > 0):
+                    old_position = position
+                    position += len(text[:max_cols-position-1]) # position simulates token printing
+                    if position < win.col_shift:
+                        continue
+                    if old_position <= win.col_shift: # token text is between pages (before and after col shift position)
+                        text = text[win.col_shift-old_position+1:]
+                        x = 1+shift
+                else:
+                    position = 0 # reset position
+
+                """ print token """
+                if text == '\n':
+                    break
+                else:
+                    if x+len(text) > max_cols+shift:
+                        screen.addstr(y, x, str(text[:max_cols+shift-x]), text_color)
+                        break
+                    else:
+                        screen.addstr(y, x, str(text), text_color)
+            _,x = screen.getyx()
+            screen.addstr(y, x, str(' '*(max_cols+shift-x)), text_color)
+        else:
+            line = line.replace("\t", " "*env.tab_size)
+            line = line + str(' '*(max_cols-len(line)))
+
+            if (line_num-1+win.begin_y == win.cursor.row-win.row_shift) and (win.col_shift > 0):
+                line = line[win.col_shift + 1:]
+            if len(line) > max_cols - 1:
+                line = line[:max_cols - 1]
+
+            text_color = curses.A_NORMAL
+            if env.specific_line_highlight is not None:
+                highlight_line, highlight_color = env.specific_line_highlight
+                if (line_num == highlight_line):
+                    text_color = highlight_color
+            """ print line """
+            screen.addstr(line_num, 1+shift, line, text_color)
+
+        screen.refresh()
+
+
+
 """ view file content """
 def show_file_content(env):
     screen = env.screens.right if env.edit_allowed else env.screens.right_up
@@ -464,8 +538,12 @@ def show_file_content(env):
     # shift = len(env.line_numbers)+1 if env.line_numbers else 0 # shift for line numbers
     #  OPTION B : note highlight on line number
     #  OPTION C : note highlight on symbol '|' before line + screens.py line 160 shift
-    shift = len(env.line_numbers)+1 if env.line_numbers else 1 # shift for line numbers
+    # shift = len(env.line_numbers)+1 if env.line_numbers else 1 # shift for line numbers
+    shift = win.line_num_shift
 
+    """ try to get syntax highlight """
+    if buffer is not None:
+        tokens = parse_code(buffer.path, '\n'.join(buffer[win.row_shift:]))
 
     screen.erase()
     """ print border """
@@ -494,10 +572,6 @@ def show_file_content(env):
     try:
         """ show file content """
         if buffer:
-            """ try to get syntax highlight """
-            tokens = parse_code(buffer.path, '\n'.join(buffer[win.row_shift:]))
-
-            # if False:
             if tokens is not None:
                 # =============== print with syntax highlight ===============
                 screen.move(1,1+shift)
@@ -713,7 +787,8 @@ def show_file_content(env):
         if env.content_filter_on():
             user_input = UserInput()
             user_input.text = env.filter.content
-            show_filter(screen, user_input, max_rows, max_cols, env)
+            show_filter(screen, user_input, max_rows, max_cols+shift, env)
+            # show_filter(screen, user_input, max_rows, max_cols, env)
 
     except Exception as err:
         log("show file | "+str(err)+" | "+str(traceback.format_exc()))

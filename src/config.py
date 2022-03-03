@@ -70,7 +70,7 @@ class Environment:
 
     def set_user_control(self, contr):
         self.control.set_file_functions(contr)
-        # self.control.set_brows_functions(contr)
+        self.control.set_brows_functions(contr)
         # self.control.set_tags_functions(contr)
         # self.control.set_notes_functions(contr)
         # self.control.set_filter_functions(contr)
@@ -156,10 +156,11 @@ class Environment:
         return False
     
     def prepare_browsing_after_filter(self):
-        self.set_brows_mode()
-        self.disable_note_management()
-        self.quick_view = True
-        self.windows.brows.reset(0,0)
+        if not self.is_exit_mode():
+            self.set_brows_mode()
+            self.disable_note_management()
+            self.quick_view = True
+            self.windows.brows.reset(0,0)
 
 
     """ update data """

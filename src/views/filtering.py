@@ -27,13 +27,15 @@ def filter_management(stdscr, screen, win, env):
         project_path = env.get_project_path()
         env.filter = Filter(project_path)
 
+    old_filter_text = ''.join(user_input.text)
+
     print_hint(env, filter_mode=True)
 
     while True:
         try:
 
             """ show user input """
-            max_cols = win.end_x - win.begin_x
+            max_cols = win.end_x - win.begin_x + win.line_num_shift
             max_rows = win.end_y - win.begin_y - 1
             show_filter(screen, user_input, max_rows, max_cols, env)
 
@@ -46,9 +48,10 @@ def filter_management(stdscr, screen, win, env):
 
             key = stdscr.getch()
 
-            if key in (curses.ascii.ESC, curses.KEY_F10): # exit filter management
-                user_input.reset()
-                curses.curs_set(0)
+            if key == curses.ascii.ESC: # exit filter management
+                return env
+            elif key == curses.KEY_F10:
+                env.set_exit_mode()
                 return env
             elif key == curses.KEY_RESIZE:
                 env = resize_all(stdscr, env)
@@ -57,8 +60,7 @@ def filter_management(stdscr, screen, win, env):
                 # env.filter.reset_by_current_mode(env)
                 env.filter.reset_all()
                 env.filter.find_files(env)
-                user_input.reset()
-                curses.curs_set(0)
+                env.prepare_browsing_after_filter()
                 return env
             elif key == curses.KEY_F1: # help
                 show_help(stdscr, env, filter_mode=True)
@@ -87,8 +89,8 @@ def filter_management(stdscr, screen, win, env):
                 text = ''.join(user_input.text)
                 env.filter.add_by_current_mode(env, text)
                 env.filter.find_files(env)
-                user_input.reset()
-                curses.curs_set(0)
+                if old_filter_text != text:
+                    env.prepare_browsing_after_filter()
                 return env
         except Exception as err:
             log("filter management | "+str(err)+" | "+str(traceback.format_exc()))

@@ -17,7 +17,7 @@
 #   * xxx.py -- implement this function in xxx file (ex: views/browsing.py or views/tags.py file...)
 #   * printing.py -- add this function to `print_help` and (optional) to `print_hint` 
 
-
+# file functions
 file_functions:
   show_help: 'F1'
   save_file: 'F2'
@@ -47,3 +47,24 @@ manage_file_functions:
   filter: 'BACKSLASH'
   add_custom_note: '0'
   add_typical_note: ['1','2','3','4','5','6','7','8','9']
+# brows functions
+brows_functions:
+  show_help: 'F1'
+  quick_view_on_off: 'F3'
+  open_file: 'F4'
+  filter: 'BACKSLASH'
+  exit_program: 'F10'
+  change_focus: 'TAB'
+  cursor_up: 'UP'
+  cursor_down: 'DOWN'
+  cursor_left: 'LEFT'
+  cursor_right: 'RIGHT'
+# tags functions
+
+# notes functions
+
+# filter functions
+
+# menu functions
+
+# user input functions

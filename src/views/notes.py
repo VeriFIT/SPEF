@@ -162,7 +162,8 @@ def notes_management(stdscr, env):
             elif key == curses.KEY_F8: # delete note
                 if len(report.data) > 0 and len(report.data) >= win.cursor.row:
                     del report.data[win.cursor.row]
-                    win.up(report, use_restrictions=False)
+                    if len(report.data) <= win.cursor.row:
+                        win.up(report, use_restrictions=False)
         except Exception as err:
             log("note management | "+str(err)+" | "+str(traceback.format_exc()))
             env.set_exit_mode()

@@ -174,6 +174,9 @@ def load_buffer_and_tags(env):
                 lines = f.read().splitlines()
             buffer = Buffer(env.file_to_open, lines)
             env.buffer = buffer
+        except UnicodeDecodeError as err:
+            log("load file content | "+str(err))
+            return env, None, False
         except Exception as err:
             log("load file content | "+str(err)+" | "+str(traceback.format_exc()))
             env.set_exit_mode()

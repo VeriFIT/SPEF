@@ -68,10 +68,10 @@ def resize_all(stdscr, env, force_resize=False):
         if curses.is_term_resized(curses.LINES,curses.COLS) or force_resize:
             """ screen resize """
             y,x = stdscr.getmaxyx()
-            stdscr.clear()
             if curses.is_term_resized(curses.LINES,curses.COLS):
+                stdscr.clear()
                 curses.resizeterm(y,x)
-            stdscr.refresh()
+                stdscr.refresh()
 
             """ create screens with new size """
             screens, windows = create_screens_and_windows(y, x, env.line_numbers)
