@@ -46,6 +46,12 @@ ADD_TAG = 201
 DELETE_TAG = 202
 OPEN_TAG_FILE = 203
 
+""" note management control """
+EXIT_NOTES = 300
+EDIT_NOTE = 301
+GO_TO_NOTE = 302
+SAVE_AS_TYPICAL_NOTE = 303
+DELETE_NOTE = 304
 
 
 class Control():
@@ -149,7 +155,18 @@ class Control():
                     keys[key] = fce
         self.tag_management = keys
 
-
+    def set_notes_functions(self, control):
+        notes_functions = control['notes_functions']
+        keys = {}
+        for str_fce, key in notes_functions.items():
+            fce = map_notes_function(str_fce)
+            if fce is not None:
+                if isinstance(key,list):
+                    for k in key:
+                        keys[k] = fce
+                else:
+                    keys[key] = fce
+        self.note_management = keys
 
 def get_function_for_key(env, key):
     if key == curses.KEY_F1:
@@ -300,6 +317,27 @@ def map_tags_function(str_fce):
         'cursor_down': CURSOR_DOWN,
         'filter': FILTER,
         'exit_program': EXIT_PROGRAM}
+    if str_fce in functions:
+        return functions[str_fce]
+    else:
+        return None
+
+
+def map_notes_function(str_fce):
+    functions = {
+        'show_help': SHOW_HELP,
+        'edit_note': EDIT_NOTE,
+        'add_custom_note': ADD_CUSTOM_NOTE,
+        'add_typical_note': ADD_TYPICAL_NOTE,
+        'go_to_note': GO_TO_NOTE,
+        'save_as_typical_note': SAVE_AS_TYPICAL_NOTE,
+        'delete_note': DELETE_NOTE,
+        'exit_program': EXIT_PROGRAM,
+        'exit_notes': EXIT_NOTES,
+        'change_focus': CHANGE_FOCUS,
+        'resize_win': RESIZE_WIN,
+        'cursor_up': CURSOR_UP,
+        'cursor_down': CURSOR_DOWN}
     if str_fce in functions:
         return functions[str_fce]
     else:

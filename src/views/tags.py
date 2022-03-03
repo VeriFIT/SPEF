@@ -44,11 +44,11 @@ def tag_management(stdscr, env):
 
     while True:
         """ print all screens """
+        # screen, win = env.get_screen_for_current_mode()
         rewrite_all_wins(env)
 
         key = stdscr.getch()
 
-        screen, win = env.get_screen_for_current_mode()
         try:
             function = get_function_for_key(env, key)
             if function is not None:
@@ -63,7 +63,7 @@ def tag_management(stdscr, env):
 
 
 
-""" implementation of functions for directory browsing """
+""" implementation of functions for tag management """
 def run_function(stdscr, env, fce, key):
     screen, win = env.get_screen_for_current_mode()
 

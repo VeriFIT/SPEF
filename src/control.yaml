@@ -70,8 +70,19 @@ tags_functions:
   filter: 'BACKSLASH'
   cursor_up: 'UP'
   cursor_down: 'DOWN'
-
-# notes functions
+notes_functions:
+  show_help: 'F1'
+  edit_note: 'F2'
+  add_custom_note: 'F3'
+  add_typical_note: 'F4'
+  go_to_note: 'F5'
+  save_as_typical_note: 'F6'
+  delete_note: 'F8'
+  exit_program: 'F10'
+  exit_notes: 'ESC'
+  change_focus: 'TAB'
+  cursor_up: 'UP'
+  cursor_down: 'DOWN'
 
 # filter functions
 

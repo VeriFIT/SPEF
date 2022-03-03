@@ -47,6 +47,8 @@ def directory_browsing(stdscr, env):
     env.cwd = cwd
 
     while True:
+        screen, win = env.get_screen_for_current_mode()
+
         """ try to load buffer and tag for current file in directory structure """
         if env.quick_view:
             idx = win.cursor.row

@@ -828,7 +828,7 @@ def show_tags(env):
         """ show tags """
         if tags.data:
             for row, name in enumerate(tags.data):
-                if row > max_rows or (row == max_rows and env.tag_filter_on()):
+                if row+1 > max_rows or (row+1 == max_rows and env.tag_filter_on()):
                     break
 
                 """ set color """

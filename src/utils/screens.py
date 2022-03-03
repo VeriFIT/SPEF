@@ -82,12 +82,15 @@ def resize_all(stdscr, env, force_resize=False):
             new_env.windows = windows
 
             """ set old cursor positions to resized windows """
-            b_win_new_row = min(b_win_old_row, new_env.windows.brows.end_y-2)
-            b_win_new_col = min(b_win_old_col, new_env.windows.brows.end_x)
-            n_win_new_row = min(n_win_old_row, new_env.windows.notes.end_y-2)
-            n_win_new_col = min(n_win_old_col, new_env.windows.notes.end_x)
-            t_win_new_row = min(t_win_old_row, new_env.windows.tag.end_y-2)
-            t_win_new_col = min(t_win_old_col, new_env.windows.tag.end_x)
+            # log("---------")
+            # log(str(b_win_old_row))
+            # log(str(new_env.windows.brows.end_y-2))
+            b_win_new_row = max(min(b_win_old_row, new_env.windows.brows.end_y-2), 0)
+            b_win_new_col = max(min(b_win_old_col, new_env.windows.brows.end_x), 0)
+            n_win_new_row = max(min(n_win_old_row, new_env.windows.notes.end_y-2), 0)
+            n_win_new_col = max(min(n_win_old_col, new_env.windows.notes.end_x), 0)
+            t_win_new_row = max(min(t_win_old_row, new_env.windows.tag.end_y-2), 0)
+            t_win_new_col = max(min(t_win_old_col, new_env.windows.tag.end_x), 0)
 
             v_win_new_col = v_win_old_col + new_env.windows.view.begin_x
             e_win_new_col = e_win_old_col + new_env.windows.edit.begin_x
@@ -100,6 +103,8 @@ def resize_all(stdscr, env, force_resize=False):
 
             new_env.windows.view.tab_shift = v_win_old_tab_shift
             new_env.windows.edit.tab_shift = e_win_old_tab_shift
+
+            # log(str(new_env.windows.brows.cursor.row))
 
 
             """ set old shift to resized windows - cursor stays in the middle """
@@ -129,8 +134,8 @@ def create_screens_and_windows(height, width, line_numbers=None):
 
     """ set window size and position """
     d_win_h, d_win_w = d_win_lines + 2, width # 2 stands for borders
-    l_win_h, l_win_w = height - d_win_h , half_width
-    r_win_h, r_win_w = height - d_win_h , half_width
+    l_win_h, l_win_w = max(height - d_win_h, 0), half_width
+    r_win_h, r_win_w = max(height - d_win_h, 0), half_width
     c_win_h, c_win_w = half_height, half_width
 
     d_win_y, d_win_x = l_win_h, 0
@@ -162,8 +167,8 @@ def create_screens_and_windows(height, width, line_numbers=None):
     #  OPTION B : note highlight on line number
     #  OPTION C : note highlight on symbol '|' before line
     shift = 1 if line_numbers is None else len(line_numbers)+1 # +1 stands for a space between line number and text
-    edit_win = Window(r_win_h, r_win_w-shift, r_win_y, r_win_x+shift, border=1, line_num_shift=shift) # +1 stands for bordes at first line and col
-    view_win = Window(right_up_h, r_win_w-shift, r_win_y, r_win_x+shift, border=1, line_num_shift=shift)
+    edit_win = Window(r_win_h, max(r_win_w-shift, 0), r_win_y, r_win_x+shift, border=1, line_num_shift=shift) # +1 stands for bordes at first line and col
+    view_win = Window(right_up_h, max(r_win_w-shift, 0), r_win_y, r_win_x+shift, border=1, line_num_shift=shift)
 
 
     """ set background color for screens """

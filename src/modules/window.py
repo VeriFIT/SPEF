@@ -105,8 +105,8 @@ class Window:
         """ location """
         self._begin_x = begin_x # width (max_cols = end_x - begin_x)
         self._begin_y = begin_y # height (max_rows = end_y - begin_y)
-        self._end_x = begin_x + width - 1
-        self._end_y = begin_y + height - 1
+        self._end_x = max(begin_x + width - 1, 0)
+        self._end_y = max(begin_y + height - 1, 0)
 
         self.border = border
         self.line_num_shift = line_num_shift
