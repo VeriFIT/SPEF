@@ -72,7 +72,7 @@ def rewrite_notes(env, hint=True):
 
 
 
-def print_hint(env, filter_mode=False):
+def print_hint(env):
     screen = env.screens.down
     screen.erase()
     screen.border(0)
@@ -100,7 +100,7 @@ def print_hint(env, filter_mode=False):
 
     T_HELP = {"F1":"help", "F3":"new tag", "F4":"edit tags", "F8":"delete", "F9":"filter", "F10":"exit"}
 
-    if filter_mode:
+    if env.is_filter_mode():
         if env.is_brows_mode(): filter_type = "path"
         elif env.is_view_mode(): filter_type = "content"
         elif env.is_tag_mode(): filter_type = "tag"
@@ -131,12 +131,12 @@ def print_hint(env, filter_mode=False):
 
 
 """ custom_help = (exit_message, title, dictionary)"""
-def print_help(screen, max_cols, max_rows, env, filter_mode=False, custom_help=None):
+def print_help(screen, max_cols, max_rows, env, custom_help=None):
     screen.erase()
     screen.border(0)
     mode = ""
     if custom_help is None:
-        if filter_mode:
+        if env.is_filter_mode():
             mode = "FILTER MANAGEMENT"
             actions = {
             "F1": "show this user help",

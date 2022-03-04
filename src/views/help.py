@@ -12,7 +12,7 @@ from utils.screens import *
 from utils.logger import *
 
 
-def show_help(stdscr, env, filter_mode=False):
+def show_help(stdscr, env):
     curses.curs_set(0)
 
     screen, win = env.get_center_win(reset=True)
@@ -22,7 +22,7 @@ def show_help(stdscr, env, filter_mode=False):
         """ print help """
         max_cols = win.end_x - win.begin_x
         max_rows = win.end_y - win.begin_y
-        print_help(screen, max_cols, max_rows, env, filter_mode=filter_mode)
+        print_help(screen, max_cols, max_rows, env)
 
         key = stdscr.getch()
         if key == curses.KEY_F1 or key == ESC:

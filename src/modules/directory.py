@@ -182,7 +182,8 @@ def get_files_by_tag(files, tag):
         tag_parsing_ok = False
         if re.match('#\w(...)', tag):
             components = re.split('[#()]', tag)
-            log(components)
+            # log(components)
+
             if components[0]=='' and components[-1]=='': # there is nothing before and after the tag
                 components = components[1:-1]
                 if len(components)==2: # there is only tag name and tag arguments, nothing else

@@ -49,7 +49,6 @@ def notes_management(stdscr, env):
             log("note management | "+str(err)+" | "+str(traceback.format_exc()))
             env.set_exit_mode()
             return env
-        
 
 
 

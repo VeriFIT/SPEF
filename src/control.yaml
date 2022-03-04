@@ -83,8 +83,20 @@ notes_functions:
   change_focus: 'TAB'
   cursor_up: 'UP'
   cursor_down: 'DOWN'
+filter_functions:
+  show_help: 'F1'
+  remove_filter: 'F8'
+  exit_program: 'F10'
+  exit_filter: 'ESC'
+  cursor_up: 'UP'
+  cursor_down: 'DOWN'
+  cursor_left: 'LEFT'
+  cursor_right: 'RIGHT'
+  delete: 'DELETE'
+  backspace: 'BACKSPACE'
+  print_char: 'ASCII'
+  save_filter: 'ENTER'
 
-# filter functions
 
 # menu functions
 

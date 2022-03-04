@@ -55,6 +55,7 @@ class Environment:
 
         """ filter """
         self.filter = None # Filter()
+        self.filter_mode = False
 
         self.report = None # Report(path, data)
 
@@ -73,7 +74,7 @@ class Environment:
         self.control.set_brows_functions(contr)
         self.control.set_tags_functions(contr)
         self.control.set_notes_functions(contr)
-        # self.control.set_filter_functions(contr)
+        self.control.set_filter_functions(contr)
 
 
     # TODO: get current project dir
@@ -274,3 +275,6 @@ class Environment:
 
     def is_exit_mode(self):
         return self.mode == EXIT
+
+    def is_filter_mode(self):
+        return self.filter_mode

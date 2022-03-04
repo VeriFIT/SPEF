@@ -35,7 +35,6 @@ PRINT_NEW_LINE = 25
 PRINT_CHAR = 26
 SAVE_FILE = 27
 
-
 """ directory browsing control """
 QUICK_VIEW_ON_OFF = 100
 OPEN_FILE = 101
@@ -53,6 +52,11 @@ GO_TO_NOTE = 302
 SAVE_AS_TYPICAL_NOTE = 303
 DELETE_NOTE = 304
 
+""" filter management control """
+EXIT_FILTER = 400
+SAVE_FILTER = 401
+REMOVE_FILTER = 402
+
 
 class Control():
     def __init__(self):
@@ -60,16 +64,16 @@ class Control():
         self.file_edit = {}
         self.file_management = {}
         self.tag_management = {}
-        self.note_management = {} # TODO
-        self.filter_management = {} # TODO
+        self.note_management = {}
+        self.filter_management = {}
         # self.menu_brows = {} # TODO
         # self.user_input = {} # TODO
         # self.help_show = {} # TODO
 
 
-    def get_function(self, env, key, filter_mode=False):
+    def get_function(self, env, key):
         dict_funcions = {}
-        if filter_mode:
+        if env.is_filter_mode():
             dict_funcions = self.filter_management
         else:
             if env.is_brows_mode():
@@ -167,6 +171,21 @@ class Control():
                 else:
                     keys[key] = fce
         self.note_management = keys
+
+    def set_filter_functions(self, control):
+        filter_functions = control['filter_functions']
+        keys = {}
+        for str_fce, key in filter_functions.items():
+            fce = map_filter_function(str_fce)
+            if fce is not None:
+                if isinstance(key,list):
+                    for k in key:
+                        keys[k] = fce
+                else:
+                    keys[key] = fce
+        self.filter_management = keys
+
+
 
 def get_function_for_key(env, key):
     if key == curses.KEY_F1:
@@ -342,3 +361,25 @@ def map_notes_function(str_fce):
         return functions[str_fce]
     else:
         return None
+
+
+def map_filter_function(str_fce):
+    functions = {
+        'show_help': SHOW_HELP,
+        'remove_filter': REMOVE_FILTER,
+        'exit_program': EXIT_PROGRAM,
+        'exit_filter': EXIT_FILTER,
+        'cursor_up': CURSOR_UP,
+        'cursor_down': CURSOR_DOWN,
+        'cursor_left': CURSOR_LEFT,
+        'cursor_right': CURSOR_RIGHT,
+        'resize_win': RESIZE_WIN,
+        'delete': DELETE,
+        'backspace': BACKSPACE,
+        'print_char': PRINT_CHAR,
+        'save_filter': SAVE_FILTER}
+    if str_fce in functions:
+        return functions[str_fce]
+    else:
+        return None
+
