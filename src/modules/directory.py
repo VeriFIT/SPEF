@@ -5,6 +5,7 @@ import json
 import re
 
 from modules.buffer import Tags, UserInput
+
 from utils.loading import load_tags_from_file
 from utils.logger import *
 

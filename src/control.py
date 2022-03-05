@@ -57,6 +57,17 @@ EXIT_FILTER = 400
 SAVE_FILTER = 401
 REMOVE_FILTER = 402
 
+""" menu control """
+EXIT_MENU = 500
+SAVE_OPTION = 501
+MOVE_LEFT = 502
+MOVE_RIGHT = 503
+
+""" user input control """
+EXIT_USER_INPUT = 600
+SAVE_INPUT = 601
+
+
 
 class Control():
     def __init__(self):
@@ -66,27 +77,29 @@ class Control():
         self.tag_management = {}
         self.note_management = {}
         self.filter_management = {}
-        # self.menu_brows = {} # TODO
-        # self.user_input = {} # TODO
-        # self.help_show = {} # TODO
+        self.menu_brows = {}
+        self.user_input = {}
 
 
     def get_function(self, env, key):
         dict_funcions = {}
-        if env.is_filter_mode():
+        if env.is_user_input_mode():
+            dict_funcions = self.user_input
+        elif env.is_menu_mode():
+            dict_funcions = self.menu_brows
+        elif env.is_filter_mode():
             dict_funcions = self.filter_management
-        else:
-            if env.is_brows_mode():
-                dict_funcions = self.directory_brows
-            elif env.is_view_mode():
-                if env.file_edit_mode:
-                    dict_funcions = self.file_edit
-                else:
-                    dict_funcions = self.file_management
-            elif env.is_tag_mode():
-                dict_funcions = self.tag_management
-            elif env.is_notes_mode():
-                dict_funcions = self.note_management
+        elif env.is_brows_mode():
+            dict_funcions = self.directory_brows
+        elif env.is_view_mode():
+            if env.file_edit_mode:
+                dict_funcions = self.file_edit
+            else:
+                dict_funcions = self.file_management
+        elif env.is_tag_mode():
+            dict_funcions = self.tag_management
+        elif env.is_notes_mode():
+            dict_funcions = self.note_management
 
         if key in dict_funcions:
             return dict_funcions[key]
@@ -185,6 +198,31 @@ class Control():
                     keys[key] = fce
         self.filter_management = keys
 
+    def set_menu_functions(self, control):
+        menu_functions = control['menu_functions']
+        keys = {}
+        for str_fce, key in menu_functions.items():
+            fce = map_menu_function(str_fce)
+            if fce is not None:
+                if isinstance(key,list):
+                    for k in key:
+                        keys[k] = fce
+                else:
+                    keys[key] = fce
+        self.menu_brows = keys
+
+    def set_user_input_functions(self, control):
+        user_input_functions = control['user_input_functions']
+        keys = {}
+        for str_fce, key in user_input_functions.items():
+            fce = map_user_input_function(str_fce)
+            if fce is not None:
+                if isinstance(key,list):
+                    for k in key:
+                        keys[k] = fce
+                else:
+                    keys[key] = fce
+        self.user_input = keys
 
 
 def get_function_for_key(env, key):
@@ -250,10 +288,16 @@ def get_function_for_key(env, key):
             return function
     if curses.ascii.ismeta(key):
         ctrl_key = curses.ascii.unctrl(key)
-        if ctrl_key == '7' or hex(key) == "0x237":
+        # https://asecuritysite.com/coding/asc2?val=512%2C768
+        if hex(key) == "0x237" or ctrl_key == '7':
             return env.control.get_function(env, 'CTRL+UP')
-        elif ctrl_key == '^N' or hex(key) == "0x20e":
+        elif hex(key) == "0x20e" or ctrl_key == '^N':
             return env.control.get_function(env, 'CTRL+DOWN')
+        elif hex(key) == "0x222":
+            return env.control.get_function(env, 'CTRL+LEFT')
+        elif hex(key) == "0x231":
+            return env.control.get_function(env, 'CTRL+RIGHT')
+
     elif curses.ascii.iscntrl(key):
         ctrl_key = curses.ascii.unctrl(key)
         if ctrl_key == '^L':
@@ -383,3 +427,39 @@ def map_filter_function(str_fce):
     else:
         return None
 
+
+def map_menu_function(str_fce):
+    functions = {
+        'exit_program': EXIT_PROGRAM,
+        'exit_menu': EXIT_MENU,
+        'resize_win': RESIZE_WIN,
+        'cursor_up': CURSOR_UP,
+        'cursor_down': CURSOR_DOWN,
+        'save_option': SAVE_OPTION,
+        'move_left': MOVE_LEFT,
+        'move_right': MOVE_RIGHT}
+    if str_fce in functions:
+        return functions[str_fce]
+    else:
+        return None
+
+
+def map_user_input_function(str_fce):
+    functions = {
+        'exit_program': EXIT_PROGRAM,
+        'exit_user_input': EXIT_USER_INPUT,
+        'resize_win': RESIZE_WIN,
+        'cursor_up': CURSOR_UP,
+        'cursor_down': CURSOR_DOWN,
+        'cursor_left': CURSOR_LEFT,
+        'cursor_right': CURSOR_RIGHT,
+        'delete': DELETE,
+        'backspace': BACKSPACE,
+        'save_input': SAVE_INPUT,
+        'print_char': PRINT_CHAR,
+        'move_left': MOVE_LEFT,
+        'move_right': MOVE_RIGHT}
+    if str_fce in functions:
+        return functions[str_fce]
+    else:
+        return None

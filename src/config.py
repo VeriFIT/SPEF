@@ -57,6 +57,9 @@ class Environment:
         self.filter = None # Filter()
         self.filter_mode = False
 
+        self.menu_mode = False
+        self.user_input_mode = False
+
         self.report = None # Report(path, data)
 
         """ reports """
@@ -75,6 +78,8 @@ class Environment:
         self.control.set_tags_functions(contr)
         self.control.set_notes_functions(contr)
         self.control.set_filter_functions(contr)
+        self.control.set_menu_functions(contr)
+        self.control.set_user_input_functions(contr)
 
 
     # TODO: get current project dir
@@ -123,6 +128,10 @@ class Environment:
             self.windows.tag = win
         if self.is_notes_mode():
             self.windows.notes = win
+
+    def update_center_win(self, win):
+        self.windows.center = win
+
 
     def get_center_win(self, reset=False, row=None, col=None):
         if reset:
@@ -278,3 +287,9 @@ class Environment:
 
     def is_filter_mode(self):
         return self.filter_mode
+
+    def is_menu_mode(self):
+        return self.menu_mode
+
+    def is_user_input_mode(self):
+        return self.user_input_mode

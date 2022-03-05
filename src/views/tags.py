@@ -6,11 +6,11 @@ import traceback
 
 from views.filtering import filter_management
 from views.help import show_help
+from views.input import get_user_input
 
 from modules.buffer import Tags, UserInput
 
 from utils.loading import load_tags_from_file
-from utils.input import get_user_input
 from utils.screens import *
 from utils.printing import *
 from utils.logger import *

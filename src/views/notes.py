@@ -10,9 +10,9 @@ from views.help import show_help
 from modules.buffer import Tags, UserInput
 
 from views.menu import brows_menu
+from views.input import get_user_input
 
 from utils.loading import save_report_to_file
-from utils.input import get_user_input
 from utils.screens import *
 from utils.printing import *
 from utils.logger import *

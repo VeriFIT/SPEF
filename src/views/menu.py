@@ -12,6 +12,8 @@ from utils.printing import *
 from utils.screens import *
 from utils.logger import *
 
+from control import *
+
 
 ESC = 27
 
@@ -22,14 +24,18 @@ returns env, option
 def brows_menu(stdscr, env, menu_options, color=None, title=None):
     curses.curs_set(0)
 
+    env.menu_mode = True
+
+
     screen, win = env.get_center_win(reset=True, row=0, col=0)
-    position = win.position
     win.set_border(0)
 
     rewrite_all_wins(env)
 
 
     while True:
+        screen, win = env.get_center_win()
+
         """ show menu options """
         max_cols = win.end_x - win.begin_x - 1
         max_rows = win.end_y - win.begin_y - 1
@@ -40,42 +46,72 @@ def brows_menu(stdscr, env, menu_options, color=None, title=None):
         key = stdscr.getch()
 
         try:
-            # ======================= EXIT =======================
-            if key == curses.KEY_F1 or key == ESC:
-                rewrite_all_wins(env)
-                return env, None
-            # ======================= RESIZE =======================
-            elif key == curses.KEY_RESIZE:
-                env = resize_all(stdscr, env)
-                screen, win = env.get_center_win()
-                win.reset()
-                win.set_position(position, screen)
-                rewrite_all_wins(env)
-            # ======================= INPUT =======================
-            elif key == curses.KEY_UP:
-                win.up(menu_options, use_restrictions=False)
-            elif key == curses.KEY_DOWN:
-                win.down(menu_options, use_restrictions=False)
-            elif key == curses.ascii.NL: # execute selected option
-                return env, win.cursor.row
-            elif curses.ascii.ismeta(key):
-                """ CTRL + LEFT / CTRL + RIGHT """
-                # https://asecuritysite.com/coding/asc2?val=512%2C768
-                if hex(key) == "0x222" or hex(key) == "0x231":
-                    if hex(key) == "0x222": # move left
-                        if position == 2:
-                            position = 1
-                        elif position == 3:
-                            position = 2
-                    elif hex(key) == "0x231": # move right
-                        if position == 1:
-                            position = 2
-                        elif position == 2:
-                            position = 3
-                    win.set_position(position, screen)
-                    rewrite_all_wins(env)
+            function = get_function_for_key(env, key)
+            if function is not None:
+                option, env, exit_program = run_function(stdscr, menu_options, env, function, key)
+                if exit_program:
+                    env.menu_mode = False
+                    return env, option
+
         except Exception as err:
             log("brows menu | "+str(err)+" | "+str(traceback.format_exc()))
             env.set_exit_mode()
             return env, None
+
+
+
+""" implementation of functions for browsing in menu """
+def run_function(stdscr, menu_options, env, fce, key):
+    screen, win = env.get_center_win()
+    old_position = win.position
+
+    option = None
+    
+    # ======================= EXIT =======================
+    if fce == EXIT_PROGRAM:
+        rewrite_all_wins(env)
+        env.set_exit_mode()
+        return option, env, True
+    elif fce == EXIT_MENU:
+        rewrite_all_wins(env)
+        return option, env, True
+    # ======================= RESIZE =======================
+    elif fce == RESIZE_WIN:
+        env = resize_all(stdscr, env)
+        screen, win = env.get_center_win()
+        win.reset()
+        win.set_position(old_position, screen)
+        rewrite_all_wins(env)
+    # ======================= SHOW HELP =======================
+    # elif fce == SHOW_HELP:
+    #     show_help(stdscr, env)
+    #     curses.curs_set(1)
+    # ========================= ARROWS =========================
+    elif fce == CURSOR_UP:
+        win.up(menu_options, use_restrictions=False)
+    elif fce == CURSOR_DOWN:
+        win.down(menu_options, use_restrictions=False)
+    # ====================== SELECT OPTION ====================== 
+    elif fce == SAVE_OPTION:
+        option = win.cursor.row
+        return option, env, True
+    # ========================= MOVE WIN ========================= 
+    elif fce == MOVE_LEFT:
+        if old_position == 2:
+            new_position = 1
+        elif old_position == 3:
+            new_position = 2
+        win.set_position(new_position, screen)
+        rewrite_all_wins(env)
+    elif fce == MOVE_RIGHT:
+        if old_position == 1:
+            new_position = 2
+        elif old_position == 2:
+            new_position = 3
+        win.set_position(new_position, screen)
+        rewrite_all_wins(env)
+
+
+    env.update_center_win(win)
+    return option, env, False
 

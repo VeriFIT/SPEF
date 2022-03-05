@@ -6,10 +6,10 @@ import traceback
 from modules.buffer import UserInput
 from modules.directory import Directory
 
+from utils.highlighter import parse_code
 from utils.loading import save_buffer
 from utils.coloring import *
 from utils.logger import *
-from utils.highlighter import parse_code
 
 ESC = 27
 

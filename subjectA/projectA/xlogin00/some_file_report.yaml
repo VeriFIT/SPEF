@@ -1,3 +1,7 @@
+1:
+  0:
+  - poznamka
+  - ahoj
 5:
   0:
   - poznamka
@@ -7,3 +11,6 @@
 11:
   9:
   - loaded fasg
+17:
+  5:
+  - nova poznamka 17 riadok

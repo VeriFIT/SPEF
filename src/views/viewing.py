@@ -13,10 +13,10 @@ import time
 
 from views.filtering import filter_management
 from views.help import show_help
+from views.input import get_user_input
 
 from modules.buffer import UserInput
 
-from utils.input import get_user_input
 from utils.loading import *
 from utils.screens import *
 from utils.printing import *
