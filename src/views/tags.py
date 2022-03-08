@@ -93,17 +93,35 @@ def run_function(stdscr, env, fce, key):
         curses.curs_set(0)
     # ======================= EDIT TAG =======================
     elif fce == EDIT_TAG:
-        pass
-    # ======================= ADD TAG =======================
-    elif fce == ADD_TAG:
-        title = "Enter new tag in format: tag_name param1 param2 ..."
-        env, text = get_user_input(stdscr, env, title=title)
+        tag_name, args = env.tags.get_tag_by_idx(win.cursor.row)
+        user_input = UserInput()
+        user_input.text = list(f"{tag_name} {' '.join(args)}")
+        title = "Edit tag in format: tag_name param1 param2 ..."
+        env, text = get_user_input(stdscr, env, title=title, user_input=user_input)
+        if env.is_exit_mode():
+            return env, True
         screen, win = env.get_screen_for_current_mode()
         curses.curs_set(0)
         if text is not None:
             tag_parts = ''.join(text).split()
             if len(tag_parts) < 1:
-                log("unknown command, press F1 to see help")
+                log("edit tag | wrong tag format")
+            else:
+                tag_name, *args = tag_parts
+                env.tags.set_tag(tag_name, args)
+                env.tags.save_to_file()
+    # ======================= ADD TAG =======================
+    elif fce == ADD_TAG:
+        title = "Enter new tag in format: tag_name param1 param2 ..."
+        env, text = get_user_input(stdscr, env, title=title)
+        if env.is_exit_mode():
+            return env, True
+        screen, win = env.get_screen_for_current_mode()
+        curses.curs_set(0)
+        if text is not None:
+            tag_parts = ''.join(text).split()
+            if len(tag_parts) < 1:
+                log("add tag | wrong tag format")
             else:
                 tag_name, *args = tag_parts
                 env.tags.set_tag(tag_name, args)

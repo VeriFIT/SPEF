@@ -461,8 +461,8 @@ def rewrite_one_line_in_file(env, line_num):
         tokens = parse_code(buffer.path, line)
 
         if tokens is not None:
-            screen.move(line_num,1+shift)
-            y = line_num
+            y = line_num-win.row_shift
+            screen.move(y,1+shift)
             position = 0
             text_color = curses.A_NORMAL
             for token in tokens:

@@ -28,12 +28,17 @@ class Tags:
             del self.data[tag_name]
 
     def remove_tag_by_idx(self, idx):
-        i = 0
-        for key in self.data:
+        for i, key in enumerate(self.data):
             if i == idx:
                 del self.data[key]
                 return
-            i+=1
+
+    def get_tag_by_idx(self, idx):
+        for i, key in enumerate(self.data):
+            if i == idx:
+                log(self.data[key])
+                return key, self.data[key]
+        return "", []
 
     def set_tag(self, tag_name, args):
         self.data[tag_name] = [*args]
@@ -43,9 +48,13 @@ class Tags:
             with open(self.path, 'w+', encoding='utf8') as f:
                 yaml.dump(self.data, f, default_flow_style=False, allow_unicode=True)
 
-    def find(self, tag_name, args):
-        if tag_name in self.data:
-            return self.compare_args(self.data[tag_name], args)
+    def find(self, tag_name, args=None):
+        for key in self.data:
+            if re.search(tag_name, key):
+                if args is not None:
+                    return self.compare_args(self.data[key], args)
+                else:
+                    return True
         return False
 
     def compare_args(self, tag_args, compare_args):

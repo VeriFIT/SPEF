@@ -89,19 +89,17 @@ def run_function(stdscr, user_input, env, fce, key):
     #     show_help(stdscr, env)
     #     curses.curs_set(1)
     # ========================= ARROWS =========================
+    elif fce == CURSOR_UP: # TODO: Fix
+        user_input.pointer = 0
+        user_input.col_shift = 0
+    elif fce == CURSOR_DOWN: # TODO: Fix
+        end_of_input = len(user_input)
+        user_input.pointer = end_of_input
+        user_input.horizontal_shift(win)
     elif fce == CURSOR_LEFT:
         user_input.left(win)
     elif fce == CURSOR_RIGHT:
         user_input.right(win)
-    elif fce == CURSOR_DOWN:
-        pass
-        # end_of_input = len(user_input)
-        # user_input.pointer = end_of_input
-        # user_input.horizontal_shift(win)
-    elif fce == CURSOR_UP:
-        pass
-        # user_input.pointer = 0
-        # user_input.col_shift = 0
     # ======================== INPUT ========================
     elif fce == DELETE:
         user_input.delete_symbol(win)

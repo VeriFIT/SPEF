@@ -170,11 +170,6 @@ def run_function(stdscr, env, fce, key):
             env.enable_file_edit()
         screen, win = env.get_screen_for_current_mode()
         rewrite = True
-    # ======================= EDIT/MANAGE =======================
-    elif fce == SET_EDIT_FILE_MODE:
-        env.change_to_file_edit_mode()
-    elif fce == SET_MANAGE_FILE_MODE:
-        env.change_to_file_management()
     # ======================= LINE NUMBERS =======================
     elif fce == SHOW_OR_HIDE_LINE_NUMBERS:
         if env.line_numbers:
@@ -233,8 +228,7 @@ def run_function(stdscr, env, fce, key):
             env.report.data = env.report.original_report.copy()
         rewrite = True
     elif fce == RELOAD_FILE_FROM_LAST_SAVE:
-        exit_key = (key, key) # !!!!!!! TODO !!!!!!!
-        if file_changes_are_saved(stdscr, env, RELOAD_FILE_WITHOUT_SAVING, exit_key):
+        if file_changes_are_saved(stdscr, env, RELOAD_FILE_WITHOUT_SAVING):
             env.buffer.lines = env.buffer.last_save.copy()
             if env.report:
                 env.report.data = env.report.last_save.copy()
@@ -277,6 +271,9 @@ def run_function(stdscr, env, fce, key):
                     rewrite_one_line_in_file(env, win.cursor.row)
                 else:
                     rewrite = True
+            # ======================= EDIT -> MANAGE =======================
+            elif fce == SET_MANAGE_FILE_MODE:
+                env.change_to_file_management()
         else:
             # ======================= FILTER =======================
             if fce == FILTER:
@@ -284,6 +281,9 @@ def run_function(stdscr, env, fce, key):
                 if env.is_exit_mode() or env.is_brows_mode():
                     return env, rewrite, True
                 rewrite = True
+            # ======================= MANAGE -> EDIT =======================
+            elif fce == SET_EDIT_FILE_MODE:
+                env.change_to_file_edit_mode()
             # ======================= ADD NOTES =======================
             elif fce == ADD_CUSTOM_NOTE:
                 if env.report:
@@ -298,7 +298,7 @@ def run_function(stdscr, env, fce, key):
                     env.specific_line_highlight = None
                     if text is not None:
                         env.report.add_note(note_row, note_col, ''.join(text))
-                        rewrite = True
+                    rewrite = True
             elif fce == ADD_TYPICAL_NOTE:
                 if env.report:
                     char_key = chr(key)
@@ -307,7 +307,7 @@ def run_function(stdscr, env, fce, key):
                         str_text = env.typical_notes[int_key-1].text
                         note_row, note_col = win.cursor.row, win.cursor.col - win.begin_x
                         env.report.add_note(note_row, note_col, str_text)
-                        rewrite = True
+                    rewrite = True
     env.update_win_for_current_mode(win)
     return env, rewrite, False
 

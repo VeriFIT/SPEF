@@ -114,6 +114,7 @@ class Environment:
             return self.screens.right_down, self.windows.tag
         if self.is_notes_mode():
             return self.screens.left, self.windows.notes
+        return None, None
 
     def update_win_for_current_mode(self, win):
         if self.is_brows_mode():

@@ -3,6 +3,7 @@ import glob
 import fnmatch
 import json
 import re
+import traceback
 
 from modules.buffer import Tags, UserInput
 
@@ -143,7 +144,7 @@ dest: destination path to match
 def get_files_by_path(src, dest):
     try:
         path_matches = []
-        dest_path = os.path.join(src, "**", dest)
+        dest_path = os.path.join(src, "**", dest+"*")
         for file_path in glob.glob(dest_path, recursive=True):
             if os.path.isfile(file_path):
                 path_matches.append(file_path)
@@ -181,24 +182,19 @@ def get_files_by_tag(files, tag):
 
         """ parse tag """
         tag_parsing_ok = False
-        if re.match('#\w(...)', tag):
-            components = re.split('[#()]', tag)
-            # log(components)
-
-            if components[0]=='' and components[-1]=='': # there is nothing before and after the tag
-                components = components[1:-1]
-                if len(components)==2: # there is only tag name and tag arguments, nothing else
-                    tag_name, args = components
-                    compare_args = list(map(str, args.split(',')))
-                    tag_parsing_ok = True
+        if re.match('\w(...)', tag):
+            components = re.split('[()]', tag)
+            log(components)
+            if len(components)>0:
+                # search only for tag name
+                tag_name = components[0]
+                compare_args = None
+                tag_parsing_ok = True
+                if len(components)>1 and components[1]!="":
+                    compare_args = list(map(str, components[1].split(',')))
 
         if not tag_parsing_ok:
-            # TODO !!!
-            # user_input = UserInput()
-            # user_input.text = "invalid input for tag filter... press F1 to see how to use tag filter "
-            # max_cols = env.windows.right_down.end_x - env.windows.right_down.begin_x
-            # max_rows = env.windows.right_down.end_y - env.windows.right_down.begin_y - 1
-            # show_filter(env.screens.right_down, user_input, max_rows, max_cols, env)
+            log("invalid input for tag filter")
             return files
         else:
             for file_path in files:
@@ -208,5 +204,5 @@ def get_files_by_tag(files, tag):
                         tag_matches.append(file_path)
             return tag_matches
     except Exception as err:
-        log("Filter by tag | "+str(err))
+        log("Filter by tag | "+str(err)+" | "+str(traceback.format_exc()))
         return files
