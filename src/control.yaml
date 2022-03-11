@@ -11,9 +11,9 @@
 #   * 
 #   *
 # If you want to add new function, you need to modify these files:
-#   * control.yaml -- define config name and key to execute this function
-#   * control.py -- define global const name/int representation to this function
-#   * control.py -- in mapping function add map for config name of this function to its name/int value
+#   * control.yaml -- define config name and key to execute this function (in correct mode (brows, file, tag,..))
+#   * functions.py -- define global const name/int representation to this function
+#   * functions.py -- in mapping function add map for config name of this function to its name/int value
 #   * xxx.py -- implement this function in xxx file (ex: views/browsing.py or views/tags.py file...)
 #   * printing.py -- add this function to `print_help` and (optional) to `print_hint` 
 
@@ -50,8 +50,10 @@ manage_file_functions:
 # brows functions
 brows_functions:
   show_help: 'F1'
+  open_menu: 'F2'
   quick_view_on_off: 'F3'
   open_file: 'F4'
+  delete_file: 'F8'
   exit_program: 'F10'
   change_focus: 'TAB'
   filter: 'BACKSLASH'

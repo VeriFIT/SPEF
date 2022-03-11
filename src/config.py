@@ -1,8 +1,8 @@
 import os
 import yaml
 
+from controls.control import *
 from utils.logger import *
-from control import *
 
 """ modes """
 BROWS = 1
@@ -86,8 +86,6 @@ class Environment:
     def get_project_path(self):
         return os.path.join(HOME, PROJ_DIR)
 
-    def get_project_name(self):
-        return PROJ_DIR
 
     def set_file_to_open(self, file_to_open):
         if self.file_to_open != file_to_open:
@@ -114,7 +112,7 @@ class Environment:
             return self.screens.right_down, self.windows.tag
         if self.is_notes_mode():
             return self.screens.left, self.windows.notes
-        return None, None
+
 
     def update_win_for_current_mode(self, win):
         if self.is_brows_mode():

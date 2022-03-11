@@ -11,6 +11,8 @@ import glob
 import traceback
 import time
 
+from controls.control import *
+
 from views.filtering import filter_management
 from views.help import show_help
 from views.input import get_user_input
@@ -21,8 +23,6 @@ from utils.loading import *
 from utils.screens import *
 from utils.printing import *
 from utils.logger import *
-
-from control import *
 
 
 # TODO: project config
@@ -45,23 +45,29 @@ def file_viewing(stdscr, env):
         env.set_brows_mode() # instead of exit mode
         return env
 
+
+    # check if file is from some project directory
+    # buffer_dir = Directory(os.path.dirname(buffer.path))
+    # if buffer_dir.is_project_subdirectory():
+        # proj = load_proj_from_conf_file(buffer_dir.proj_conf_path)
+
+    # check if file is from student solution directory (match solution id)
+    # file_login = os.path.relpath(buffer.path, project_path).split(os.sep)[0]
+    # report_file = get_report_file_name(buffer.path)
+    # login_match = bool(re.match(SOLUTION_IDENTIFIER, file_login))
+    # if login_match:
+
     """ try load code review to report  """
     report_already_loaded = False
     report = None
-    if buffer.path.startswith(HOME): # opened file is some file from students projects
-        project_path = env.get_project_path()
-        file_login = os.path.relpath(buffer.path, project_path).split(os.sep)[0]
-        report_file = get_report_file_name(buffer.path)
-        login_match = bool(re.match(SOLUTION_IDENTIFIER, file_login))
-        if login_match:
-            if env.report:
-                if env.report.path == report_file:
-                    report_already_loaded = True
-                    report = env.report
-            if not env.report or not report_already_loaded:
-                # try get report for file in buffer
-                report = load_report_from_file(buffer.path)
-                env.report = report
+    if env.report:
+        if env.report.path == report_file:
+            report_already_loaded = True
+            report = env.report
+    if not env.report or not report_already_loaded:
+        # try get report for file in buffer
+        report = load_report_from_file(buffer.path)
+        env.report = report
 
 
     """ calculate line numbers """
@@ -283,13 +289,14 @@ def run_function(stdscr, env, fce, key):
                 rewrite = True
             # ======================= MANAGE -> EDIT =======================
             elif fce == SET_EDIT_FILE_MODE:
+                log("edit "+str(SET_EDIT_FILE_MODE))
                 env.change_to_file_edit_mode()
             # ======================= ADD NOTES =======================
             elif fce == ADD_CUSTOM_NOTE:
                 if env.report:
                     note_row, note_col = win.cursor.row, win.cursor.col - win.begin_x
                     # define specific highlight for current line which is related to the new note
-                    env.specific_line_highlight = (note_row, curses.color_pair(NOTE_MGMT))
+                    env.specific_line_highlight = (note_row, curses.color_pair(COL_NOTE_LIGHT))
 
                     title = f"Enter new note at {note_row}:{note_col}"
                     env, text = get_user_input(stdscr, env, title=title)

@@ -7,7 +7,7 @@ import traceback
 
 from modules.buffer import Tags, UserInput
 
-from utils.loading import load_tags_from_file
+from utils.loading import *
 from utils.logger import *
 
 
@@ -17,6 +17,9 @@ class Directory:
         self.path = path
         self.dirs = [] if dirs is None else dirs
         self.files = [] if files is None else files
+
+        self.proj = None # None or project object (if its project subdirectory)
+
 
     def __len__(self):
         return len(self.dirs) + len(self.files)
@@ -41,12 +44,76 @@ class Directory:
         else:
             return self.dirs, self.files
 
-
     """ returns list of all items (directories and files) in current working directory"""
     def get_all_items(self):
         items = self.dirs.copy()
         items.extend(self.files)
         return items
+
+    def is_project_subdirectory(self):
+        return self.proj is not None
+
+    def get_proj_conf(self):
+        try:
+            cur_dir = self.path
+            while True:
+                file_list = os.listdir(cur_dir)
+                parent_dir = os.path.dirname(cur_dir)
+                if PROJECT_FILE in file_list:
+                    proj_data = load_proj_from_conf_file(cur_dir)
+                    self.proj = get_project_from_data(proj_data)
+                    return
+                else:
+                    if cur_dir == parent_dir:
+                        return
+                    else:
+                        cur_dir = parent_dir
+        except Exception as err:
+            log("get proj conf | "+str(err)+" | "+str(traceback.format_exc()))
+
+
+class Project:
+    def __init__(self, path):
+        self.path = path
+        self.solution_id = None
+
+        self.tests_dir = None
+        self.test_timeout = 0
+        self.solutions_dir = None
+        self.solution_quick_view = None
+        self.solution_test_quick_view = None
+
+
+    def set_default_values(self):
+        self.solution_id =  "x[a-z]{5}[0-9]{2}" # default solution identifier (xlogin00)
+
+        self.tests_dir = "tests"
+        self.test_timeout = 5
+        self.solutions_dir = "solutions"
+        self.solution_quick_view = "auto_report"
+        self.solution_test_quick_view = "stdout"
+
+
+    def to_dict(self):
+        return {
+            'path': self.path,
+            'solution_id': self.solution_id
+        }
+        #     'tests_dir': self.tests_dir
+        #     'test_timeout': self.test_timeout
+        #     'solutions_dir': self.solutions_dir
+        #     'solution_id': self.solution_id
+        #     'solution_quick_view': self.solution_quick_view
+        #     'solution_test_quick_view': self.solution_test_quick_view
+        # }
+
+
+def get_project_from_data(data): # TODO: premenovat a premiestnit
+    proj = Project(data['path'])
+    proj.solution_id = data['solution_id']
+
+    return proj
+
 
 
 """ class for currently set filters (by path, file content or tag) """
@@ -150,7 +217,7 @@ def get_files_by_path(src, dest):
                 path_matches.append(file_path)
         return path_matches
     except Exception as err:
-        log("Filter by path | "+str(err))
+        log("Filter by path | "+str(err)+" | "+str(traceback.format_exc()))
         return []
 
 
@@ -167,14 +234,14 @@ def get_files_by_content(files, content):
                     content_matches.append(file_path)
         return content_matches
     except Exception as err:
-        log("Filter by content | "+str(err))
+        log("Filter by content | "+str(err)+" | "+str(traceback.format_exc()))
         # if there is some exception, dont apply filter, just ignore it and return all files
         return files
 
 
-""" 
+"""
 files: files to filter
-tag: tag to match, ex: "#test1(0,.*,2,[0-5],5)"
+tag: tag to match, ex: "test1(0,.*,2,[0-5],5)"
 """
 def get_files_by_tag(files, tag):
     try:

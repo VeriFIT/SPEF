@@ -162,6 +162,9 @@ def create_screens_and_windows(height, width, line_numbers=None):
     notes_win = Window(l_win_h, l_win_w, l_win_y, l_win_x)
     tag_win = Window(right_down_h, r_win_w, r_win_y+right_up_h, r_win_x)
 
+    # log("b :"+str(l_win_h))
+    # log("v :"+str(right_up_h))
+    # log("t :"+str(right_down_h))
     #  OPTION A : note highlight on full line
     # shift = 0 if line_numbers is None else len(line_numbers)+1 # +1 stands for a space between line number and text
     #  OPTION B : note highlight on line number
@@ -172,7 +175,7 @@ def create_screens_and_windows(height, width, line_numbers=None):
 
 
     """ set background color for screens """
-    bkgd_col = curses.color_pair(BKGD)
+    bkgd_col = curses.color_pair(COL_BKGD)
     left_screen.bkgd(' ', bkgd_col)
     right_screen.bkgd(' ', bkgd_col)
     down_screen.bkgd(' ', bkgd_col)

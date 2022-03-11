@@ -108,6 +108,9 @@ class Window:
         self._end_x = max(begin_x + width - 1, 0)
         self._end_y = max(begin_y + height - 1, 0)
 
+        self.width = width
+        self.height = height
+
         self.border = border
         self.line_num_shift = line_num_shift
 
@@ -150,6 +153,7 @@ class Window:
 
     @property
     def bottom(self):
+        # return self.end_y - self.begin_y + self.border + self.row_shift - 1
         return self.end_y + self.row_shift - 1
 
     @property
@@ -165,12 +169,13 @@ class Window:
     def set_border(self, border):
         self.border = border
 
-    def up(self, buffer, use_restrictions=True, ):
+    def up(self, buffer, use_restrictions=True):
         self.cursor.up(buffer, self, use_restrictions)
 
         """ window shift """
         self.horizontal_shift()
-        if (self.cursor.row - self.begin_y - self.top_edge == self.row_shift - 1 ) and (self.row_shift > 0):
+        # if (self.cursor.row - self.begin_y - self.top_edge == self.row_shift - 1) and (self.row_shift > 0):
+        if (self.cursor.row == self.border + self.top_edge + self.row_shift - 1) and (self.row_shift > 0):
             self.row_shift -= 1
 
     def down(self, buffer, filter_on=False, use_restrictions=True):
@@ -178,7 +183,8 @@ class Window:
 
         """ window shift """
         self.horizontal_shift()
-        bottom = self.bottom - (1 if filter_on else 0) - self.bottom_edge
+        # bottom = self.bottom - (1 if filter_on else 0) - self.bottom_edge
+        bottom = self.height - 2 - self.bottom_edge - (1 if filter_on else 0) + self.border + self.row_shift
         if (self.cursor.row == bottom) and (self.cursor.row - self.begin_y + self.bottom_edge < len(buffer)):
             self.row_shift += 1
 
@@ -202,8 +208,9 @@ class Window:
 
         """ window shift """
         self.horizontal_shift()
-        bottom = self.bottom - (1 if filter_on else 0)
-        if (self.cursor.row == bottom) and (self.cursor.row - self.begin_y < len(buffer)):
+        # bottom = self.bottom - (1 if filter_on else 0) - self.bottom_edge
+        bottom = self.height - 2 - self.bottom_edge - (1 if filter_on else 0) + self.border + self.row_shift
+        if (self.cursor.row == bottom) and (self.cursor.row - self.begin_y + self.bottom_edge < len(buffer)):
             self.row_shift += 1
 
         # _, col = self.get_cursor_position()

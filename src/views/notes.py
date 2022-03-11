@@ -4,13 +4,13 @@ import yaml
 import os
 import traceback
 
-
-from views.help import show_help
-
-from modules.buffer import Tags, UserInput
+from controls.control import *
 
 from views.menu import brows_menu
 from views.input import get_user_input
+from views.help import show_help
+
+from modules.buffer import Tags, UserInput
 
 from utils.loading import save_report_to_file
 from utils.screens import *
@@ -18,7 +18,6 @@ from utils.printing import *
 from utils.logger import *
 from utils.coloring import *
 
-from control import *
 
 
 def notes_management(stdscr, env):
@@ -95,7 +94,7 @@ def run_function(stdscr, env, fce, key):
             user_input.text = list(current_note.text)
 
             # define specific highlight for current line which is related to the new note
-            env.specific_line_highlight = (current_note.row, curses.color_pair(NOTE_MGMT))
+            env.specific_line_highlight = (current_note.row, curses.color_pair(COL_NOTE_LIGHT))
 
             title = f"Edit note at {current_note.row}:{current_note.col}"
             env, text = get_user_input(stdscr, env, title=title, user_input=user_input)
@@ -110,7 +109,7 @@ def run_function(stdscr, env, fce, key):
         note_row, note_col = file_win.cursor.row, file_win.cursor.col - file_win.begin_x
 
         # define specific highlight for current line which is related to the new note
-        env.specific_line_highlight = (note_row, curses.color_pair(NOTE_MGMT))
+        env.specific_line_highlight = (note_row, curses.color_pair(COL_NOTE_LIGHT))
 
         title = f"Enter new note at {note_row}:{note_col}"
         env, text = get_user_input(stdscr, env, title=title)
@@ -133,10 +132,10 @@ def run_function(stdscr, env, fce, key):
         note_row, note_col = file_win.cursor.row, file_win.cursor.col - file_win.begin_x
 
         # define specific highlight for current line which is related to the new note
-        env.specific_line_highlight = (note_row, curses.color_pair(NOTE_MGMT))
+        env.specific_line_highlight = (note_row, curses.color_pair(COL_NOTE_LIGHT))
 
         title = "Select from typical notes: "
-        color = curses.color_pair(GREEN_COL)
+        color = curses.color_pair(COL_TITLE)
         menu_options = [note.text for note in env.typical_notes]
         env, option_idx = brows_menu(stdscr, env, menu_options, color=color, title=title)
         screen, win = env.get_screen_for_current_mode()

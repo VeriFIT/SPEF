@@ -73,7 +73,7 @@ def main(stdscr):
     curses.use_default_colors()
 
     init_color_pairs()
-    bkgd_color = curses.color_pair(BKGD)
+    bkgd_color = curses.color_pair(COL_BKGD)
     stdscr.bkgd(' ', bkgd_color)
 
     """ create screens and windows for TUI """
@@ -105,7 +105,7 @@ def main(stdscr):
     refresh_main_screens(env)
 
     """ get current files and dirs """
-    env.cwd = get_directory_content()
+    env.cwd = get_directory_content(env)
 
     while True:
 

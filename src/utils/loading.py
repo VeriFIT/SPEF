@@ -15,7 +15,7 @@ TAGS_SUFFIX = "_tags.yaml"
 CONFIG_FILE = "config.yaml"
 CONTROL_FILE = "control.yaml"
 TYPICAL_NOTES_FILE = "typical_notes.txt"
-
+PROJECT_FILE = "proj_conf.yaml"
 
 
 """ **************** CONFIG **************** """
@@ -42,6 +42,27 @@ def load_control_from_file():
     except Exception as err:
         log("cannot load control file | "+str(err)+" | "+str(traceback.format_exc()))
         return None
+
+
+""" **************** PROJECT **************** """
+def load_proj_from_conf_file(path):
+    # load data from yaml file
+    project_file = os.path.join(path, PROJECT_FILE)
+    try:
+        with open(project_file, 'r') as f:
+            data = yaml.safe_load(f)
+        return data
+    except Exception as err:
+        log("cannot load project file | "+str(err)+" | "+str(traceback.format_exc()))
+        return None
+
+def save_proj_to_conf_file(path, data):
+    project_file = os.path.join(path, PROJECT_FILE)
+    try:
+        with open(project_file, 'w+', encoding='utf8') as f:
+            yaml.dump(data, f, default_flow_style=False, allow_unicode=True)
+    except Exception as err:
+        log("cannot save project conf to file | "+str(err)+" | "+str(traceback.format_exc()))
 
 
 

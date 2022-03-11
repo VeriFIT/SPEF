@@ -3,19 +3,16 @@ import curses
 import curses.ascii
 import traceback
 
+from controls.control import *
+
 from modules.directory import Directory
 from modules.window import Window
 from modules.buffer import UserInput
-
 
 from utils.printing import *
 from utils.screens import *
 from utils.logger import *
 
-from control import *
-
-
-ESC = 27
 
 """
 menu_options = []
@@ -66,7 +63,7 @@ def run_function(stdscr, menu_options, env, fce, key):
     old_position = win.position
 
     option = None
-    
+
     # ======================= EXIT =======================
     if fce == EXIT_PROGRAM:
         rewrite_all_wins(env)
@@ -95,6 +92,7 @@ def run_function(stdscr, menu_options, env, fce, key):
     elif fce == SAVE_OPTION:
         option = win.cursor.row
         return option, env, True
+    # TODO: select option by idx (number [1..last option] or char [a..z])
     # ========================= MOVE WIN ========================= 
     elif fce == MOVE_LEFT:
         if old_position == 2:

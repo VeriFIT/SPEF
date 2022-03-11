@@ -2,15 +2,17 @@ import curses
 import curses.ascii
 import traceback
 
+from controls.control import *
+
 from views.help import show_help
 
 from modules.buffer import UserInput
 from modules.directory import Filter
 
+from utils.screens import *
 from utils.printing import *
 from utils.logger import *
 
-from control import *
 
 
 def filter_management(stdscr, screen, win, env):
@@ -28,7 +30,8 @@ def filter_management(stdscr, screen, win, env):
 
 
     if not env.filter:
-        project_path = env.get_project_path()
+        # project_path = env.get_project_path()
+        project_path = env.cwd.proj_conf_path
         env.filter = Filter(project_path)
 
     old_filter_text = ''.join(user_input.text)
@@ -92,6 +95,7 @@ def run_function(stdscr, filter_data, old_filter_text, env, fce, key):
     elif fce == RESIZE_WIN:
         env = resize_all(stdscr, env)
         screen, win = env.get_screen_for_current_mode()
+        rewrite_all_wins(env)
     # ======================= SHOW HELP =======================
     elif fce == SHOW_HELP:
         show_help(stdscr, env)

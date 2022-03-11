@@ -4,6 +4,8 @@ import yaml
 import os
 import traceback
 
+from controls.control import *
+
 from views.filtering import filter_management
 from views.help import show_help
 from views.input import get_user_input
@@ -15,7 +17,6 @@ from utils.screens import *
 from utils.printing import *
 from utils.logger import *
 
-from control import *
 
 
 def save_tags_to_file(tags):

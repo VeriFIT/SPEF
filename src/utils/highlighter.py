@@ -73,23 +73,27 @@ def parse_code(file_name, code):
 
         text = highlight(code, lexer, curses_format)
         raw_tokens = text.splitlines()
-        raw_tokens = raw_tokens[:-1] # remove last new line
-
+        # raw_tokens = raw_tokens[:-1] # remove last new line
 
         """ parse string tokens to list of tuples (style, text) """
         last_style = ""
         parsed_tokens = []
+        new_line = False
         while raw_tokens:
+            new_line = False
             token = raw_tokens.pop(0)
             parts = token.split("|",1)
             if len(parts) == 2:
                 style, text = parts
                 last_style = style
-                parsed_tokens.append((int(style), text))
+                parsed_tokens.append((int(style), str(text)))
             else:
                 parsed_tokens.append((int(last_style), '\n'+str(token)))
+                new_line = True
+        if new_line:
+            parsed_tokens.append((int(last_style), '\n'))
 
-        # log(str(parsed_tokens))
+
         """ split tokens to separate lines """
         result = []
         for token in parsed_tokens:

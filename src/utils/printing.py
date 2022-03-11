@@ -230,7 +230,7 @@ def print_help(screen, max_cols, max_rows, env, custom_help=None):
     if exit_message:
         if len(exit_message) >= max_cols:
             exit_message = exit_message[:max_cols-1]
-        screen.addstr(line, 1, exit_message, curses.color_pair(HELP))
+        screen.addstr(line, 1, exit_message, curses.color_pair(COL_HELP))
         line += 1
     if title:
         if len(title) >= max_cols:
@@ -242,7 +242,7 @@ def print_help(screen, max_cols, max_rows, env, custom_help=None):
         if line < max_rows:
             if len(key)+2 > max_cols:
                 break
-            screen.addstr(line, 1, str(key), curses.color_pair(HELP))
+            screen.addstr(line, 1, str(key), curses.color_pair(COL_HELP))
             # if it doesnt fit to windows weight
             free_space = max_cols-len(key)-3
             if len(action) > free_space:
@@ -378,10 +378,10 @@ def show_filter(screen, user_input, max_rows, max_cols, env):
         elif env.is_view_mode(): empty_message = env.messages['empty_content_filter']
         elif env.is_tag_mode(): empty_message = env.messages['empty_tag_filter']
         empty_message += " "*(max_cols-1-len(empty_message))
-        screen.addstr(max_rows, 1, empty_message[:max_cols-1], curses.color_pair(FILTER) | curses.A_ITALIC)
+        screen.addstr(max_rows, 1, empty_message[:max_cols-1], curses.color_pair(COL_FILTER) | curses.A_ITALIC)
     else:
         user_input_str += " "*(max_cols-1-len(user_input_str))
-        screen.addstr(max_rows, 1, user_input_str[:max_cols-1], curses.color_pair(FILTER))
+        screen.addstr(max_rows, 1, user_input_str[:max_cols-1], curses.color_pair(COL_FILTER))
     screen.refresh()
 
 
@@ -401,9 +401,9 @@ def show_directory_content(env):
     """ print borders """
     screen.erase()
     if env.is_brows_mode():
-        screen.attron(curses.color_pair(BORDER))
+        screen.attron(curses.color_pair(COL_BORDER))
         screen.border(0)
-        screen.attroff(curses.color_pair(BORDER))
+        screen.attroff(curses.color_pair(COL_BORDER))
     else:
         screen.border(0)
 
@@ -422,13 +422,13 @@ def show_directory_content(env):
             for dir_name in dirs:
                 if i > max_rows or (i == max_rows and env.path_filter_on()):
                     break
-                coloring = (curses.color_pair(SELECT) if i+win.row_shift == win.cursor.row+1 else curses.A_NORMAL)
+                coloring = (curses.color_pair(COL_SELECT) if i+win.row_shift == win.cursor.row+1 else curses.A_NORMAL)
                 screen.addstr(i, 1, str(dir_name[:max_cols-2])+"/", coloring | curses.A_BOLD)
                 i+=1
             for file_name in files:
                 if i > max_rows or (i == max_rows and env.path_filter_on()):
                     break
-                coloring = curses.color_pair(SELECT) if i+win.row_shift == win.cursor.row+1 else curses.A_NORMAL
+                coloring = curses.color_pair(COL_SELECT) if i+win.row_shift == win.cursor.row+1 else curses.A_NORMAL
                 screen.addstr(i, 1, str(file_name[:max_cols-1]), coloring)
                 i+=1
 
@@ -545,12 +545,15 @@ def show_file_content(env):
     if buffer is not None:
         tokens = parse_code(buffer.path, '\n'.join(buffer[win.row_shift:]))
 
+        # log(str(buffer[win.row_shift:]))
+        # log(str(tokens))
+
     screen.erase()
     """ print border """
     if env.is_view_mode():
-        screen.attron(curses.color_pair(BORDER))
+        screen.attron(curses.color_pair(COL_BORDER))
         screen.border(0)
-        screen.attroff(curses.color_pair(BORDER))
+        screen.attroff(curses.color_pair(COL_BORDER))
     else:
         screen.border(0)
 
@@ -598,7 +601,7 @@ def show_file_content(env):
                     #  OPTION A : note highlight on full line
                     # """ set color for line numbers and for line text """
                     # if (y + win.row_shift in colored_lines):
-                    #     text_color = curses.color_pair(NOTE_HIGHLIGHT)
+                    #     text_color = curses.color_pair(COL_NOTE)
                     # else:
                     #     text_color = curses.color_pair(style)
                     # if env.specific_line_highlight is not None:
@@ -608,15 +611,15 @@ def show_file_content(env):
 
                     # """ print line number """
                     # if env.line_numbers:
-                    #     screen.addstr(y, 1, str(y+win.row_shift), curses.color_pair(LINE_NUM))
+                    #     screen.addstr(y, 1, str(y+win.row_shift), curses.color_pair(COL_LINE_NUM))
 
 
                     #  OPTION B : note highlight on line number
                     """ set color for line numbers and for line text """
                     if (y + win.row_shift in colored_lines):
-                        line_num_color = curses.color_pair(NOTE_HIGHLIGHT)
+                        line_num_color = curses.color_pair(COL_NOTE)
                     else:
-                        line_num_color = curses.color_pair(LINE_NUM)
+                        line_num_color = curses.color_pair(COL_LINE_NUM)
 
                     text_color = curses.color_pair(style)
                     if env.specific_line_highlight is not None:
@@ -629,7 +632,6 @@ def show_file_content(env):
                         screen.addstr(y, 1, str(y+win.row_shift), line_num_color)
                     else:
                         screen.addstr(y, 1, " ", line_num_color)
-
 
                     #  OPTION C : note highlight on symbol '|' before line
                     # """ set color for line numbers and for line text """
@@ -646,7 +648,7 @@ def show_file_content(env):
 
                     # """ print line number """
                     # if env.line_numbers:
-                    #     screen.addstr(y, 1, str(y+win.row_shift), curses.color_pair(LINE_NUM))
+                    #     screen.addstr(y, 1, str(y+win.row_shift), curses.color_pair(COL_LINE_NUM))
                     #     screen.addstr(y, shift, "|", line_num_color)
                     # else:
                     #     screen.addstr(y, 1, "|", line_num_color)
@@ -691,7 +693,7 @@ def show_file_content(env):
                     #  OPTION A : note highlight on full line
                     # """ set color for line numbers and for line text """
                     # if (row+1+win.row_shift in colored_lines):
-                        # text_color = curses.color_pair(NOTE_HIGHLIGHT)
+                        # text_color = curses.color_pair(COL_NOTE)
                     # else:
                     #     text_color = curses.A_NORMAL
                     # if env.specific_line_highlight is not None:
@@ -701,15 +703,15 @@ def show_file_content(env):
 
                     # """ print line number """
                     # if env.line_numbers: # row+1 bcs row starts from 0
-                    #     screen.addstr(row+1, 1, str(row+1+win.row_shift), curses.color_pair(LINE_NUM))
+                    #     screen.addstr(row+1, 1, str(row+1+win.row_shift), curses.color_pair(COL_LINE_NUM))
 
 
                     #  OPTION B : note highlight on line number
                     """ set color for line numbers and for line text """
                     if (row+1+win.row_shift in colored_lines):
-                        line_num_color = curses.color_pair(NOTE_HIGHLIGHT)
+                        line_num_color = curses.color_pair(COL_NOTE)
                     else:
-                        line_num_color = curses.color_pair(LINE_NUM)
+                        line_num_color = curses.color_pair(COL_LINE_NUM)
 
                     text_color = curses.A_NORMAL
                     if env.specific_line_highlight is not None:
@@ -739,7 +741,7 @@ def show_file_content(env):
 
                     # """ print line number """
                     # if env.line_numbers: # row+1 bcs row starts from 0
-                    #     screen.addstr(row+1, 1, str(row+1+win.row_shift), curses.color_pair(LINE_NUM))
+                    #     screen.addstr(row+1, 1, str(row+1+win.row_shift), curses.color_pair(COL_LINE_NUM))
                     #     screen.addstr(row+1, shift, "|", line_num_color)
                     # else:
                     #     screen.addstr(row+1, 1, "|", line_num_color)
@@ -751,15 +753,15 @@ def show_file_content(env):
             #  OPTION A : note highlight on full line
             # """ print line number """
             # if env.line_numbers:
-            #     screen.addstr(1, 1, "1", curses.color_pair(LINE_NUM))
+            #     screen.addstr(1, 1, "1", curses.color_pair(COL_LINE_NUM))
 
 
             #  OPTION B : note highlight on line number
             """ set color for line numbers """
             if (1 in colored_lines):
-                line_num_color = curses.color_pair(NOTE_HIGHLIGHT)            
+                line_num_color = curses.color_pair(COL_NOTE)            
             else:
-                line_num_color = curses.color_pair(LINE_NUM)
+                line_num_color = curses.color_pair(COL_LINE_NUM)
 
             """ print line number """
             if env.line_numbers:
@@ -777,7 +779,7 @@ def show_file_content(env):
 
             # """ print line number """
             # if env.line_numbers:
-            #     screen.addstr(1, 1, "1", curses.color_pair(LINE_NUM))
+            #     screen.addstr(1, 1, "1", curses.color_pair(COL_LINE_NUM))
             #     screen.addstr(1, 2, "|", line_num_color)
             # else:
             #     screen.addstr(1, 1, "|", line_num_color)
@@ -809,9 +811,9 @@ def show_tags(env):
     """ print borders """
     screen.erase()
     if env.is_tag_mode():
-        screen.attron(curses.color_pair(BORDER))
+        screen.attron(curses.color_pair(COL_BORDER))
         screen.border(0)
-        screen.attroff(curses.color_pair(BORDER))
+        screen.attroff(curses.color_pair(COL_BORDER))
     else:
         screen.border(0)
 
@@ -827,13 +829,16 @@ def show_tags(env):
 
         """ show tags """
         if tags.data:
+            i = 1
             for row, name in enumerate(tags.data):
-                if row+1 > max_rows or (row+1 == max_rows and env.tag_filter_on()):
+                if row < win.row_shift:
+                    continue
+                if i > max_rows or (i == max_rows and env.tag_filter_on()):
                     break
 
                 """ set color """
-                if row+win.row_shift == win.cursor.row and env.is_tag_mode():
-                    coloring = curses.color_pair(SELECT)
+                if i-1+win.row_shift == win.cursor.row and env.is_tag_mode():
+                    coloring = curses.color_pair(COL_SELECT)
                 else:
                     coloring = curses.A_NORMAL
 
@@ -843,7 +848,8 @@ def show_tags(env):
                 line = "#"+str(name)+str_params
                 if len(line) > max_cols -1:
                     line = line[:max_cols - 1]
-                screen.addstr(row+1, 1, line, coloring)
+                screen.addstr(i, 1, line, coloring)
+                i+=1
 
         """ show tag filter if there is one """
         if env.tag_filter_on():
@@ -868,9 +874,9 @@ def show_notes(env):
     """ print borders """
     screen.erase()
     if env.is_notes_mode():
-        screen.attron(curses.color_pair(BORDER))
+        screen.attron(curses.color_pair(COL_BORDER))
         screen.border(0)
-        screen.attroff(curses.color_pair(BORDER))
+        screen.attroff(curses.color_pair(COL_BORDER))
     else:
         screen.border(0)
 
@@ -902,7 +908,7 @@ def show_notes(env):
 
                 """ set color """
                 if row+win.row_shift == win.cursor.row and env.is_notes_mode():
-                    color = curses.color_pair(SELECT)
+                    color = curses.color_pair(COL_SELECT)
                 else:
                     color = curses.A_NORMAL
 
@@ -924,20 +930,23 @@ def show_menu(screen, win, menu_options, max_rows, max_cols, env, color=None, ti
         screen.addstr(row+1, 1, title[:max_cols], color if color else curses.A_NORMAL)
         row += 1
 
+    shift = len(str(min(max_rows,len(menu_options))))+1
+
     try:
         """ show options """
         if len(menu_options) > 0:
-            for option in menu_options:
-                if row > max_rows:
+            for option in menu_options[win.row_shift:]:
+                if row+1 > max_rows:
                     break
 
                 """ set color """
                 if row+win.row_shift == win.cursor.row+1: # +1
-                    coloring = curses.color_pair(SELECT)
+                    coloring = curses.color_pair(COL_SELECT)
                 else:
                     coloring = curses.A_NORMAL
 
-                screen.addstr(row+1, 1, str(option[:max_cols-1]), coloring)
+                screen.addstr(row+1, 1, str(row+win.row_shift), curses.color_pair(COL_HELP))
+                screen.addstr(row+1, 1+shift, str(option[:max_cols-1]), coloring)
                 row += 1
         else:
             screen.addstr(row+1, 1, "* There is no option to select from menu *", curses.A_NORMAL | curses.A_BOLD)
