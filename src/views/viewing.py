@@ -23,18 +23,16 @@ from utils.loading import *
 from utils.screens import *
 from utils.printing import *
 from utils.logger import *
+from utils.match import *
 
-
-# TODO: project config
-SOLUTION_IDENTIFIER = "x[a-z]{5}[0-9]{2}"
-
+from utils.reporting import get_path_relative_to_solution_dir
 
 
 def file_viewing(stdscr, env):
     curses.curs_set(1) # set cursor as visible
     screen, win = env.get_screen_for_current_mode()
 
-    if not env.file_to_open: # there is no file to open
+    if not env.file_to_open or is_archive_file(env.file_to_open): # there is no file to open
         env.set_brows_mode()
         return env
 
@@ -48,7 +46,7 @@ def file_viewing(stdscr, env):
 
     # check if file is from some project directory
     # buffer_dir = Directory(os.path.dirname(buffer.path))
-    # if buffer_dir.is_project_subdirectory():
+    # if buffer_dir.proj is not None: # if is_root_project_dir(env, buffer.path)
         # proj = load_proj_from_conf_file(buffer_dir.proj_conf_path)
 
     # check if file is from student solution directory (match solution id)
@@ -60,13 +58,16 @@ def file_viewing(stdscr, env):
     """ try load code review to report  """
     report_already_loaded = False
     report = None
-    if env.report:
+    if env.report is not None:
+        report_file = get_report_file_name(buffer.path)
         if env.report.path == report_file:
             report_already_loaded = True
             report = env.report
     if not env.report or not report_already_loaded:
         # try get report for file in buffer
-        report = load_report_from_file(buffer.path)
+        orig_file_name = get_path_relative_to_solution_dir(buffer.path)
+        report = load_report_from_file(buffer.path, orig_file_name=orig_file_name)
+        log(str(report))
         env.report = report
 
 
@@ -76,6 +77,11 @@ def file_viewing(stdscr, env):
         env.enable_line_numbers(buffer)
         env = resize_all(stdscr, env, True)
         screen, win = env.get_screen_for_current_mode()
+
+    if report is None:
+        log("report is None (this will never execute probably)")
+        env.set_exit_mode()
+        return env
 
 
     env.buffer = buffer
@@ -111,6 +117,7 @@ def file_viewing(stdscr, env):
             return env
 
 
+
 """ implementation of functions for file edit/management """
 def run_function(stdscr, env, fce, key):
     screen, win = env.get_screen_for_current_mode()
@@ -124,7 +131,7 @@ def run_function(stdscr, env, fce, key):
         rewrite = True
     # ======================= FOCUS =======================
     elif fce == CHANGE_FOCUS:
-        if env.edit_allowed:
+        if env.show_tags:
             if file_changes_are_saved(stdscr, env):
                 env.switch_to_next_mode()
                 return env, rewrite, True
@@ -169,11 +176,7 @@ def run_function(stdscr, env, fce, key):
         save_buffer(env.file_to_open, env.buffer, env.report)
     # ======================= SHOW/HIDE TAGS =======================
     elif fce == SHOW_OR_HIDE_TAGS:
-        # env.show_tags = not env.show_tags
-        if env.edit_allowed:
-            env.disable_file_edit()
-        else:
-            env.enable_file_edit()
+        env.show_tags = not env.show_tags
         screen, win = env.get_screen_for_current_mode()
         rewrite = True
     # ======================= LINE NUMBERS =======================
@@ -191,26 +194,31 @@ def run_function(stdscr, env, fce, key):
     # ======================= SHOW NOTES =======================
     elif fce == OPEN_NOTE_MANAGEMENT:
         env.enable_note_management()
-        env.switch_to_next_mode()
+        # env.switch_to_next_mode()
+        env.set_notes_mode()
         return env, rewrite, True
     elif fce == SHOW_TYPICAL_NOTES:
         center_screen, center_win = env.get_center_win(reset=True)
         max_cols = center_win.end_x - center_win.begin_x
         max_rows = center_win.end_y - center_win.begin_y
-        options = {}
-        if len(env.typical_notes) > 0:
-            if len(env.typical_notes) < 9:
-                for idx, note in enumerate(env.typical_notes):
-                    options[str(idx+1)] = note.text
+        # show list of typical notes with indexes
+        options = env.get_typical_notes_dict()
         custom_help = (None, "Typical notes:", options)
         curses.curs_set(0)
         print_help(center_screen, max_cols, max_rows, env, custom_help=custom_help)
         key = stdscr.getch()
         curses.curs_set(1)
+        # if key represents index of typical note, add this note to current line in file
+        if curses.ascii.isprint(key):
+            char_key = chr(key)
+            if char_key in options.keys():
+                str_text = options[char_key]
+                note_row, note_col = win.cursor.row, win.cursor.col - win.begin_x
+                env.report.add_note(note_row, note_col, str_text)
         rewrite = True
     # ======================= NOTES JUMP =======================
     elif fce == GO_TO_PREV_NOTE:
-        if env.report and env.note_highlight:
+        if env.note_highlight:
             old_shifts = win.row_shift, win.col_shift # get old shifts
             prev_line = env.report.get_prev_line_with_note(win.cursor.row)
             while win.cursor.row != prev_line:
@@ -219,7 +227,7 @@ def run_function(stdscr, env, fce, key):
             env.update_win_for_current_mode(win)
             rewrite = (old_shifts != (win.row_shift, win.col_shift)) # rewrite if shifts changed
     elif fce == GO_TO_NEXT_NOTE:
-        if env.report and env.note_highlight:
+        if env.note_highlight:
             old_shifts = win.row_shift, win.col_shift # get old shifts
             next_line = env.report.get_next_line_with_note(win.cursor.row)
             while win.cursor.row != next_line:
@@ -230,14 +238,12 @@ def run_function(stdscr, env, fce, key):
     # ======================= RELOAD =======================
     elif fce == RELOAD_ORIGINAL_BUFF:
         env.buffer.lines = env.buffer.original_buff.copy()
-        if env.report:
-            env.report.data = env.report.original_report.copy()
+        env.report.data = env.report.original_report.copy()
         rewrite = True
     elif fce == RELOAD_FILE_FROM_LAST_SAVE:
         if file_changes_are_saved(stdscr, env, RELOAD_FILE_WITHOUT_SAVING):
             env.buffer.lines = env.buffer.last_save.copy()
-            if env.report:
-                env.report.data = env.report.last_save.copy()
+            env.report.data = env.report.last_save.copy()
         rewrite = True
     else:
         if env.file_edit_mode:
@@ -293,28 +299,26 @@ def run_function(stdscr, env, fce, key):
                 env.change_to_file_edit_mode()
             # ======================= ADD NOTES =======================
             elif fce == ADD_CUSTOM_NOTE:
-                if env.report:
-                    note_row, note_col = win.cursor.row, win.cursor.col - win.begin_x
-                    # define specific highlight for current line which is related to the new note
-                    env.specific_line_highlight = (note_row, curses.color_pair(COL_NOTE_LIGHT))
+                note_row, note_col = win.cursor.row, win.cursor.col - win.begin_x
+                # define specific highlight for current line which is related to the new note
+                env.specific_line_highlight = (note_row, curses.color_pair(COL_NOTE_LIGHT))
 
-                    title = f"Enter new note at {note_row}:{note_col}"
-                    env, text = get_user_input(stdscr, env, title=title)
-                    screen, win = env.get_screen_for_current_mode()
-                    curses.curs_set(1)
-                    env.specific_line_highlight = None
-                    if text is not None:
-                        env.report.add_note(note_row, note_col, ''.join(text))
-                    rewrite = True
+                title = f"Enter new note at {note_row}:{note_col}"
+                env, text = get_user_input(stdscr, env, title=title)
+                screen, win = env.get_screen_for_current_mode()
+                curses.curs_set(1)
+                env.specific_line_highlight = None
+                if text is not None:
+                    env.report.add_note(note_row, note_col, ''.join(text))
+                rewrite = True
             elif fce == ADD_TYPICAL_NOTE:
-                if env.report:
-                    char_key = chr(key)
-                    int_key = int(char_key)
-                    if len(env.typical_notes) >= int_key:
-                        str_text = env.typical_notes[int_key-1].text
-                        note_row, note_col = win.cursor.row, win.cursor.col - win.begin_x
-                        env.report.add_note(note_row, note_col, str_text)
-                    rewrite = True
+                options = env.get_typical_notes_dict()
+                char_key = chr(key)
+                if char_key in options.keys():
+                    str_text = options[char_key]
+                    note_row, note_col = win.cursor.row, win.cursor.col - win.begin_x
+                    env.report.add_note(note_row, note_col, str_text)
+                rewrite = True
     env.update_win_for_current_mode(win)
     return env, rewrite, False
 

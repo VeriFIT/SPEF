@@ -36,7 +36,7 @@ class Tags:
     def get_tag_by_idx(self, idx):
         for i, key in enumerate(self.data):
             if i == idx:
-                log(self.data[key])
+                # log(self.data[key])
                 return key, self.data[key]
         return "", []
 
@@ -139,7 +139,7 @@ class Report:
 
         self.original_report = data.copy()
         self.last_save = data.copy()
-
+        self.orig_file_name = None
 
     def __str__(self):
         return str(self.data)

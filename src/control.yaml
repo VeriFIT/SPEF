@@ -2,7 +2,7 @@
 #   * F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12
 #   * ESC, TAB, DELETE, BACKSPACE, ENTER
 #   * UP, DOWN, LEFT, RIGHT
-#   * BACKSLASH
+#   * BACKSLASH, A..Z
 #   * ASCII
 #   * 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 #   * CTRL+UP, CTRL+DOWN, CTRL+LEFT, CTRL+RIGHT
@@ -46,7 +46,7 @@ edit_file_functions:
 manage_file_functions:
   filter: 'BACKSLASH'
   add_custom_note: '0'
-  add_typical_note: ['1','2','3','4','5','6','7','8','9']
+  add_typical_note: ['1','2','3','4','5','6','7','8','9','A..Z']
 # brows functions
 brows_functions:
   show_help: 'F1'
@@ -77,8 +77,9 @@ tags_functions:
 notes_functions:
   show_help: 'F1'
   edit_note: 'F2'
-  add_custom_note: 'F3'
-  add_typical_note: 'F4'
+  add_custom_note: '0' # 'F3'
+  add_typical_note: 'F9' # 'F4'
+  # show_typical_notes: 'F9'
   go_to_note: 'F5'
   save_as_typical_note: 'F6'
   delete_note: 'F8'

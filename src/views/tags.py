@@ -12,17 +12,10 @@ from views.input import get_user_input
 
 from modules.buffer import Tags, UserInput
 
-from utils.loading import load_tags_from_file
+from utils.loading import load_tags_from_file, save_tags_to_file
 from utils.screens import *
 from utils.printing import *
 from utils.logger import *
-
-
-
-def save_tags_to_file(tags):
-    with open(tags.path, 'w+', encoding='utf8') as f:
-        yaml.dump(tags.data, f, default_flow_style=False, allow_unicode=True)
-
 
 
 def tag_management(stdscr, env):
@@ -130,13 +123,6 @@ def run_function(stdscr, env, fce, key):
     # ======================= OPEN FILE TAG =======================
     elif fce == OPEN_TAG_FILE:
         pass
-        # env.update_win_for_current_mode(win)
-        # if not os.path.exists(env.tags.path):
-        #     with open(env.tags.path, 'a+') as f: pass
-        # env.set_view_mode()
-        # env.enable_file_edit()
-        # env.set_file_to_open(env.tags.path)
-        # return env, True
     # ======================= DELETE TAG =======================
     elif fce == DELETE_TAG:
         env.tags.remove_tag_by_idx(win.cursor.row)

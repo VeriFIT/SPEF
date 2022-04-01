@@ -50,7 +50,7 @@ def rewrite_all_wins(env):
     else:
         show_directory_content(env)
     show_file_content(env)
-    if not env.edit_allowed:
+    if not env.show_tags:
         show_tags(env)
 
 def rewrite_brows(env, hint=True):
@@ -62,7 +62,7 @@ def rewrite_file(env, hint=True):
     if hint:
         print_hint(env)
     show_file_content(env)
-    if not env.edit_allowed:
+    if not env.show_tags:
         show_tags(env)
 
 def rewrite_notes(env, hint=True):
@@ -160,7 +160,7 @@ def print_help(screen, max_cols, max_rows, env, custom_help=None):
             "TAB": "change focus to file view or edit",
             "Arrows": "brows between files and dirs"}
         elif env.is_view_mode():
-            if env.edit_allowed:
+            if env.show_tags:
                 mode = "FILE EDIT"
                 actions = {
                 "F1": "show this user help",
@@ -446,8 +446,8 @@ def show_directory_content(env):
 
 
 def rewrite_one_line_in_file(env, line_num):
-    screen = env.screens.right if env.edit_allowed else env.screens.right_up
-    win = env.windows.edit if env.edit_allowed else env.windows.view
+    screen = env.screens.right if env.show_tags else env.screens.right_up
+    win = env.windows.edit if env.show_tags else env.windows.view
     max_cols = win.end_x - win.begin_x
     max_rows = win.end_y - win.begin_y - 1
 
@@ -524,8 +524,8 @@ def rewrite_one_line_in_file(env, line_num):
 
 """ view file content """
 def show_file_content(env):
-    screen = env.screens.right if env.edit_allowed else env.screens.right_up
-    win = env.windows.edit if env.edit_allowed else env.windows.view
+    screen = env.screens.right if env.show_tags else env.screens.right_up
+    win = env.windows.edit if env.show_tags else env.windows.view
 
 
     max_cols = win.end_x - win.begin_x

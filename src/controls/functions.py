@@ -37,8 +37,7 @@ SAVE_FILE = 27
 QUICK_VIEW_ON_OFF = 100
 OPEN_FILE = 101
 OPEN_MENU = 102
-ADD_PROJECT = 103
-DELETE_FILE = 104
+DELETE_FILE = 103
 
 """ tag management control """
 EDIT_TAG = 200
@@ -69,7 +68,52 @@ EXIT_USER_INPUT = 600
 SAVE_INPUT = 601
 
 
+""" menu functions """
+# anywhere
+ADD_PROJECT = 700
 
+EXPAND_HERE = 701
+EXPAND_TO = 702
+CREATE_DIR = 703
+CREATE_FILE = 704
+REMOVE_FILE = 705
+RENAME_FILE = 706
+COPY_FILE = 707
+MOVE_FILE = 708
+
+# in proj root dir
+EDIT_PROJ_CONF = 710
+EXPAND_ALL_SOLUTIONS = 711
+RENAME_ALL_SOLUTIONS = 712
+TEST_ALL_STUDENTS = 713
+SHOW_OR_HIDE_PROJ_INFO = 714
+SHOW_STATS = 715
+SHOW_HISTOGRAM = 716
+
+# in solution dir
+EXPAND_AND_RENAME_SOLUTION = 720
+TEST_STUDENT = 721
+TEST_CLEAN = 722
+SHOW_TEST_RESULTS = 723
+SHOW_AUTO_REPORT = 724
+SHOW_CODE_REVIEW = 725
+SHOW_TOTAL_REPORT = 726
+GEN_CODE_REVIEW = 727
+
+# in tests dir
+ADD_TEST = 730
+EDIT_TESTSUITE = 731
+DEFINE_TEST_FAILURE = 732
+
+# in tests/test dir
+REMOVE_TEST = 733
+EDIT_TEST = 734
+
+
+
+#########################################################################
+############## F U N C T I O N S    B Y    S H O R T C U T ##############
+#########################################################################
 
 """ mapping of functions from controls.yaml to intern representation of function id """
 def map_file_function(str_fce):
@@ -224,3 +268,114 @@ def map_user_input_function(str_fce):
         return functions[str_fce]
     else:
         return None
+
+
+#########################################################################
+################## F U N C T I O N S    I N    M E N U ##################
+#########################################################################
+
+# funkcie tykajuce sa nastavenia samotneho frameworku
+def global_menu_functions():
+    return {
+        'open file with user control': ADD_PROJECT, # TODO otvori subor controls.yaml a znovu nacita controls
+        'open file with framework configuration': ADD_PROJECT # TODO otvori subor config.py a znovu nacita cely config
+    }
+
+
+def brows_menu_functions():
+    return {
+        'project - create new': ADD_PROJECT,
+        'project - edit configuration': EDIT_PROJ_CONF,
+        'project - show/hide project info': SHOW_OR_HIDE_PROJ_INFO, #       TODO zobrazit info o projekte
+        'archive - expand all student solutions': EXPAND_ALL_SOLUTIONS, #   TODO rozbali vsetkych studentov
+        'solution - name solution files correctly': RENAME_ALL_SOLUTIONS, # TODO premenuje vsetkych studentov
+        'test - test all students': TEST_ALL_STUDENTS, #                    TODO testovat vsetkych studentov v proj root dir (alebo len filtrovanych studentov)
+        'show statistics': SHOW_STATS, #                                    TODO zobrazit statistiky z testov
+        'show histogram': SHOW_HISTOGRAM, #                                 TODO zobrazit histogram z testov
+        'archive - expand solution and name it correctly': EXPAND_AND_RENAME_SOLUTION, #    TODO rozbali archiv a pomenuje ho spravne
+        'test - test the student': TEST_STUDENT, #                                          TODO spusti testsuite
+        'test - clean from test results': TEST_CLEAN, #                                     TODO vycisti archiv od bordelu z testov
+        'show test results': SHOW_TEST_RESULTS, #                               TODO ukaze vysledky testov (zoznam testov medzi ktorymi sa da prechadzat) 
+        'show auto report': SHOW_AUTO_REPORT, #                                 TODO ukaze subor s hodnotenim z auto testov
+        'show code review notes': SHOW_CODE_REVIEW, #                           TODO ukaze subor s poznamkami z code review
+        'show total report with score': SHOW_TOTAL_REPORT, #                    TODO ukaze celkove hodnotenie
+        'report - generate code review from notes': GEN_CODE_REVIEW,
+        'create new test': ADD_TEST, #                  TODO vytvori novy adresar testxx (adresar ktory este neexistuje) v nom bude subor runtest.sh
+        'create or edit testsuite': EDIT_TESTSUITE, #   TODO otvori tests/testsuite.sh
+        'define test failure': DEFINE_TEST_FAILURE, #   TODO definicia sposobu zlyhania testu
+        'remove test': REMOVE_TEST, #   TODO odstrani cely adresar s testom a skontroluje testsuite ci tam nie je pouzity
+        'edit test': EDIT_TEST, #       TODO otvori subor runtest.sh
+        'expand archive here': EXPAND_HERE,
+        'expand archive to ...': EXPAND_TO,
+        'create directory': CREATE_DIR,
+        'create file': CREATE_FILE,
+        'remove file': REMOVE_FILE,
+        'rename file': RENAME_FILE,
+        'copy file': COPY_FILE,
+        'move file': MOVE_FILE
+    }
+
+
+def get_menu_functions(env):
+    is_proj_root_dir = False
+    is_solution_dir = False
+    is_tests_root_dir = False
+    is_test_dir = False
+
+    basic_functions = {
+        'create new project': ADD_PROJECT,
+        'expand archive here': EXPAND_HERE,
+        'expand archive to ...': EXPAND_TO,
+        'create directory': CREATE_DIR,
+        'create file': CREATE_FILE,
+        'remove file': REMOVE_FILE,
+        'rename file': RENAME_FILE,
+        'copy file': COPY_FILE,
+        'move file': MOVE_FILE
+    }
+
+    proj_functions = {
+        'edit project configuration': EDIT_PROJ_CONF,
+        'expand all archives of all students': EXPAND_ALL_SOLUTIONS,
+        'name all solution files correctly': RENAME_ALL_SOLUTION,
+        'test all students': TEST_ALL_STUDENTS,
+        'show/hide project info': SHOW_OR_HIDE_PROJ_INFO,
+        'show statistics': SHOW_STATS,
+        'show histogram': SHOW_HISTOGRAM
+    }
+
+    solution_functions = {
+        'expand solution and name it correctly': EXPAND_AND_RENAME_SOLUTION,
+        'test the student': TEST_STUDENTS,
+        'clean from test results': TEST_CLEAN,
+        'show test results': SHOW_TEST_RESULTS,
+        'show auto report': SHOW_AUTO_REPORT,
+        'show code review notes': SHOW_CODE_REVIEW,
+        'show total report with score': SHOW_TOTAL_REPORT,
+        'generate code review from notes': GEN_CODE_REVIEW
+    }
+
+    tests_functions = {
+        'create new test': ADD_TEST,
+        'create or edit testsuite': EDIT_TESTSUITE,
+        'define test failure': DEFINE_TEST_FAILURE
+    }
+
+    test_functions = {
+        'remove test': REMOVE_TEST,
+        'edit test': EDIT_TEST
+    }
+
+    result_dir = basic_functions.copy()
+    if is_proj_root_dir:
+        result_dir.update(proj_functions)
+    if is_solution_dir:
+        result_dir.update(solution_functions)
+    if is_tests_root_dir:
+        result_dir.update(tests_functions)
+    if is_test_dir:
+        result_dir.update(test_functions)
+
+    return result_dir
+
+

@@ -9,6 +9,7 @@ from modules.buffer import Buffer, Report, Tags, Note
 
 # from utils.printing import *
 from utils.logger import *
+from utils.match import is_archive_file
 
 REPORT_SUFFIX = "_report.yaml"
 TAGS_SUFFIX = "_tags.yaml"
@@ -16,6 +17,8 @@ CONFIG_FILE = "config.yaml"
 CONTROL_FILE = "control.yaml"
 TYPICAL_NOTES_FILE = "typical_notes.txt"
 PROJECT_FILE = "proj_conf.yaml"
+TEST_FILE = "dotest.sh"
+TESTSUITE_FILE = "testsuite.sh"
 
 
 """ **************** CONFIG **************** """
@@ -111,10 +114,14 @@ def get_report_file_name(path):
     file_name = os.path.splitext(path)[:-1]
     return str(os.path.join(*file_name))+REPORT_SUFFIX
 
-def load_report_from_file(path):
-    report_file = get_report_file_name(path)
-    report = None
+def load_report_from_file(path, add_suffix=True, orig_file_name=None):
+    report_file = get_report_file_name(path) if add_suffix else path
+    report = Report(report_file, [])
     try:
+        with open(report_file, 'r') as f: # first line is comment with file name
+            first_line = f.readline()
+            if first_line.startswith('#'):
+                orig_file_name = first_line[1:]
         with open(report_file, 'r') as f:
             data = yaml.safe_load(f)
         notes = []
@@ -126,12 +133,13 @@ def load_report_from_file(path):
                     notes.append(note)
         report = Report(report_file, notes)
     except yaml.YAMLError as err:
-        report = Report(report_file, [])
+        pass
     except FileNotFoundError:
-        report = Report(report_file, [])
+        pass
     except Exception as err:
         log("load report | "+str(err)+" | "+str(traceback.format_exc()))
     finally:
+        report.orig_file_name = orig_file_name
         return report
 
 
@@ -153,6 +161,9 @@ def save_report_to_file(report):
     """ save data to file """
     try:
         with open(report.path, 'w+', encoding='utf8') as f:
+            if report.orig_file_name is not None:
+                f.write(f"#{report.orig_file_name}\n")
+        with open(report.path, 'a', encoding='utf8') as f:
             yaml.dump(notes, f, default_flow_style=False, allow_unicode=True)
         report.last_save = report.data.copy()
     except Exception as err:
@@ -181,6 +192,11 @@ def load_tags_from_file(path):
     return tags
 
 
+def save_tags_to_file(tags):
+    with open(tags.path, 'w+', encoding='utf8') as f:
+        yaml.dump(tags.data, f, default_flow_style=False, allow_unicode=True)
+
+
 
 """ **************** BUFFER AND TAGS **************** """
 def load_buffer_and_tags(env):
@@ -196,10 +212,10 @@ def load_buffer_and_tags(env):
             buffer = Buffer(env.file_to_open, lines)
             env.buffer = buffer
         except UnicodeDecodeError as err:
-            log("load file content | "+str(err))
+            log("load file content ("+str(env.file_to_open)+") | "+str(err))
             return env, None, False
         except Exception as err:
-            log("load file content | "+str(err)+" | "+str(traceback.format_exc()))
+            log("load file content ("+str(env.file_to_open)+") | "+str(err)+" | "+str(traceback.format_exc()))
             env.set_exit_mode()
             return env, None, False
 

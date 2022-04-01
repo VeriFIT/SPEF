@@ -4,11 +4,13 @@ import fnmatch
 import json
 import re
 import traceback
+import datetime
 
 from modules.buffer import Tags, UserInput
 
 from utils.loading import *
 from utils.logger import *
+from utils.match import *
 
 
 """ represents content of current working directory (cwd)"""
@@ -50,9 +52,6 @@ class Directory:
         items.extend(self.files)
         return items
 
-    def is_project_subdirectory(self):
-        return self.proj is not None
-
     def get_proj_conf(self):
         try:
             cur_dir = self.path
@@ -61,7 +60,10 @@ class Directory:
                 parent_dir = os.path.dirname(cur_dir)
                 if PROJECT_FILE in file_list:
                     proj_data = load_proj_from_conf_file(cur_dir)
-                    self.proj = get_project_from_data(proj_data)
+
+                    """ create Project obj from proj data """
+                    self.proj = Project(proj_data['path'])
+                    self.proj.set_values_from_conf(proj_data)
                     return
                 else:
                     if cur_dir == parent_dir:
@@ -72,22 +74,35 @@ class Directory:
             log("get proj conf | "+str(err)+" | "+str(traceback.format_exc()))
 
 
+
 class Project:
     def __init__(self, path):
         self.path = path
         self.solution_id = None
-
+        self.created = None
         self.tests_dir = None
+
+        self.description = ""
+
         self.test_timeout = 0
         self.solutions_dir = None
         self.solution_quick_view = None
         self.solution_test_quick_view = None
 
+    def set_values_from_conf(self, data):
+        try:
+            self.solution_id = data['solution_id']
+            self.created = data['created']
+            self.tests_dir = data['tests_dir']
+        except:
+            log("wrong data for proj")
+
 
     def set_default_values(self):
-        self.solution_id =  "x[a-z]{5}[0-9]{2}" # default solution identifier (xlogin00)
-
+        self.solution_id =  "x[a-z]{5}[0-9]{2}" # default solution identifier: xlogin00
+        self.created = datetime.date.today() # date of creation
         self.tests_dir = "tests"
+
         self.test_timeout = 5
         self.solutions_dir = "solutions"
         self.solution_quick_view = "auto_report"
@@ -97,7 +112,9 @@ class Project:
     def to_dict(self):
         return {
             'path': self.path,
-            'solution_id': self.solution_id
+            'solution_id': self.solution_id,
+            'created': self.created,
+            'tests_dir': self.tests_dir
         }
         #     'tests_dir': self.tests_dir
         #     'test_timeout': self.test_timeout
@@ -106,13 +123,6 @@ class Project:
         #     'solution_quick_view': self.solution_quick_view
         #     'solution_test_quick_view': self.solution_test_quick_view
         # }
-
-
-def get_project_from_data(data): # TODO: premenovat a premiestnit
-    proj = Project(data['path'])
-    proj.solution_id = data['solution_id']
-
-    return proj
 
 
 
@@ -148,17 +158,17 @@ class Filter:
         matches = []
 
         if self.path:
-            matches = get_files_by_path(self.project, self.path)
+            matches = self.get_files_by_path(self.project, self.path)
 
         if self.content:
             # if some filtering has already been done, search for files only in its matches
             # else search all files in project directory
-            files = matches if self.path else get_files_in_dir_recursive(self.project)
-            matches = get_files_by_content(files, self.content)
+            files = matches if self.path else self.get_files_in_dir_recursive(self.project)
+            matches = self.get_files_by_content(files)
 
         if self.tag:
-            files = matches if (self.path or self.content) else get_files_in_dir_recursive(self.project)
-            matches = get_files_by_tag(files, self.tag)
+            files = matches if (self.path or self.content) else self.get_files_in_dir_recursive(self.project)
+            matches = self.get_files_by_tag(files)
 
         filtered_files = []
         for file_path in matches:
@@ -196,80 +206,80 @@ class Filter:
 
 
 
-""" returns list of all files in directory (recursive) """
-def get_files_in_dir_recursive(dir_path):
-    files = []
-    for root, dirnames, filenames in os.walk(dir_path):
-        files.extend(os.path.join(root, filename) for filename in filenames)
-    return files
-
-
-""" 
-src: source directory path
-dest: destination path to match
-"""
-def get_files_by_path(src, dest):
-    try:
-        path_matches = []
-        dest_path = os.path.join(src, "**", dest+"*")
-        for file_path in glob.glob(dest_path, recursive=True):
-            if os.path.isfile(file_path):
-                path_matches.append(file_path)
-        return path_matches
-    except Exception as err:
-        log("Filter by path | "+str(err)+" | "+str(traceback.format_exc()))
-        return []
-
-
-""" 
-files: files to filter
-content: content to match
-"""
-def get_files_by_content(files, content):
-    try:
-        content_matches = []
-        for file_path in files:
-            with open(file_path) as f:
-                if content in f.read():
-                    content_matches.append(file_path)
-        return content_matches
-    except Exception as err:
-        log("Filter by content | "+str(err)+" | "+str(traceback.format_exc()))
-        # if there is some exception, dont apply filter, just ignore it and return all files
+    """ returns list of all files in directory (recursive) """
+    def get_files_in_dir_recursive(self, dir_path):
+        files = []
+        for root, dirnames, filenames in os.walk(dir_path):
+            files.extend(os.path.join(root, filename) for filename in filenames)
         return files
 
 
-"""
-files: files to filter
-tag: tag to match, ex: "test1(0,.*,2,[0-5],5)"
-"""
-def get_files_by_tag(files, tag):
-    try:
-        tag_matches = []
+    """ 
+    src: source directory path
+    dest: destination path to match
+    """
+    def get_files_by_path(self, src, dest):
+        try:
+            path_matches = []
+            dest_path = os.path.join(src, "**", dest+"*")
+            for file_path in glob.glob(dest_path, recursive=True):
+                if os.path.isfile(file_path):
+                    path_matches.append(file_path)
+            return path_matches
+        except Exception as err:
+            log("Filter by path | "+str(err)+" | "+str(traceback.format_exc()))
+            return []
 
-        """ parse tag """
-        tag_parsing_ok = False
-        if re.match('\w(...)', tag):
-            components = re.split('[()]', tag)
-            log(components)
-            if len(components)>0:
-                # search only for tag name
-                tag_name = components[0]
-                compare_args = None
-                tag_parsing_ok = True
-                if len(components)>1 and components[1]!="":
-                    compare_args = list(map(str, components[1].split(',')))
 
-        if not tag_parsing_ok:
-            log("invalid input for tag filter")
-            return files
-        else:
+    """ 
+    files: files to filter
+    content: content to match
+    """
+    def get_files_by_content(self, files):
+        try:
+            content_matches = []
             for file_path in files:
-                tags = load_tags_from_file(file_path)
-                if tags and len(tags)>0:
-                    if tags.find(tag_name, compare_args):
-                        tag_matches.append(file_path)
-            return tag_matches
-    except Exception as err:
-        log("Filter by tag | "+str(err)+" | "+str(traceback.format_exc()))
-        return files
+                with open(file_path) as f:
+                    if self.content in f.read():
+                        content_matches.append(file_path)
+            return content_matches
+        except Exception as err:
+            log("Filter by content | "+str(err)+" | "+str(traceback.format_exc()))
+            # if there is some exception, dont apply filter, just ignore it and return all files
+            return files
+
+
+    """
+    files: files to filter
+    tag: tag to match, ex: "test1(0,.*,2,[0-5],5)"
+    """
+    def get_files_by_tag(self, files):
+        try:
+            tag_matches = []
+
+            """ parse tag """
+            tag_parsing_ok = False
+            if re.match('\w(...)', self.tag):
+                components = re.split('[()]', self.tag)
+                log(components)
+                if len(components)>0:
+                    # search only for tag name
+                    tag_name = components[0]
+                    compare_args = None
+                    tag_parsing_ok = True
+                    if len(components)>1 and components[1]!="":
+                        compare_args = list(map(str, components[1].split(',')))
+
+            if not tag_parsing_ok:
+                log("invalid input for tag filter")
+                return files
+            else:
+                for file_path in files:
+                    tags = load_tags_from_file(file_path)
+                    if tags and len(tags)>0:
+                        if tags.find(tag_name, compare_args):
+                            tag_matches.append(file_path)
+                return tag_matches
+        except Exception as err:
+            log("Filter by tag | "+str(err)+" | "+str(traceback.format_exc()))
+            return files

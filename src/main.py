@@ -20,6 +20,7 @@ from views.notes import notes_management
 
 from views.help import show_help
 
+from modules.environment import Environment
 from modules.buffer import Buffer, Report, UserInput
 from modules.directory import Directory
 from modules.window import Window, Cursor
@@ -30,7 +31,6 @@ from utils.coloring import *
 from utils.printing import *
 from utils.logger import *
 
-from config import Environment
 
 
 """ hladanie cesty projektu v ktorom su odovzdane riesenia
@@ -138,8 +138,7 @@ def preparation():
     """ create dirs for tags and reports """
     if not os.path.exists(TAG_DIR):
         os.makedirs(TAG_DIR)
-    if not os.path.exists(REPORT_DIR):
-        os.makedirs(REPORT_DIR)
+
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 env:
   mode: 1 # 1 BROWS, 2 VIEW, 3 TAG, -1 EXIT
   quick_view: True
-  edit_allowed: False
+  show_tags: False
   note_highlight: True
   show_cached_files: False
   start_with_line_numbers: True

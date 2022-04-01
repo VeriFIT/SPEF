@@ -16,7 +16,7 @@ class Control():
         self.menu_brows = {}
         self.user_input = {}
 
-
+    """ get function for key according to current mode """
     def get_function(self, env, key):
         dict_funcions = {}
         if env.is_user_input_mode():
@@ -212,10 +212,12 @@ def get_function_for_key(env, key):
         char_key = chr(key)
         function = None
         # try to find some function for specitic ascii symbols
-        if char_key == '\\':
+        if char_key == '/':
             function = env.control.get_function(env, 'BACKSLASH')
         elif char_key in [str(i) for i in range(0,10)]:
             function = env.control.get_function(env, char_key) # number 0..10
+        elif char_key in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+            function = env.control.get_function(env, 'A..Z')
         # ============>>> HERE YOU CAN ADD SPECIFIC SYMBOLS TO MATCH <<<============
 
         if function is None:

@@ -30,9 +30,7 @@ def filter_management(stdscr, screen, win, env):
 
 
     if not env.filter:
-        # project_path = env.get_project_path()
-        project_path = env.cwd.proj_conf_path
-        env.filter = Filter(project_path)
+        env.filter = Filter(env.cwd.proj.path)
 
     old_filter_text = ''.join(user_input.text)
 

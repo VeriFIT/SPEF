@@ -2,8 +2,8 @@ import curses
 import curses.ascii
 import traceback
 
-from config import Environment
 
+from modules.environment import Environment
 from modules.directory import Directory
 from modules.window import Windows, Screens, Window, Cursor
 

@@ -3,8 +3,11 @@ import curses
 import curses.ascii
 import os
 import traceback
+import tarfile
+import zipfile
 
 from controls.control import *
+from controls.functions import brows_menu_functions
 
 from views.filtering import filter_management
 from views.help import show_help
@@ -16,6 +19,8 @@ from utils.loading import *
 from utils.screens import *
 from utils.printing import *
 from utils.logger import *
+from utils.reporting import *
+from utils.match import *
 
 
 def get_directory_content(env):
@@ -58,20 +63,25 @@ def directory_browsing(stdscr, env):
             dirs_and_files = env.cwd.get_all_items()
             # if its file, show its content and tags
             if idx >= len(env.cwd.dirs):
-                env.set_file_to_open(os.path.join(env.cwd.path, dirs_and_files[idx]))
-                env, buffer, succ = load_buffer_and_tags(env) # try to load file
-                if not succ: # couldnt load buffer and/or fags for current file
-                    env.set_file_to_open(None)
-                    env.set_brows_mode() # instead of exit mode
+                selected_file = os.path.join(env.cwd.path, dirs_and_files[idx])
+                # if its archive file, show its content (TODO)
+                if is_archive_file(selected_file):
+                    pass
                 else:
-                    """ set line numbers """
-                    if env.line_numbers or env.start_with_line_numbers:
-                        env.start_with_line_numbers = False
-                        env.enable_line_numbers(buffer)
-                        env = resize_all(stdscr, env, True)
+                    env.set_file_to_open(selected_file)
+                    env, buffer, succ = load_buffer_and_tags(env) # try to load file
+                    if not succ: # couldnt load buffer and/or fags for current file
+                        env.set_file_to_open(None)
+                        env.set_brows_mode() # contnue to browsing without showing file content (instead of exit mode)
+                    else:
+                        """ set line numbers """
+                        if env.line_numbers or env.start_with_line_numbers:
+                            env.start_with_line_numbers = False
+                            env.enable_line_numbers(buffer)
+                            env = resize_all(stdscr, env, True)
             # if its project directory, show project info and test results
             else:
-                if env.cwd.is_project_subdirectory(): # current working directory is a project subdirectory (ex: "proj1/")
+                if env.cwd.proj is not None: # current working directory is a project subdirectory (ex: "proj1/")
                     # env.cwd.proj
                     selected_dir = dirs_and_files[idx]
                     # if proj.match_solution_id(selected_dir): # selected item is solution directory (ex: "proj1/xlogin00/")
@@ -83,7 +93,6 @@ def directory_browsing(stdscr, env):
                         #    show_file()
                         #    show_test_tags()
 
-                        
                 pass # TODO: show project info and test tags
             env.update_win_for_current_mode(win)
 
@@ -155,29 +164,7 @@ def run_function(stdscr, env, fce, key):
         curses.curs_set(0)
     # ======================= OPEN MENU =======================
     elif fce == OPEN_MENU:
-        menu_functions = {
-            'create new project': ADD_PROJECT,
-            'create new test': ADD_PROJECT, # sprava testov
-            'remove test': ADD_PROJECT,
-            'edit test': ADD_PROJECT,
-            'run test': ADD_PROJECT,
-            'create new testset': ADD_PROJECT,
-            'run testset': ADD_PROJECT,
-            'define test failure': ADD_PROJECT,
-            'create new directory': ADD_PROJECT,
-            'create new file': ADD_PROJECT, # sprava suborov
-            'remove file': ADD_PROJECT,
-            'rename file': ADD_PROJECT,
-            'copy file': ADD_PROJECT,
-            'move file': ADD_PROJECT,
-            'edit file': ADD_PROJECT,
-            'expand archive here': ADD_PROJECT,
-            'expand archive to ...': ADD_PROJECT,
-            'show project info': ADD_PROJECT, # zobrazovanie info
-            'hide project info': ADD_PROJECT,
-            'show statistics': ADD_PROJECT,
-            'show histogram': ADD_PROJECT
-        }
+        menu_functions = brows_menu_functions()
         title = "Select function from menu: "
         color = curses.color_pair(COL_TITLE)
         menu_options = [key for key in menu_functions]
@@ -194,16 +181,14 @@ def run_function(stdscr, env, fce, key):
                     env, exit_program = run_menu_function(stdscr, env, function, key)
                     if exit_program:
                         return env, True
-
     # ======================= QUICK VIEW =======================
     elif fce == QUICK_VIEW_ON_OFF:
         env.quick_view = not env.quick_view
     # ======================= OPEN FILE =======================
     elif fce == OPEN_FILE:
         idx = win.cursor.row
-        if idx >= len(env.cwd.dirs) or env.filter: # cant open direcotry
+        if idx >= len(env.cwd.dirs) or env.filter: # cant open directory
             dirs_and_files = env.cwd.get_all_items()
-            env.enable_file_edit()
             env.set_file_to_open(os.path.join(env.cwd.path, dirs_and_files[idx]))
             env.switch_to_next_mode()
             return env, True
@@ -212,7 +197,7 @@ def run_function(stdscr, env, fce, key):
         idx = win.cursor.row
         dirs_and_files = env.cwd.get_all_items()
         file_to_delete = os.path.join(env.cwd.path, dirs_and_files[idx])
-        if os.path.exists(file_to_delete):
+        if os.path.exists(file_to_delete) and os.path.isfile(file_to_delete):
             os.remove(file_to_delete)
             win.up(env.cwd, use_restrictions=False)
             # actualize current working directory
@@ -236,42 +221,136 @@ def run_function(stdscr, env, fce, key):
 def run_menu_function(stdscr, env, fce, key):
     screen, win = env.get_screen_for_current_mode()
 
-
-    if fce == OPEN_FILE:
-        idx = win.cursor.row
-        if idx >= len(env.cwd.dirs) or env.filter: # cant open direcotry
-            dirs_and_files = env.cwd.get_all_items()
-            env.enable_file_edit()
-            env.set_file_to_open(os.path.join(env.cwd.path, dirs_and_files[idx]))
-            env.switch_to_next_mode()
-            return env, True
     # ======================= ADD PROJECT =======================
-    elif fce == ADD_PROJECT:
-        if env.cwd.is_project_subdirectory():
+    if fce == ADD_PROJECT:
+        if env.cwd.proj is not None:
             return env, False
         # create project object
         proj = Project(env.cwd.path)
         proj.set_default_values()
-
         # create project config file
         proj_data = proj.to_dict()
         save_proj_to_conf_file(proj.path, proj_data)
-
         # actualize current working directory
         env.cwd = get_directory_content(env)
-    # ======================== ADD TEST ========================
-    # elif fce == ADD_TEST:
-    #     pass
-    # ====================== RUN ALL TESTS ======================
-    # elif fce == RUN_ALL_TESTS:
-    #     pass
-    # ======================= RUN TEST SET =======================
-    # elif fce == RUN_TEST_SET:
-    #     pass
-    # =================== GENERATE AUTO REPORT ===================
-    # elif fce == GEN_AUTO_REPORT:
-    #     pass
+    elif fce == EXPAND_HERE:
+        pass
+    elif fce == EXPAND_TO:
+        pass
+    elif fce == CREATE_DIR:
+        pass
+    elif fce == CREATE_FILE:
+        pass
+    elif fce == REMOVE_FILE:
+        pass
+    elif fce == RENAME_FILE:
+        pass
+    elif fce == COPY_FILE:
+        pass
+    elif fce == MOVE_FILE:
+        pass
+    # ====================== EDIT PROJ CONFIG ======================
+    elif fce == EDIT_PROJ_CONF:
+        if env.cwd.proj is not None:
+            env.set_file_to_open(os.path.join(env.cwd.proj.path, PROJECT_FILE))
+            env.switch_to_next_mode()
+            return env, True
+        pass
+    # ====================== EXPAND AND RENAME ======================
+    elif fce == EXPAND_ALL_SOLUTIONS: # ALL STUDENTS
+        if env.cwd.proj is not None:
+            solutions, problem_files = get_solution_archives(env)
+            problem_solutions = set(problem_files)
+            for solution in solutions:
+                opener, mode = None, None
+                if solution.endswith('.zip'):
+                    dest_dir = solution.removesuffix('.zip')
+                    opener, mode = zipfile.ZipFile, 'r'
+                elif solution.endswith('.tar'):
+                    dest_dir = solution.removesuffix('.tar')
+                    opener, mode = tarfile.open, 'r'
+                elif solution.endswith('.tar.gz') or solution.endswith('.tgz'):
+                    dest_dir = solution.removesuffix('.tar.gz').removesuffix('.tgz')
+                    opener, mode = tarfile.open, 'r:gz'
+                elif solution.endswith('.tar.bz2') or solution.endswith('.tbz'):
+                    dest_dir = solution.removesuffix('.tar.bz2').removesuffix('.tbz')
+                    opener, mode = tarfile.open, 'r:bz2'
+                elif solution.endswith('.tar.xz') or solution.endswith('.txz'):
+                    dest_dir = solution.removesuffix('.tar.xz').removesuffix('.txz')
+                    opener, mode = tarfile.open, 'r:xz'
+                else:
+                    problem_solutions.append(solution)
 
+                try:
+                    if opener and mode:
+                        with opener(solution, mode) as arch_file:
+                            if not os.path.exists(dest_dir):
+                                os.mkdir(dest_dir)
+                            arch_file.extractall(dest_dir)
+                except Exception as err:
+                    log("expand solution archive | "+str(err)+" | "+str(traceback.format_exc()))
+
+            log("problem archives: "+str(problem_solutions))
+            env.cwd = get_directory_content(env)
+
+    elif fce == RENAME_ALL_SOLUTIONS: # ALL STUDENTS
+        if env.cwd.proj is not None:
+            pass
+            # if proj.solution_is_dir():
+            #    solutions = get_solution_dirs(env)
+            # elif proj.solution_is_file():
+            #    solutions = get_solution_files(env)
+
+
+    elif fce == EXPAND_AND_RENAME_SOLUTION: # on solution dir
+        # if is_project_dir:
+        # if is_solution_dir:
+        # if is_archive:
+        # try unzip (podla typu .zip, .tar)
+        # if proj.solution_file_name and proj.extended_solution_file_name:
+        # for file in solution_dir:
+        # try
+        pass
+    # ======================= RUN TEST SET =======================
+    elif fce == TEST_ALL_STUDENTS: # ALL STUDENTS
+        pass
+    elif fce == TEST_STUDENT: # on solution dir
+        pass
+    elif fce == TEST_CLEAN: # on solution dir
+        pass
+    # =================== GENERATE REPORT ===================
+    # elif fce == GEN_AUTO_REPORT: # on solution dir
+        # pass
+    elif fce == GEN_CODE_REVIEW: # on solution dir
+        idx = win.cursor.row
+        dirs_and_files = env.cwd.get_all_items()
+        generate_code_review(env, os.path.join(env.cwd.path, dirs_and_files[idx]))
+    # ======================= SHOW INFO =======================
+    elif fce == SHOW_OR_HIDE_PROJ_INFO:
+        pass
+    elif fce == SHOW_STATS:
+        pass
+    elif fce == SHOW_HISTOGRAM:
+        pass
+    elif fce == SHOW_TEST_RESULTS: # on solution dir
+        pass
+    elif fce == SHOW_AUTO_REPORT:
+        pass
+    elif fce == SHOW_CODE_REVIEW:
+        pass
+    elif fce == SHOW_TOTAL_REPORT:
+        pass
+    # =================== TESTS ===================
+    elif fce == ADD_TEST:
+        pass
+    elif fce == EDIT_TEST:
+        pass
+    elif fce == REMOVE_TEST:
+        pass
+    elif fce == EDIT_TESTSUITE:
+        pass
+    elif fce == DEFINE_TEST_FAILURE:
+        pass
 
     env.update_win_for_current_mode(win)
     return env, False
