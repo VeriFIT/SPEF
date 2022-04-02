@@ -11,6 +11,15 @@ from utils.match import *
 from modules.directory import Project
 
 
+def add_tag_to_file(file_path, tag_name, tag_args):
+    tags = load_tags_from_file(file_path)
+    if tags is not None:
+        tags.set_tag(tag_name, tag_args)
+        save_tags_to_file(tags)
+    else:
+        log("add tag to file | cannot load tags file")
+
+
 """ from subjA/proj1/xlogin00/dir/file_name to xlogin00/dir/file_name """
 def get_path_relative_to_solution_dir(dest_path):
     # check if its project subdir
@@ -21,7 +30,7 @@ def get_path_relative_to_solution_dir(dest_path):
         parent_dir = os.path.dirname(cur_dir)
         if PROJECT_FILE in file_list:
             proj_data = load_proj_from_conf_file(cur_dir)
-            proj = Project(proj_data['path'])
+            proj = Project(cur_dir)
             proj.set_values_from_conf(proj_data)
             break
         else:

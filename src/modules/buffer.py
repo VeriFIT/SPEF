@@ -44,9 +44,8 @@ class Tags:
         self.data[tag_name] = [*args]
 
     def save_to_file(self):
-        if self.data:
-            with open(self.path, 'w+', encoding='utf8') as f:
-                yaml.dump(self.data, f, default_flow_style=False, allow_unicode=True)
+        with open(self.path, 'w+', encoding='utf8') as f:
+            yaml.dump(self.data, f, default_flow_style=False, allow_unicode=True)
 
     def find(self, tag_name, args=None):
         for key in self.data:

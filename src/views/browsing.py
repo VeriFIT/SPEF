@@ -2,6 +2,7 @@
 import curses
 import curses.ascii
 import os
+import shutil
 import traceback
 import tarfile
 import zipfile
@@ -21,6 +22,7 @@ from utils.printing import *
 from utils.logger import *
 from utils.reporting import *
 from utils.match import *
+from utils.file import *
 
 
 def get_directory_content(env):
@@ -36,7 +38,7 @@ def get_directory_content(env):
             files.extend(file_names)
         else:
             for file_name in file_names:
-                if not file_name.endswith((REPORT_SUFFIX,TAGS_SUFFIX)):
+                if not file_name.endswith((REPORT_SUFFIX, TAGS_SUFFIX)):
                     files.append(file_name)
         dirs.extend(dir_names)
         break
@@ -260,57 +262,47 @@ def run_menu_function(stdscr, env, fce, key):
     elif fce == EXPAND_ALL_SOLUTIONS: # ALL STUDENTS
         if env.cwd.proj is not None:
             solutions, problem_files = get_solution_archives(env)
-            problem_solutions = set(problem_files)
-            for solution in solutions:
-                opener, mode = None, None
-                if solution.endswith('.zip'):
-                    dest_dir = solution.removesuffix('.zip')
-                    opener, mode = zipfile.ZipFile, 'r'
-                elif solution.endswith('.tar'):
-                    dest_dir = solution.removesuffix('.tar')
-                    opener, mode = tarfile.open, 'r'
-                elif solution.endswith('.tar.gz') or solution.endswith('.tgz'):
-                    dest_dir = solution.removesuffix('.tar.gz').removesuffix('.tgz')
-                    opener, mode = tarfile.open, 'r:gz'
-                elif solution.endswith('.tar.bz2') or solution.endswith('.tbz'):
-                    dest_dir = solution.removesuffix('.tar.bz2').removesuffix('.tbz')
-                    opener, mode = tarfile.open, 'r:bz2'
-                elif solution.endswith('.tar.xz') or solution.endswith('.txz'):
-                    dest_dir = solution.removesuffix('.tar.xz').removesuffix('.txz')
-                    opener, mode = tarfile.open, 'r:xz'
-                else:
-                    problem_solutions.append(solution)
-
-                try:
-                    if opener and mode:
-                        with opener(solution, mode) as arch_file:
-                            if not os.path.exists(dest_dir):
-                                os.mkdir(dest_dir)
-                            arch_file.extractall(dest_dir)
-                except Exception as err:
-                    log("expand solution archive | "+str(err)+" | "+str(traceback.format_exc()))
-
-            log("problem archives: "+str(problem_solutions))
+            problem_solutions = extract_archives(solutions)
+            problem_solutions.update(problem_files)
+            if problem_solutions:
+                log("extract | problem archives: "+str(problem_solutions))
             env.cwd = get_directory_content(env)
 
     elif fce == RENAME_ALL_SOLUTIONS: # ALL STUDENTS
         if env.cwd.proj is not None:
-            pass
-            # if proj.solution_is_dir():
-            #    solutions = get_solution_dirs(env)
-            # elif proj.solution_is_file():
-            #    solutions = get_solution_files(env)
-
+            if env.cwd.proj.sut_required == "":
+                log("rename all solutions | there is no defined sut_required in proj config")
+            else:
+                solutions = get_solution_dirs(env)
+                log(str(solutions))
+                required_name = env.cwd.proj.sut_required
+                extended_variants = env.cwd.proj.sut_ext_variants
+                ok, renamed, fail = rename_solutions(solutions, required_name, extended_variants)
+                log("students with correctly named solution file: "+str(ok))
+                log("students with wrong named solution file: "+str(renamed))
+                log("students with no supported extention of solution file: "+str(fail))
 
     elif fce == EXPAND_AND_RENAME_SOLUTION: # on solution dir
-        # if is_project_dir:
-        # if is_solution_dir:
-        # if is_archive:
-        # try unzip (podla typu .zip, .tar)
-        # if proj.solution_file_name and proj.extended_solution_file_name:
-        # for file in solution_dir:
-        # try
-        pass
+        if env.cwd.proj is not None:
+            idx = win.cursor.row
+            dirs_and_files = env.cwd.get_all_items()
+            path = os.path.join(env.cwd.path, dirs_and_files[idx]) # selected item
+            if is_solution_file(env, env.cwd.proj.solution_id, path):
+                if is_archive_file(path):
+                    # try extract solution archive file 
+                    problem_solutions = extract_archives([path])
+                    env.cwd = get_directory_content(env)
+                    if problem_solutions:
+                        log("extract | problem archives: "+str(problem_solutions))
+                    else:
+                        # try rename sut
+                        required_name = env.cwd.proj.sut_required
+                        extended_variants = env.cwd.proj.sut_ext_variants
+                        ok, renamed, fail = rename_solutions([path], required_name, extended_variants)
+                else:
+                    log("expand and rename solution | is solution but not zipfile or tarfile")
+
+
     # ======================= RUN TEST SET =======================
     elif fce == TEST_ALL_STUDENTS: # ALL STUDENTS
         pass

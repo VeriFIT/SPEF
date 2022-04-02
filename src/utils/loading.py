@@ -63,7 +63,7 @@ def save_proj_to_conf_file(path, data):
     project_file = os.path.join(path, PROJECT_FILE)
     try:
         with open(project_file, 'w+', encoding='utf8') as f:
-            yaml.dump(data, f, default_flow_style=False, allow_unicode=True)
+            yaml.dump(data, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
     except Exception as err:
         log("cannot save project conf to file | "+str(err)+" | "+str(traceback.format_exc()))
 

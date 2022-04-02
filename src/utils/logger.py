@@ -8,6 +8,7 @@ HOME = str(Path(__file__).parents[2])
 LOG_FILE = os.path.join(HOME,"debug.log")
 TAG_DIR = os.path.join(HOME,"tags")
 REPORT_DIR = os.path.join("reports")
+TESTS_DIR = os.path.join("tests")
 
 
 

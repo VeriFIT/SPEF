@@ -216,9 +216,11 @@ def get_solution_dirs(env):
     result = set()
     if env.cwd.proj is not None:
         solution_id = env.cwd.proj.solution_id
-        for dir_name in env.cwd.dirs:
-            if is_root_solution_dir(env, solution_id, dir_name):
-                result.add(dir_name)
+        items = os.listdir(env.cwd.proj.path) # list all dirs and files in proj dir
+        for item in items:
+            path = os.path.join(env.cwd.proj.path, item)
+            if is_root_solution_dir(env, solution_id, path):
+                result.add(path)
     else:
         log("get_solution_dirs | cwd is not project root directory")
     return list(result)
@@ -229,15 +231,19 @@ def get_solution_files(env):
     result = set()
     if env.cwd.proj is not None:
         solution_id = env.cwd.proj.solution_id
-        for file_name in env.cwd.files:
-            if is_solution_file(env, solution_id, file_name):
-                result.add(file_name)
+        items = os.listdir(env.cwd.proj.path) # list all dirs and files in proj dir
+        for item in items:
+            path = os.path.join(env.cwd.proj.path, item) # path ex: subj1/projA/xlogin00.*
+            if is_solution_file(env, solution_id, path):
+                result.add(path)
     else:
         log("get_solution_files | cwd is not project root directory")
     return list(result)
 
 
 # return list of solution archive dirs in current directory (cwd) if its project directory
+# solution_archives = list of *paths* to valid solution archives
+# solution_files = list of *file names* to some solution files
 def get_solution_archives(env):
     solution_archives = set() # zipfile or tarfile
     solution_files = set() # other solution matched file
@@ -245,8 +251,10 @@ def get_solution_archives(env):
         if is_archive_file(file_name):
             solution_archives.add(file_name)
         else:
-            log("solution file but not zipfile or tarfile: "+str(file_name))
-            solution_files.add(file_name)
+            log("solution file but not zipfile or tarfile: "+str(os.path.basename(file_name)))
+            solution_files.add(os.path.basename(file_name))
+    # log(str(solution_archives))
+    # log(str(solution_files))
     return list(solution_archives), list(solution_files)
 
 
@@ -254,4 +262,3 @@ def get_solution_archives(env):
 # with_check=True means it returns only valid test dirs (with 'dotest.sh' file in it)
 def get_test_dirs(with_check=True):
     pass
-

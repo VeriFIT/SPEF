@@ -62,7 +62,7 @@ class Directory:
                     proj_data = load_proj_from_conf_file(cur_dir)
 
                     """ create Project obj from proj data """
-                    self.proj = Project(proj_data['path'])
+                    self.proj = Project(cur_dir)
                     self.proj.set_values_from_conf(proj_data)
                     return
                 else:
@@ -78,12 +78,15 @@ class Directory:
 class Project:
     def __init__(self, path):
         self.path = path
-        self.solution_id = None
         self.created = None
         self.tests_dir = None
+        self.solution_id = None
+        self.solution_type_dir = True # True = solution id matches directory, False = solution id matches file
+
+        self.sut_required = ""
+        self.sut_ext_variants = []
 
         self.description = ""
-
         self.test_timeout = 0
         self.solutions_dir = None
         self.solution_quick_view = None
@@ -91,17 +94,24 @@ class Project:
 
     def set_values_from_conf(self, data):
         try:
-            self.solution_id = data['solution_id']
             self.created = data['created']
             self.tests_dir = data['tests_dir']
+            self.solution_id = data['solution_id']
+            self.solution_type_dir = data['solution_type_dir']
+            self.sut_required = data['sut_required']
+            self.sut_ext_variants = data['sut_ext_variants']
         except:
             log("wrong data for proj")
 
 
     def set_default_values(self):
-        self.solution_id =  "x[a-z]{5}[0-9]{2}" # default solution identifier: xlogin00
         self.created = datetime.date.today() # date of creation
         self.tests_dir = "tests"
+        self.solution_id =  "x[a-z]{5}[0-9]{2}" # default solution identifier: xlogin00
+        self.solution_type_dir = True # default solution type is directory
+        self.sut_required = "sut" # default file name of project solution is "sut" (system under test)
+        self.sut_ext_variants = ["*sut*", "sut.sh", "sut.bash"]
+
 
         self.test_timeout = 5
         self.solutions_dir = "solutions"
@@ -111,10 +121,12 @@ class Project:
 
     def to_dict(self):
         return {
-            'path': self.path,
-            'solution_id': self.solution_id,
             'created': self.created,
-            'tests_dir': self.tests_dir
+            'tests_dir': self.tests_dir,
+            'solution_id': self.solution_id,
+            'solution_type_dir': self.solution_type_dir,
+            'sut_required': self.sut_required,
+            'sut_ext_variants': self.sut_ext_variants
         }
         #     'tests_dir': self.tests_dir
         #     'test_timeout': self.test_timeout
