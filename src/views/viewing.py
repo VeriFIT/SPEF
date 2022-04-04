@@ -67,7 +67,7 @@ def file_viewing(stdscr, env):
         # try get report for file in buffer
         orig_file_name = get_path_relative_to_solution_dir(buffer.path)
         report = load_report_from_file(buffer.path, orig_file_name=orig_file_name)
-        log(str(report))
+        # log(str(report))
         env.report = report
 
 
@@ -295,7 +295,6 @@ def run_function(stdscr, env, fce, key):
                 rewrite = True
             # ======================= MANAGE -> EDIT =======================
             elif fce == SET_EDIT_FILE_MODE:
-                log("edit "+str(SET_EDIT_FILE_MODE))
                 env.change_to_file_edit_mode()
             # ======================= ADD NOTES =======================
             elif fce == ADD_CUSTOM_NOTE:

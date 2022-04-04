@@ -133,6 +133,7 @@ class Environment:
         if reset:
             self.windows.center.set_position(self.win_center_pos, screen=self.screens.center)
             self.windows.center.reset(row=row, col=col)
+            self.windows.center.set_border(1)
         return self.screens.center, self.windows.center
 
 

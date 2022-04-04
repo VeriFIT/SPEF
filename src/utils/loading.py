@@ -9,7 +9,7 @@ from modules.buffer import Buffer, Report, Tags, Note
 
 # from utils.printing import *
 from utils.logger import *
-from utils.match import is_archive_file
+
 
 REPORT_SUFFIX = "_report.yaml"
 TAGS_SUFFIX = "_tags.yaml"

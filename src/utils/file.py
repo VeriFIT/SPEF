@@ -12,6 +12,17 @@ from utils.logger import *
 from utils.match import *
 from utils.reporting import *
 
+
+
+
+def remove_archive_suffix(path):
+    suffix_list = ['.zip', '.tar', '.tar.gz', '.tgz', '.tar.bz2', '.tbz', '.tar.xz', '.txz']
+    for ext in suffix_list:
+        path = path.removesuffix(ext)
+    return path
+
+
+
 # input: list of archive files
 # output: set of problematic archives
 def extract_archives(archives):
@@ -19,25 +30,21 @@ def extract_archives(archives):
     for arch in archives:
         opener, mode = None, None
         if arch.endswith('.zip'):
-            dest_dir = arch.removesuffix('.zip')
             opener, mode = zipfile.ZipFile, 'r'
         elif arch.endswith('.tar'):
-            dest_dir = arch.removesuffix('.tar')
             opener, mode = tarfile.open, 'r'
         elif arch.endswith('.tar.gz') or arch.endswith('.tgz'):
-            dest_dir = arch.removesuffix('.tar.gz').removesuffix('.tgz')
             opener, mode = tarfile.open, 'r:gz'
         elif arch.endswith('.tar.bz2') or arch.endswith('.tbz'):
-            dest_dir = arch.removesuffix('.tar.bz2').removesuffix('.tbz')
             opener, mode = tarfile.open, 'r:bz2'
         elif arch.endswith('.tar.xz') or arch.endswith('.txz'):
-            dest_dir = arch.removesuffix('.tar.xz').removesuffix('.txz')
             opener, mode = tarfile.open, 'r:xz'
         else:
             problem_archives.add(os.path.basename(arch))
 
         try:
             if opener and mode:
+                dest_dir = remove_archive_suffix(arch)
                 with opener(arch, mode) as arch_file:
                     if not os.path.exists(dest_dir):
                         os.mkdir(dest_dir)
@@ -53,13 +60,15 @@ def rename_solutions(src_dirs, required_name, extended_variants):
     for solution in src_dirs:
         try:
             # find sut in solution dir
-            file_list = glob.glob(os.path.join(solution, '**', required_name))
+            file_list = glob.glob(os.path.join(solution, '**', required_name), recursive=True)
+            file_list = filter_intern_files(file_list)
             if len(file_list) == 1: # only one file matches the sut required
                 ok.append(solution)
             else:
                 files = []
                 for ext in extended_variants: # find extended version of sut in solution dir
-                    files.extend(glob.glob(os.path.join(solution, '**', ext)))
+                    files.extend(glob.glob(os.path.join(solution, '**', ext), recursive=True))
+                files = filter_intern_files(files)
                 if len(files) == 1: # only one file matches some sut extened variant
                     old_file = files[0]
                     new_file = os.path.join(os.path.dirname(old_file), required_name)
@@ -71,3 +80,43 @@ def rename_solutions(src_dirs, required_name, extended_variants):
         except:
             fail.append(solution)
     return ok, renamed, fail
+
+
+# condition: path is root project dir (or path in proj dir)
+# return path to new test dir if created succesfully (else return None)
+def create_new_test(proj_dir, test_name=None):
+    try:
+        # try get path to root project dir
+        if not is_root_project_dir(proj_dir):
+            if is_in_project_dir:
+                proj_dir = get_proj_path(proj_dir)
+            else:
+                log("create new test | must be in project (sub)dir")
+                return None
+
+        # create tests dir if not exists
+        tests_dir = os.path.join(proj_dir, TESTS_DIR)
+        if not os.path.exists(tests_dir):
+            os.mkdir(tests_dir)
+
+        # create subdir in tests dir for new test --> TODO: define "test_dir_base" and "i"
+        file_list = os.listdir(tests_dir)
+        if (not test_name) or (test_name in file_list):
+            test_dir_base = "test_"
+            i = 1
+
+            test_name = f"{test_dir_base}{i}"
+            while test_name in file_list:
+                i += 1
+                test_name = f"{test_dir_base}{i}"
+        new_test_dir = os.path.join(tests_dir, test_name)
+        os.mkdir(new_test_dir)
+
+        # create empty file for test script (dotest.sh)
+        with open(os.path.join(new_test_dir, TEST_FILE), 'w+'):
+            pass
+
+        return new_test_dir
+    except Exception as err:
+        log("create new test | "+str(err)+" | "+str(traceback.format_exc()))
+        return None

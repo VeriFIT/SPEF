@@ -38,7 +38,7 @@ class Tags:
             if i == idx:
                 # log(self.data[key])
                 return key, self.data[key]
-        return "", []
+        return None, None
 
     def set_tag(self, tag_name, args):
         self.data[tag_name] = [*args]

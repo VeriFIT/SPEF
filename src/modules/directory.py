@@ -273,7 +273,7 @@ class Filter:
             tag_parsing_ok = False
             if re.match('\w(...)', self.tag):
                 components = re.split('[()]', self.tag)
-                log(components)
+                # log(components)
                 if len(components)>0:
                     # search only for tag name
                     tag_name = components[0]

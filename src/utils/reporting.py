@@ -43,7 +43,7 @@ def get_path_relative_to_solution_dir(dest_path):
 
     # find solution dir
     solution_dir = None
-    if match_regex(proj.solution_id, dest_path):
+    if match_regex(proj.solution_id, os.path.basename(dest_path)):
         solution_dir = dest_path
     else:
         solution_dir = get_parent_regex_match(proj.solution_id, dest_path)

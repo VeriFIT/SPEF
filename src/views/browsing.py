@@ -13,6 +13,7 @@ from controls.functions import brows_menu_functions
 from views.filtering import filter_management
 from views.help import show_help
 from views.menu import brows_menu
+from views.input import get_user_input
 
 from modules.directory import Directory, Project
 
@@ -274,7 +275,7 @@ def run_menu_function(stdscr, env, fce, key):
                 log("rename all solutions | there is no defined sut_required in proj config")
             else:
                 solutions = get_solution_dirs(env)
-                log(str(solutions))
+                # log(str(solutions))
                 required_name = env.cwd.proj.sut_required
                 extended_variants = env.cwd.proj.sut_ext_variants
                 ok, renamed, fail = rename_solutions(solutions, required_name, extended_variants)
@@ -296,9 +297,10 @@ def run_menu_function(stdscr, env, fce, key):
                         log("extract | problem archives: "+str(problem_solutions))
                     else:
                         # try rename sut
+                        dest_dir = remove_archive_suffix(path)
                         required_name = env.cwd.proj.sut_required
                         extended_variants = env.cwd.proj.sut_ext_variants
-                        ok, renamed, fail = rename_solutions([path], required_name, extended_variants)
+                        ok, renamed, fail = rename_solutions([dest_dir], required_name, extended_variants)
                 else:
                     log("expand and rename solution | is solution but not zipfile or tarfile")
 
@@ -334,7 +336,31 @@ def run_menu_function(stdscr, env, fce, key):
         pass
     # =================== TESTS ===================
     elif fce == ADD_TEST:
-        pass
+        env.update_win_for_current_mode(win)
+        rewrite_all_wins(env)
+
+        # get test name from user input
+        title = "Enter a name/identifier for new test (please dont use any white space):"
+        env, test_name = get_user_input(stdscr, env, title=title)
+        if env.is_exit_mode():
+            return env, True
+        screen, win = env.get_screen_for_current_mode()
+        curses.curs_set(0)
+        if test_name is not None:
+            test_name = ''.join(test_name).strip()
+            test_name = re.sub("\s+","_",test_name)
+            log("testname "+str(test_name))
+
+            # create dir for new test (and go to new test dir)
+            new_test_dir = create_new_test(env.cwd.path, test_name)
+            os.chdir(new_test_dir)
+            env.cwd = get_directory_content(env)
+            win.reset(0,0)
+
+            # open shell script "dotest.sh" to implement the test
+            env.set_file_to_open(os.path.join(new_test_dir, TEST_FILE))
+            env.switch_to_next_mode()
+            return env, True
     elif fce == EDIT_TEST:
         pass
     elif fce == REMOVE_TEST:
