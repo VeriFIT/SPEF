@@ -221,9 +221,16 @@ class Environment:
     """ line numbers """
     def enable_line_numbers(self, buffer):
         self.line_numbers = str(len(buffer))
+        self.update_line_numbers_shift()
 
     def disable_line_numbers(self):
         self.line_numbers = None
+        self.update_line_numbers_shift()
+
+    def update_line_numbers_shift(self):
+        shift = 1 if self.line_numbers is None else len(self.line_numbers)+1
+        self.windows.edit.set_line_num_shift(shift)
+        self.windows.view.set_line_num_shift(shift)
 
 
     """ set mode """

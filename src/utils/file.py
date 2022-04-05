@@ -112,9 +112,11 @@ def create_new_test(proj_dir, test_name=None):
         new_test_dir = os.path.join(tests_dir, test_name)
         os.mkdir(new_test_dir)
 
-        # create empty file for test script (dotest.sh)
-        with open(os.path.join(new_test_dir, TEST_FILE), 'w+'):
-            pass
+        # create file for test script (dotest.sh)
+        with open(os.path.join(new_test_dir, TEST_FILE), 'w+') as f:
+            f.write("#!/bin/bash\n")
+            f.write("# ***** write test here *****\n")
+            f.write("# press F1 to see all available functions and variables you can use")
 
         return new_test_dir
     except Exception as err:

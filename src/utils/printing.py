@@ -545,9 +545,6 @@ def show_file_content(env):
     if buffer is not None:
         tokens = parse_code(buffer.path, '\n'.join(buffer[win.row_shift:]))
 
-        # log(str(buffer[win.row_shift:]))
-        # log(str(tokens))
-
     screen.erase()
     """ print border """
     if env.is_view_mode():
@@ -584,7 +581,7 @@ def show_file_content(env):
                     style, text = token
                     y,x = screen.getyx()
 
-                    if y > max_rows or (y == max_rows and env.content_filter_on()):
+                    if y > max_rows or (y == max_rows and env.content_filter_on()) or y+win.row_shift > len(buffer):
                         break
                     if x == 0:
                         x = 1+shift

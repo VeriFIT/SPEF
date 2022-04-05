@@ -81,7 +81,6 @@ def directory_browsing(stdscr, env):
                         if env.line_numbers or env.start_with_line_numbers:
                             env.start_with_line_numbers = False
                             env.enable_line_numbers(buffer)
-                            env = resize_all(stdscr, env, True)
             # if its project directory, show project info and test results
             else:
                 if env.cwd.proj is not None: # current working directory is a project subdirectory (ex: "proj1/")
@@ -340,7 +339,7 @@ def run_menu_function(stdscr, env, fce, key):
         rewrite_all_wins(env)
 
         # get test name from user input
-        title = "Enter a name/identifier for new test (please dont use any white space):"
+        title = "Enter a name/identifier for new test:"
         env, test_name = get_user_input(stdscr, env, title=title)
         if env.is_exit_mode():
             return env, True

@@ -67,7 +67,6 @@ def file_viewing(stdscr, env):
         # try get report for file in buffer
         orig_file_name = get_path_relative_to_solution_dir(buffer.path)
         report = load_report_from_file(buffer.path, orig_file_name=orig_file_name)
-        # log(str(report))
         env.report = report
 
 
@@ -75,8 +74,6 @@ def file_viewing(stdscr, env):
     if env.line_numbers or env.start_with_line_numbers:
         env.start_with_line_numbers = False
         env.enable_line_numbers(buffer)
-        env = resize_all(stdscr, env, True)
-        screen, win = env.get_screen_for_current_mode()
 
     if report is None:
         log("report is None (this will never execute probably)")
@@ -185,8 +182,6 @@ def run_function(stdscr, env, fce, key):
             env.disable_line_numbers()
         else:
             env.enable_line_numbers(env.buffer)
-        env = resize_all(stdscr, env, True)
-        screen, win = env.get_screen_for_current_mode()
         rewrite = True
     elif fce == SHOW_OR_HIDE_NOTE_HIGHLIGHT:
         env.note_highlight = not env.note_highlight
@@ -246,43 +241,66 @@ def run_function(stdscr, env, fce, key):
             env.report.data = env.report.last_save.copy()
         rewrite = True
     else:
+        # ======================= EDIT FILE =======================
         if env.file_edit_mode:
-            # ======================= EDIT FILE =======================
+            # ======================= DELETE =======================
             if fce == DELETE:
                 old_len = len(env.buffer)
+                # delete char and update report
                 env.report = env.buffer.delete(win, env.report)
+                # check if its necessary to rewrite the whole window or just one line
                 if old_len == len(env.buffer):
                     env.update_win_for_current_mode(win)
                     rewrite_one_line_in_file(env, win.cursor.row)
                 else:
                     rewrite = True
+                # update the total number of lines
+                if env.line_numbers:
+                    env.enable_line_numbers(env.buffer)
+            # ======================= BACKSPACE =======================
             elif fce == BACKSPACE:
                 old_len = len(env.buffer)
+                # delete char and update report
                 if (win.cursor.row, win.cursor.col) > (win.begin_y, win.begin_x):
                     win.left(env.buffer)
                     env.report = env.buffer.delete(win, env.report)
                     win.calculate_tab_shift(env.buffer, env.tab_size)
+                # check if its necessary to rewrite the whole window or just one line
                 if old_len == len(env.buffer):
                     env.update_win_for_current_mode(win)
                     rewrite_one_line_in_file(env, win.cursor.row)
                 else:
                     rewrite = True
+                # update the total number of lines
+                if env.line_numbers:
+                    env.enable_line_numbers(env.buffer)
+            # ======================= NEW LINE =======================
             elif fce == PRINT_NEW_LINE:
+                # add new line
                 env.report = env.buffer.newline(win, env.report)
                 win.right(env.buffer, filter_on=env.content_filter_on())
                 win.calculate_tab_shift(env.buffer, env.tab_size)
                 rewrite = True
+                # update the total number of lines
+                if env.line_numbers:
+                    env.enable_line_numbers(env.buffer)
+            # ======================= PRINT CHAR =======================
             elif fce == PRINT_CHAR:
                 old_len = len(env.buffer)
+                # print char
                 if key is not None:
                     env.buffer.insert(win, chr(key))
                     win.right(env.buffer, filter_on=env.content_filter_on())
                     win.calculate_tab_shift(env.buffer, env.tab_size)
+                # check if its necessary to rewrite the whole window or just one line
                 if old_len == len(env.buffer):
                     env.update_win_for_current_mode(win)
                     rewrite_one_line_in_file(env, win.cursor.row)
                 else:
                     rewrite = True
+                # update the total number of lines
+                if env.line_numbers:
+                    env.enable_line_numbers(env.buffer)
             # ======================= EDIT -> MANAGE =======================
             elif fce == SET_MANAGE_FILE_MODE:
                 env.change_to_file_management()

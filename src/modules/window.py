@@ -252,10 +252,9 @@ class Window:
 
     def set_line_num_shift(self, shift):
         if self.line_num_shift != shift:
+            self._begin_x = self._begin_x - self.line_num_shift + shift
+            self.cursor.col = self.cursor.col - self.line_num_shift + shift
             self.line_num_shift = shift
-            # self.begin_x += shift
-            # self.col_shift = 0
-            # self.cursor.col = self.begin_x
 
 
     def set_position(self, pos, screen=None):
