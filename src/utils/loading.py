@@ -17,6 +17,11 @@ CONFIG_FILE = "config.yaml"
 CONTROL_FILE = "control.yaml"
 TYPICAL_NOTES_FILE = "typical_notes.txt"
 PROJECT_FILE = "proj_conf.yaml"
+
+REPORT_DIR = "reports"
+TESTS_DIR = "tests"
+
+SCORING_FILE = "scoring"
 TEST_FILE = "dotest.sh"
 TESTSUITE_FILE = "testsuite.sh"
 

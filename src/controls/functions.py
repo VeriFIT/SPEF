@@ -83,31 +83,36 @@ MOVE_FILE = 708
 
 # in proj root dir
 EDIT_PROJ_CONF = 710
-EXPAND_ALL_SOLUTIONS = 711
-RENAME_ALL_SOLUTIONS = 712
-TEST_ALL_STUDENTS = 713
-SHOW_OR_HIDE_PROJ_INFO = 714
-SHOW_STATS = 715
-SHOW_HISTOGRAM = 716
+SHOW_OR_HIDE_PROJ_INFO = 711
+EXPAND_AND_RENAME_SOLUTION = 712
+EXPAND_ALL_SOLUTIONS = 713
+RENAME_ALL_SOLUTIONS = 714
+TEST_ALL_STUDENTS = 715
+
+SHOW_STATS = 716
+SHOW_HISTOGRAM = 717
 
 # in solution dir
-EXPAND_AND_RENAME_SOLUTION = 720
-TEST_STUDENT = 721
-TEST_CLEAN = 722
-SHOW_TEST_RESULTS = 723
-SHOW_AUTO_REPORT = 724
-SHOW_CODE_REVIEW = 725
-SHOW_TOTAL_REPORT = 726
-GEN_CODE_REVIEW = 727
+TEST_STUDENT = 720
+TEST_CLEAN = 721
+GEN_CODE_REVIEW = 722
+GEN_AUTO_REPORT = 723
+ADD_AUTO_NOTE = 724
+ADD_USER_NOTE = 725
+SHOW_CODE_REVIEW = 726
+SHOW_AUTO_REPORT = 727
+SHOW_TOTAL_REPORT = 728
+SHOW_TEST_RESULTS = 729
 
 # in tests dir
 ADD_TEST = 730
 EDIT_TESTSUITE = 731
-DEFINE_TEST_FAILURE = 732
+CHANGE_SCORING = 732
+DEFINE_TEST_FAILURE = 733
 
 # in tests/test dir
-REMOVE_TEST = 733
-EDIT_TEST = 734
+REMOVE_TEST = 734
+EDIT_TEST = 735
 
 
 
@@ -316,65 +321,79 @@ def brows_menu_functions():
     }
 
 
-def get_menu_functions(env):
-    is_proj_root_dir = False
-    is_solution_dir = False
-    is_tests_root_dir = False
-    is_test_dir = False
+def get_menu_functions(in_proj_dir=False, in_solution_dir=False, is_test_dir=False):
 
-    basic_functions = {
-        'create new project': ADD_PROJECT,
+    basic = {
+        'create new project here': ADD_PROJECT,
         'expand archive here': EXPAND_HERE,
         'expand archive to ...': EXPAND_TO,
-        'create directory': CREATE_DIR,
-        'create file': CREATE_FILE,
+        'create new directory': CREATE_DIR,
+        'create new file': CREATE_FILE,
         'remove file': REMOVE_FILE,
         'rename file': RENAME_FILE,
         'copy file': COPY_FILE,
         'move file': MOVE_FILE
     }
 
-    proj_functions = {
-        'edit project configuration': EDIT_PROJ_CONF,
-        'expand all archives of all students': EXPAND_ALL_SOLUTIONS,
-        'name all solution files correctly': RENAME_ALL_SOLUTION,
-        'test all students': TEST_ALL_STUDENTS,
-        'show/hide project info': SHOW_OR_HIDE_PROJ_INFO,
+    proj = {
+        'project - edit configuration': EDIT_PROJ_CONF,
+        'project - show/hide project info': SHOW_OR_HIDE_PROJ_INFO,
+        'student - expand archive and name solution file correctly': EXPAND_AND_RENAME_SOLUTION,
+        'all students - expand archives for all students': EXPAND_ALL_SOLUTIONS,
+        'all students - name solution file correctly for all students': RENAME_ALL_SOLUTIONS,
+        'all students - run tests (testsuite)': TEST_ALL_STUDENTS
+    }
+
+    tests = {
+        'tests - create new test': ADD_TEST,
+        'tests - create/edit testsuite': EDIT_TESTSUITE,
+        'tests - change scoring': CHANGE_SCORING,
+        'tests - define test failure': DEFINE_TEST_FAILURE
+    }
+
+    test = {
+        'test - remove test': REMOVE_TEST,
+        'test - edit test': EDIT_TEST
+    }
+
+    stats = {
         'show statistics': SHOW_STATS,
         'show histogram': SHOW_HISTOGRAM
     }
 
-    solution_functions = {
-        'expand solution and name it correctly': EXPAND_AND_RENAME_SOLUTION,
-        'test the student': TEST_STUDENTS,
-        'clean from test results': TEST_CLEAN,
-        'show test results': SHOW_TEST_RESULTS,
-        'show auto report': SHOW_AUTO_REPORT,
-        'show code review notes': SHOW_CODE_REVIEW,
-        'show total report with score': SHOW_TOTAL_REPORT,
-        'generate code review from notes': GEN_CODE_REVIEW
+    student = {
+        'student - run tests (testsuite)': TEST_STUDENT,
+        'student - clean from test results': TEST_CLEAN,
+        'student - generate code review from notes': GEN_CODE_REVIEW,
+        'student - generate auto report from tests': GEN_AUTO_REPORT, # TODO
+        'student - add note to auto report': ADD_AUTO_NOTE, # TODO
+        'student - add custom user note': ADD_USER_NOTE, # TODO
+        'student - show code review notes': SHOW_CODE_REVIEW,
+        'student - show auto report': SHOW_AUTO_REPORT,
+        'student - show total report with score': SHOW_TOTAL_REPORT,
+        'student - show test results': SHOW_TEST_RESULTS
     }
 
-    tests_functions = {
-        'create new test': ADD_TEST,
-        'create or edit testsuite': EDIT_TESTSUITE,
-        'define test failure': DEFINE_TEST_FAILURE
-    }
 
-    test_functions = {
-        'remove test': REMOVE_TEST,
-        'edit test': EDIT_TEST
-    }
-
-    result_dir = basic_functions.copy()
-    if is_proj_root_dir:
-        result_dir.update(proj_functions)
-    if is_solution_dir:
-        result_dir.update(solution_functions)
-    if is_tests_root_dir:
-        result_dir.update(tests_functions)
-    if is_test_dir:
-        result_dir.update(test_functions)
+    result_dir = {}
+    if in_solution_dir: # in solution dir or in proj dir with selected solution
+        result_dir.update(proj)
+        result_dir.update(student)
+        result_dir.update(stats)
+        result_dir.update(basic)
+    elif is_test_dir: # in test dir or in tests dir with selected test
+        result_dir.update(proj)
+        result_dir.update(tests)
+        result_dir.update(test)
+        result_dir.update(stats)
+        result_dir.update(basic)
+    elif in_proj_dir: # in proj dir
+        result_dir.update(proj)
+        result_dir.update(tests)
+        result_dir.update(stats)
+        result_dir.update(basic)
+    else:
+        result_dir.update(basic)
 
     return result_dir
 

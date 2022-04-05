@@ -108,7 +108,6 @@ def is_solution_file(solution_id, path):
 # pre-condition: check if is_in_project_dir(path)
 # return True it path is some project solution subdirectory or file
 # parent matches solution identifier
-# if path is not specified, check current working directory path
 def is_in_solution_dir(solution_id, path):
     try:
         if path is None or solution_id is None:
@@ -123,31 +122,46 @@ def is_in_solution_dir(solution_id, path):
 
 # pre-condition: check if is_in_project_dir(path)
 # return True if path is root tests dir (matches given tests dir)
-# if path is not specified, check current working directory path
-def is_root_tests_dir(tests_dir, path):
+def is_root_tests_dir(path):
     try:
-        if path is None or tests_dir is None:
+        if path is None:
             return False
 
         if os.path.isdir(path):
-            return match_regex(tests_dir, os.path.basename(path))
+            return os.path.basename(path) == TESTS_DIR
         return False
     except:
         return False
 
+def is_in_tests_dir(path):
+    try:
+        if path is None:
+            return False
+
+        cur_dir = path if os.path.isdir(path) else os.path.dirname(path)
+        while True:
+            parent_dir = os.path.dirname(cur_dir)
+            if is_root_tests_dir(cur_dir):
+                return True
+            else:
+                if cur_dir == parent_dir:
+                    return False
+                else:
+                    cur_dir = parent_dir
+    except:
+        return False
 
 # pre-condition: check if is_in_project_dir(path)
 # return True if path is dir in root tests dir
-# if path is not specified, check current working directory path
 # with_check=True means it returns True only for valid testcase dirs (with 'dotest.sh' file in it)
-def is_testcase_dir(tests_dir, path, with_check=True):
+def is_testcase_dir(path, with_check=True):
     try:
-        if path is None or tests_dir is None:
+        if path is None:
             return False
 
         if os.path.isdir(path):
             parent_dir = os.path.dirname(path)
-            if is_root_tests_dir(tests_dir, parent_dir):
+            if is_root_tests_dir(parent_dir):
                 if with_check:
                     file_list = os.listdir(path)
                     if TEST_FILE in file_list:

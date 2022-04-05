@@ -82,6 +82,14 @@ def rename_solutions(src_dirs, required_name, extended_variants):
     return ok, renamed, fail
 
 
+
+def create_test_suite(testsuite_file):
+    if not os.path.exists(testsuite_file):
+        with open(testsuite_file, 'w+') as f:
+            f.write("#!/usr/bin/env bash\n")
+            f.write("# ***** write test strategy here *****\n")
+
+
 # condition: path is root project dir (or path in proj dir)
 # return path to new test dir if created succesfully (else return None)
 def create_new_test(proj_dir, test_name=None):
@@ -96,8 +104,13 @@ def create_new_test(proj_dir, test_name=None):
 
         # create tests dir if not exists
         tests_dir = os.path.join(proj_dir, TESTS_DIR)
+        scoring_file = os.path.join(tests_dir, SCORING_FILE)
+        testsuite_file = os.path.join(tests_dir, TESTSUITE_FILE)
         if not os.path.exists(tests_dir):
             os.mkdir(tests_dir)
+            with open(scoring_file, 'w+'): pass # create scoring file
+            with open(testsuite_file, 'w+'): pass # create testsuite file
+
 
         # create subdir in tests dir for new test --> TODO: define "test_dir_base" and "i"
         file_list = os.listdir(tests_dir)
@@ -117,6 +130,12 @@ def create_new_test(proj_dir, test_name=None):
             f.write("#!/bin/bash\n")
             f.write("# ***** write test here *****\n")
             f.write("# press F1 to see all available functions and variables you can use")
+
+        # set default scoring for new test
+        with open(scoring_file, 'a+') as f:
+            f.write(f"{test_name}_ok=1; {test_name}_fail=0\n")
+
+        log("create new test | scoring set to default (ok=1, fail=0) -- you can change it in: "+str(scoring_file))
 
         return new_test_dir
     except Exception as err:

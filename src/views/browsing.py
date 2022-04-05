@@ -166,7 +166,13 @@ def run_function(stdscr, env, fce, key):
         curses.curs_set(0)
     # ======================= OPEN MENU =======================
     elif fce == OPEN_MENU:
-        menu_functions = brows_menu_functions()
+        # show menu with functions
+        in_proj_dir = is_in_project_dir(env.cwd.path)
+        in_solution_dir = is_in_solution_dir(env.cwd.proj.solution_id, env.cwd.path) if env.cwd.proj is not None else False
+        is_test_dir = is_testcase_dir(env.cwd.path)
+        menu_functions = get_menu_functions(in_proj_dir, in_solution_dir, is_test_dir)
+        # menu_functions = brows_menu_functions()
+
         title = "Select function from menu: "
         color = curses.color_pair(COL_TITLE)
         menu_options = [key for key in menu_functions]
@@ -175,6 +181,8 @@ def run_function(stdscr, env, fce, key):
             return env, True
         screen, win = env.get_screen_for_current_mode()
         curses.curs_set(0)
+
+        # execute selected function
         if option_idx is not None:
             for i, key in enumerate(menu_functions):
                 if i == option_idx:
@@ -257,8 +265,7 @@ def run_menu_function(stdscr, env, fce, key):
             env.set_file_to_open(os.path.join(env.cwd.proj.path, PROJECT_FILE))
             env.switch_to_next_mode()
             return env, True
-        pass
-    # ====================== EXPAND AND RENAME ======================
+    # ============================ EXPAND ===========================
     elif fce == EXPAND_ALL_SOLUTIONS: # ALL STUDENTS
         if env.cwd.proj is not None:
             solutions, problem_files = get_solution_archives(env)
@@ -267,7 +274,7 @@ def run_menu_function(stdscr, env, fce, key):
             if problem_solutions:
                 log("extract | problem archives: "+str(problem_solutions))
             env.cwd = get_directory_content(env)
-
+    # ============================ RENAME ===========================
     elif fce == RENAME_ALL_SOLUTIONS: # ALL STUDENTS
         if env.cwd.proj is not None:
             if env.cwd.proj.sut_required == "":
@@ -281,7 +288,7 @@ def run_menu_function(stdscr, env, fce, key):
                 log("students with correctly named solution file: "+str(ok))
                 log("students with wrong named solution file: "+str(renamed))
                 log("students with no supported extention of solution file: "+str(fail))
-
+    # ====================== EXPAND AND RENAME ======================
     elif fce == EXPAND_AND_RENAME_SOLUTION: # on solution dir
         if env.cwd.proj is not None:
             idx = win.cursor.row
@@ -302,8 +309,6 @@ def run_menu_function(stdscr, env, fce, key):
                         ok, renamed, fail = rename_solutions([dest_dir], required_name, extended_variants)
                 else:
                     log("expand and rename solution | is solution but not zipfile or tarfile")
-
-
     # ======================= RUN TEST SET =======================
     elif fce == TEST_ALL_STUDENTS: # ALL STUDENTS
         pass
@@ -312,28 +317,34 @@ def run_menu_function(stdscr, env, fce, key):
     elif fce == TEST_CLEAN: # on solution dir
         pass
     # =================== GENERATE REPORT ===================
-    # elif fce == GEN_AUTO_REPORT: # on solution dir
-        # pass
     elif fce == GEN_CODE_REVIEW: # on solution dir
         idx = win.cursor.row
         dirs_and_files = env.cwd.get_all_items()
         generate_code_review(env, os.path.join(env.cwd.path, dirs_and_files[idx]))
+    elif fce == GEN_AUTO_REPORT: # on solution dir
+        pass
+    # ======================= ADD NOTES TO REPORT =======================
+    elif fce == ADD_AUTO_NOTE:
+        pass
+    elif fce == ADD_USER_NOTE:
+        pass
     # ======================= SHOW INFO =======================
     elif fce == SHOW_OR_HIDE_PROJ_INFO:
         pass
+    elif fce == SHOW_CODE_REVIEW: # on solution dir
+        pass
+    elif fce == SHOW_AUTO_REPORT: # on solution dir
+        pass
+    elif fce == SHOW_TOTAL_REPORT: # on solution dir
+        pass
+    elif fce == SHOW_TEST_RESULTS: # on solution dir
+        pass
+    # ======================= SHOW STATS =======================
     elif fce == SHOW_STATS:
         pass
     elif fce == SHOW_HISTOGRAM:
         pass
-    elif fce == SHOW_TEST_RESULTS: # on solution dir
-        pass
-    elif fce == SHOW_AUTO_REPORT:
-        pass
-    elif fce == SHOW_CODE_REVIEW:
-        pass
-    elif fce == SHOW_TOTAL_REPORT:
-        pass
-    # =================== TESTS ===================
+    # =================== ADD TEST ===================
     elif fce == ADD_TEST:
         env.update_win_for_current_mode(win)
         rewrite_all_wins(env)
@@ -348,25 +359,51 @@ def run_menu_function(stdscr, env, fce, key):
         if test_name is not None:
             test_name = ''.join(test_name).strip()
             test_name = re.sub("\s+","_",test_name)
-            log("testname "+str(test_name))
 
             # create dir for new test (and go to new test dir)
             new_test_dir = create_new_test(env.cwd.path, test_name)
-            os.chdir(new_test_dir)
-            env.cwd = get_directory_content(env)
-            win.reset(0,0)
+            if new_test_dir is not None:
+                os.chdir(new_test_dir)
+                env.cwd = get_directory_content(env)
+                win.reset(0,0)
 
-            # open shell script "dotest.sh" to implement the test
-            env.set_file_to_open(os.path.join(new_test_dir, TEST_FILE))
-            env.switch_to_next_mode()
-            return env, True
+                # open shell script "dotest.sh" to implement the test
+                env.set_file_to_open(os.path.join(new_test_dir, TEST_FILE))
+                env.switch_to_next_mode()
+                return env, True
+    # =================== EDIT TESTSUITE ===================
+    elif fce == EDIT_TESTSUITE:
+        if env.cwd.proj is not None:
+            tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
+            if os.path.exists(tests_dir):
+                # create testsuite file if not exists
+                testsuite_file = os.path.join(tests_dir, TESTSUITE_FILE)
+                create_test_suite(testsuite_file)
+
+                # open "testsuite.sh" to implement testing strategy
+                env.set_file_to_open(testsuite_file)
+                env.switch_to_next_mode()
+                return env, True
+            else:
+                log(f"cant create testsuite file in tests dir | '{tests_dir}' doesnt exists ")
+    # =================== CHANGE SCORING ===================
+    elif fce == CHANGE_SCORING:
+        if env.cwd.proj is not None:
+            scoring_file = os.path.join(env.cwd.proj.path, TESTS_DIR, SCORING_FILE)
+            if os.path.exists(scoring_file):
+                env.set_file_to_open(scoring_file)
+                env.switch_to_next_mode()
+                return env, True
+            else:
+                log(f"cant find scoring file | '{scoring_file}' doesnt exists")
+    # =================== DEFINE TEST FAILURE ===================
+    elif fce == DEFINE_TEST_FAILURE:
+        pass
+    # =================== EDIT TEST ===================
     elif fce == EDIT_TEST:
         pass
+    # =================== REMOVE TEST ===================
     elif fce == REMOVE_TEST:
-        pass
-    elif fce == EDIT_TESTSUITE:
-        pass
-    elif fce == DEFINE_TEST_FAILURE:
         pass
 
     env.update_win_for_current_mode(win)
