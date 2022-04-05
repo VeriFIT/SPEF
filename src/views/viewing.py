@@ -27,6 +27,9 @@ from utils.match import *
 
 from utils.reporting import get_path_relative_to_solution_dir
 
+REWRITE_ALL = 1
+REWRITE_VIEW = 2
+REWRITE_NONE = 3
 
 def file_viewing(stdscr, env):
     curses.curs_set(1) # set cursor as visible
@@ -89,7 +92,8 @@ def file_viewing(stdscr, env):
         """ print all screens """
         screen, win = env.get_screen_for_current_mode()
         if rewrite:
-            rewrite_all_wins(env)
+            # rewrite_all_wins(env)
+            rewrite_file(env)
 
         try:
             """ move cursor to correct position """
@@ -140,7 +144,8 @@ def run_function(stdscr, env, fce, key):
     elif fce == RESIZE_WIN:
         env = resize_all(stdscr, env)
         screen, win = env.get_screen_for_current_mode()
-        rewrite = True
+        rewrite_all_wins(env)
+        # rewrite = True
     # ======================= ARROWS =======================
     elif fce == CURSOR_UP:
         old_shifts = win.row_shift, win.col_shift
@@ -167,7 +172,8 @@ def run_function(stdscr, env, fce, key):
         env = show_help(stdscr, env)
         screen, win = env.get_screen_for_current_mode()
         curses.curs_set(1)
-        rewrite = True
+        rewrite_all_wins(env)
+        # rewrite = True
     # ======================= SAVE FILE =======================
     elif fce == SAVE_FILE:
         save_buffer(env.file_to_open, env.buffer, env.report)
@@ -175,7 +181,8 @@ def run_function(stdscr, env, fce, key):
     elif fce == SHOW_OR_HIDE_TAGS:
         env.show_tags = not env.show_tags
         screen, win = env.get_screen_for_current_mode()
-        rewrite = True
+        rewrite_all_wins(env)
+        # rewrite = True
     # ======================= LINE NUMBERS =======================
     elif fce == SHOW_OR_HIDE_LINE_NUMBERS:
         if env.line_numbers:
@@ -210,7 +217,8 @@ def run_function(stdscr, env, fce, key):
                 str_text = options[char_key]
                 note_row, note_col = win.cursor.row, win.cursor.col - win.begin_x
                 env.report.add_note(note_row, note_col, str_text)
-        rewrite = True
+        rewrite_all_wins(env)
+        # rewrite = True
     # ======================= NOTES JUMP =======================
     elif fce == GO_TO_PREV_NOTE:
         if env.note_highlight:
@@ -327,7 +335,8 @@ def run_function(stdscr, env, fce, key):
                 env.specific_line_highlight = None
                 if text is not None:
                     env.report.add_note(note_row, note_col, ''.join(text))
-                rewrite = True
+                rewrite_all_wins(env)
+                # rewrite = True
             elif fce == ADD_TYPICAL_NOTE:
                 options = env.get_typical_notes_dict()
                 char_key = chr(key)
@@ -335,7 +344,9 @@ def run_function(stdscr, env, fce, key):
                     str_text = options[char_key]
                     note_row, note_col = win.cursor.row, win.cursor.col - win.begin_x
                     env.report.add_note(note_row, note_col, str_text)
-                rewrite = True
+                rewrite_all_wins(env)
+                # rewrite = True
+
     env.update_win_for_current_mode(win)
     return env, rewrite, False
 
