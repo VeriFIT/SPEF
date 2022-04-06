@@ -109,7 +109,7 @@ def create_new_test(proj_dir, test_name=None):
         if not os.path.exists(tests_dir):
             os.mkdir(tests_dir)
             with open(scoring_file, 'w+'): pass # create scoring file
-            with open(testsuite_file, 'w+'): pass # create testsuite file
+            create_test_suite(testsuite_file) # create testsuite file
 
 
         # create subdir in tests dir for new test --> TODO: define "test_dir_base" and "i"
@@ -129,7 +129,7 @@ def create_new_test(proj_dir, test_name=None):
         with open(os.path.join(new_test_dir, TEST_FILE), 'w+') as f:
             f.write("#!/bin/bash\n")
             f.write("# ***** write test here *****\n")
-            f.write("# press F1 to see all available functions and variables you can use")
+            f.write("# press Fx to see all available functions and variables you can use")
 
         # set default scoring for new test
         with open(scoring_file, 'a+') as f:

@@ -943,7 +943,7 @@ def show_menu(screen, win, menu_options, max_rows, max_cols, env, color=None, ti
                     coloring = curses.A_NORMAL
 
                 screen.addstr(row+1, 1, str(row+win.row_shift), curses.color_pair(COL_HELP))
-                screen.addstr(row+1, 1+shift, str(option[:max_cols-1]), coloring)
+                screen.addstr(row+1, 1+shift, str(option[:max_cols-(1+shift)]), coloring)
                 row += 1
         else:
             screen.addstr(row+1, 1, "* There is no option to select from menu *", curses.A_NORMAL | curses.A_BOLD)

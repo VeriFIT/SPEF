@@ -86,6 +86,7 @@ def file_viewing(stdscr, env):
 
     env.buffer = buffer
     env.report = report
+    rewrite_all_wins(env)
     rewrite = True
 
     while True:

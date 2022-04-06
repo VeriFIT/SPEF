@@ -321,6 +321,7 @@ def run_menu_function(stdscr, env, fce, key):
         idx = win.cursor.row
         dirs_and_files = env.cwd.get_all_items()
         generate_code_review(env, os.path.join(env.cwd.path, dirs_and_files[idx]))
+        env.cwd = get_directory_content(env)
     elif fce == GEN_AUTO_REPORT: # on solution dir
         pass
     # ======================= ADD NOTES TO REPORT =======================

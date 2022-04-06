@@ -57,14 +57,20 @@ def get_path_relative_to_solution_dir(dest_path):
 
 def generate_code_review(env, dir_path=None):
     # check if cwd is project solution dir
-    solution_dir = None
+    dir_path = dir_path if os.path.isdir(dir_path) else os.path.dirname(dir_path)
     if dir_path is None:
         dir_path = env.cwd.path
-    solution_dir = is_solution_dir(env, dir_path)
-    if solution_dir is None:
-        log("current directory is not project solution (sub)directory")
+    
+    if env.cwd.proj:
+        if not is_in_solution_dir(env.cwd.proj.solution_id, dir_path):
+            log("generate code review | given path is not solution dir")
+            return    
+    else:
+        log("generate code review | current directory is not project (sub)directory")
+        return
 
     # create dir for reports if not exists
+    solution_dir = get_root_solution_dir(env.cwd.proj.solution_id, dir_path)
     report_dir = os.path.join(solution_dir, REPORT_DIR)
     if not os.path.exists(report_dir):
         os.makedirs(report_dir)
@@ -88,7 +94,8 @@ def generate_code_review(env, dir_path=None):
                         code_review.append(f"{file_name}")
                     code_review.append(str(note.text)+'\n')
     except Exception as err:
-        log("get report files | "+str(err)+" | "+str(traceback.format_exc()))
+        log("gen code review | get report files | "+str(err)+" | "+str(traceback.format_exc()))
+        return
 
     # save code review to file
     code_review_file = os.path.join(report_dir, "code_review")
