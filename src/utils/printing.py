@@ -24,6 +24,9 @@ RELOAD_FILE_WITHOUT_SAVING = """WARNING: Reload file will discard changes.\n\
     Press {} to reload file and discard all changes.\n\
     Press any other key to continue editing your file."""
 
+EMPTY_PATH_FILTER_MESSAGE = "add path filter... ex: test1/unit "
+EMPTY_CONTENT_FILTER_MESSAGE = "add content filter... ex: def test1 "
+EMPTY_TAG_FILTER_MESSAGE = "add tag filter... ex: plagiat(^[0-5]$) "
 
 
 def refresh_main_screens(env):
@@ -141,7 +144,8 @@ def print_help(screen, max_cols, max_rows, env, custom_help=None):
             actions = {
             "F1": "show this user help",
             "F8": "delete/remove all filters",
-            "ESC, F10": "exit filter management",
+            "F10": "exit program",
+            "ESC": "exit filter management",
             "Arrows": "move cursor in user input",
             "Delete, Backspace": "delete symbol in user input",
             "Ascii character": "insert symbol in user input",
@@ -213,7 +217,8 @@ def print_help(screen, max_cols, max_rows, env, custom_help=None):
             "F5": "go to current note in file",
             "F6": "save note as typical",
             "F8": "delete current note",
-            "F10": "exit note management",
+            "F10": "exit program",
+            "ESC": "exit note management",
             "TAB": "change focus to file view or edit",
             "Arrows": "brows between notes"}
         else:

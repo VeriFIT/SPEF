@@ -18,8 +18,17 @@
 #   * printing.py -- add this function to `print_help` and (optional) to `print_hint` 
 
 # file functions
-file_functions:
+general:
+  change_focus: 'TAB'
+  exit_program: 'F10'
   show_help: 'F1'
+  cursor_up: 'UP'
+  cursor_down: 'DOWN'
+  cursor_left: 'LEFT'
+  cursor_right: 'RIGHT'
+  backspace: 'BACKSPACE'
+  delete: 'DELETE'
+file_functions:
   save_file: 'F2'
   show_or_hide_tags: 'F3'
   set_edit_file_mode: 'F4'
@@ -28,19 +37,11 @@ file_functions:
   open_note_management: 'F7'
   reload_file_from_last_save: 'F8'
   show_typical_notes: 'F9'
-  exit_program: 'F10'
   set_manage_file_mode: 'ESC'
-  change_focus: 'TAB'
-  cursor_up: 'UP'
-  cursor_down: 'DOWN'
-  cursor_left: 'LEFT'
-  cursor_right: 'RIGHT'
   go_to_prev_note: 'CTRL+UP'
   go_to_next_note: 'CTRL+DOWN'
   reload_original_buff: 'CTRL+L'
 edit_file_functions:
-  delete: 'DELETE'
-  backspace: 'BACKSPACE'
   print_new_line: 'ENTER'
   print_char: 'ASCII'
 manage_file_functions:
@@ -49,13 +50,10 @@ manage_file_functions:
   add_typical_note: ['1','2','3','4','5','6','7','8','9','A..Z']
 # brows functions
 brows_functions:
-  show_help: 'F1'
   open_menu: 'F2'
   quick_view_on_off: 'F3'
   open_file: 'F4'
   delete_file: 'F8'
-  exit_program: 'F10'
-  change_focus: 'TAB'
   filter: 'BACKSLASH'
   cursor_up: 'UP'
   cursor_down: 'DOWN'
@@ -63,19 +61,15 @@ brows_functions:
   cursor_right: 'RIGHT'
 # tags functions
 tags_functions:
-  show_help: 'F1'
   edit_tag: 'F2'
   add_tag: 'F3'
   open_tag_file: 'F4'
   delete_tag: 'F8'
-  exit_program: 'F10'
-  change_focus: 'TAB'
   filter: 'BACKSLASH'
   cursor_up: 'UP'
   cursor_down: 'DOWN'
 # notes functions
 notes_functions:
-  show_help: 'F1'
   edit_note: 'F2'
   add_custom_note: '0' # 'F3'
   add_typical_note: 'F9' # 'F4'
@@ -83,44 +77,22 @@ notes_functions:
   go_to_note: 'F5'
   save_as_typical_note: 'F6'
   delete_note: 'F8'
-  exit_program: 'F10'
   exit_notes: 'ESC'
-  change_focus: 'TAB'
-  cursor_up: 'UP'
-  cursor_down: 'DOWN'
 # filter functions
 filter_functions:
-  show_help: 'F1'
   remove_filter: 'F8'
-  exit_program: 'F10'
   exit_filter: 'ESC'
-  cursor_up: 'UP'
-  cursor_down: 'DOWN'
-  cursor_left: 'LEFT'
-  cursor_right: 'RIGHT'
-  delete: 'DELETE'
-  backspace: 'BACKSPACE'
   print_char: 'ASCII'
   save_filter: 'ENTER'
 # menu functions
 menu_functions:
-  exit_program: 'F10'
   exit_menu: 'ESC'
-  cursor_up: 'UP'
-  cursor_down: 'DOWN'
   save_option: 'ENTER'
   move_left: 'CTRL+LEFT'
   move_right: 'CTRL+RIGHT'
 # user input functions
 user_input_functions:
-  exit_program: 'F10'
   exit_user_input: 'ESC'
-  cursor_up: 'UP'
-  cursor_down: 'DOWN'
-  cursor_left: 'LEFT'
-  cursor_right: 'RIGHT'
-  delete: 'DELETE'
-  backspace: 'BACKSPACE'
   save_input: 'ENTER'
   print_char: 'ASCII'
   move_left: 'CTRL+LEFT'

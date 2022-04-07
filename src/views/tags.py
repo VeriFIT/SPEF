@@ -63,12 +63,12 @@ def run_function(stdscr, env, fce, key):
 
     # ======================= EXIT =======================
     if fce == EXIT_PROGRAM:
-        env.tags.save_to_file()
+        save_tags_to_file(env.tags)
         env.set_exit_mode()
         return env, True
     # ======================= FOCUS =======================
     elif fce == CHANGE_FOCUS:
-        env.tags.save_to_file()
+        save_tags_to_file(env.tags)
         env.switch_to_next_mode()
         return env, True
     # ======================= RESIZE =======================
@@ -113,7 +113,7 @@ def run_function(stdscr, env, fce, key):
                     # add new tag
                     tag_name, *args = tag_parts
                     env.tags.set_tag(tag_name, args)
-                    env.tags.save_to_file()
+                    save_tags_to_file(env.tags)
     # ======================= ADD TAG =======================
     elif fce == ADD_TAG:
         title = "Enter new tag in format: tag_name param1 param2 ..."
@@ -129,14 +129,14 @@ def run_function(stdscr, env, fce, key):
             else:
                 tag_name, *args = tag_parts
                 env.tags.set_tag(tag_name, args)
-                env.tags.save_to_file()
+                save_tags_to_file(env.tags)
     # ======================= OPEN FILE TAG =======================
     elif fce == OPEN_TAG_FILE:
         pass
     # ======================= DELETE TAG =======================
     elif fce == DELETE_TAG:
         env.tags.remove_tag_by_idx(win.cursor.row)
-        env.tags.save_to_file()
+        save_tags_to_file(env.tags)
         win.up(env.tags, use_restrictions=False)
     # ======================= FILTER =======================
     elif fce == FILTER:

@@ -44,6 +44,7 @@ class Control():
 
     def set_file_functions(self, control):
         file_functions = control['file_functions']
+        file_functions.update(control['general'])
         edit_file_functions = control['edit_file_functions']
         manage_file_functions = control['manage_file_functions']
 
@@ -85,6 +86,7 @@ class Control():
 
     def set_brows_functions(self, control):
         brows_functions = control['brows_functions']
+        brows_functions.update(control['general'])
         keys = {}
         for str_fce, key in brows_functions.items():
             fce = map_brows_function(str_fce)
@@ -98,6 +100,7 @@ class Control():
 
     def set_tags_functions(self, control):
         tags_functions = control['tags_functions']
+        tags_functions.update(control['general'])
         keys = {}
         for str_fce, key in tags_functions.items():
             fce = map_tags_function(str_fce)
@@ -111,6 +114,7 @@ class Control():
 
     def set_notes_functions(self, control):
         notes_functions = control['notes_functions']
+        notes_functions.update(control['general'])
         keys = {}
         for str_fce, key in notes_functions.items():
             fce = map_notes_function(str_fce)
@@ -124,6 +128,7 @@ class Control():
 
     def set_filter_functions(self, control):
         filter_functions = control['filter_functions']
+        filter_functions.update(control['general'])
         keys = {}
         for str_fce, key in filter_functions.items():
             fce = map_filter_function(str_fce)
@@ -137,6 +142,7 @@ class Control():
 
     def set_menu_functions(self, control):
         menu_functions = control['menu_functions']
+        menu_functions.update(control['general'])
         keys = {}
         for str_fce, key in menu_functions.items():
             fce = map_menu_function(str_fce)
@@ -150,6 +156,7 @@ class Control():
 
     def set_user_input_functions(self, control):
         user_input_functions = control['user_input_functions']
+        user_input_functions.update(control['general'])
         keys = {}
         for str_fce, key in user_input_functions.items():
             fce = map_user_input_function(str_fce)

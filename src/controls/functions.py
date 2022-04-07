@@ -321,6 +321,7 @@ def brows_menu_functions():
     }
 
 
+# def get_menu_functions(dir_stack, in_proj_dir=False, in_solution_dir=False, is_test_dir=False):
 def get_menu_functions(in_proj_dir=False, in_solution_dir=False, is_test_dir=False):
 
     basic = {

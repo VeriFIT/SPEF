@@ -119,14 +119,156 @@ class Project:
         self.solution_test_quick_view = "stdout"
 
 
+    """
+    solution info = informacie ktore sa zobrazia pre xlogin00 dir
+    * informacie sa zarovnaju vpravo
+    * informacie su oddelene medzerou
+    * ak informacia nematchne ani jeden predikat -- nema sa zobrazit, zostane namiesto nej prazdne miesto
+
+    * identifier = id informacie (int)
+                -- urcuje poradie v akom sa informacie zobrazuju zprava
+                -- ak sa do okna nezmestia vsetky info, ako prve sa schovaju tie s najvacsim identifier
+    * visualization = ako sa ma informacia zobrazit
+                -- idealne pouzit len jeden znak
+                -- cim menej miesta to zaberie, tym viac roznych info viem zobrazit
+                -- mozno pouzit aj priamo hodnotu parametra nejakeho tagu --- POZOR !!!
+                    -- mozu sa pouzivat len hodnoty z jedno-parametrovych tagov
+                    -- musi byt dodrzany striktny format zadavania: param FROM #tag_name(param)
+                    -- napr: datetime FROM #last_testing(datetime)
+                    -- napr: body FROM #scoring(body)
+                    -- zobrazenie hodnoty mozu byt rozne pre kazde riesenie
+                        -- to moze viest k tomu ze sa zobrazovane informacie rozsynchronizuju
+                        -- vizualne to teda nemusi vyzerat dobre (ked sa ostatne info posunu lebo je tento parameter dlhy)
+                        -- odporuca sa preto definovat hodnotu length (vid dalej)
+    * length = (optional) urcuje maximalnu dlzku informacie pre vizualizaciu
+                -- tato hodnota nemusi byt definovana
+                -- je vhodne definovat ak sa pri vizualizacii pouziva parameter tagu (hodnota ktora moze byt premenna pre rozne riesenia)
+                -- napr. ak viem ze vizualizujem celkove skore riesenia
+                    -- viem ze nebude viac ako 100, teda viem ze bude max dvojciferne
+                    -- chcem ho teda zarovnat na dva znaky --> length=2
+                    -- ak pre dane riesenie nenajdem #scoring tak bude namiesto cisla zobrazena medzera o velkosti 2
+    * description = strucny popis informacie
+                -- lubovolny retazec (idealne nie moc dlhy)
+                -- zobrazi sa v nahlade informacii (po zadani "show details about project solution informations" v menu)
+    * predicates = zoznam predikatov
+                -- urcuju za akych podniemok sa informacia zobrazi a s akou farbou
+                -- na zobrazenie informacie sa musi aspon jedna podniemka z predikatov [...] vyhodnotit ako True
+                -- ak su splnene viacere podmienky predikatov, pouzije sa farba z prveho, ktory sa matchne
+                * predicate = podmienka zobrazenia informacie
+                        -- pracuje s tagmi (funguje rovnako ako filter podla tagov)
+                        -- u tagov sa skuma:
+                            -- existencia = odkazuje na vsoebecnu existenciu tagu bez ohladu na parameter,  napr: plag
+                            -- zhoda = odkazuje na zhodu tagu aj parametru podla regex,                     napr: scoring(^[0-5])
+                            -- porovnanie = odkazuje na porovnanie tagu s niecim,                           napr: body FROM #scoring(body) > 0
+                * color = farba zobrazenia informacie
+                        -- ak sa podmienka v danom predikate vyhodnoti na True
+                        -- potom sa pouzije tato definovana farba na vyzobrazenie informacie
+                        -- ak farba nie je definovana, pouzije sa Normal (biela)
+                        -- farba sa zadava pomocou
+                                ??? preddefinovanych hodnot: white, red, green, blue  (gray, cyan, yellow, orange, pink)
+                                ??? GRB hodnot
+                                ??? #hex hodnot
+    -- tagy mozno pouzit u visualization a predicate
+    -- ak ma nejake info rovnaky indentifier, porovnaju sa jeho predikaty...
+        -- ak je splneny predikat len jednej z info --> zobrazi sa
+        -- ak nie je splneny predikat ziadnej       --> nezobrazi sa ziadna
+        -- ak je splneny predikat oboch             --> zobrazi sa prva v poradi v zozname
+
+    POSTUP PRI ZOBRAZOVANI:
+    1. get solution_info from proj conf
+    2. zoradir solution_info podla identifier (od najmensieho po najvacsie)
+    3. for info in solution_info -- citam zprava a pridavam zlava
+    a) if visualization je hodnota parametru tagu
+        1. zisti tuto hodnotu
+        2. ak taky tag neexistuje --> nezobrazuj info a chod dalej
+        3. pozri ci je definovana length
+        4. ak neni, by default daj length = 1 medzera
+    b) else
+        1. pozri ci je definovana length
+        2. ak neni, by default daj length = len(visualization)
+    c) for predicate in predicates -- resp while predicate not matches
+        1. spracuj predicate
+        2. vyhodnot predicate
+        3. ak matchol, konci a vrat farbu ak je definovana, inak vrat Normal farbu
+        4. ak nematchol pokracuj v cykle
+        5. ak uz nie su dalsie predicates --> nezobrazuj info a chod dalej
+    d) ak mas co zobrazit, pridaj zlava hodnotu v danej farbe + 1 medzeru
+    e) ak nemas co zobrazit, pridaj zlava medzeru*length + 1 medzeru
+
+    """
+
+    def get_solution_info(self):
+        # sorting by id: [... 3 2 1]
+
+        # default info
+        date = {
+            'identifier': 1,
+            'visualization': 'datetime FROM #last_testing(datetime)', # vypise sa ak existuje tag #last_testing
+            'length': 12, #10-12 15:30
+            'description': 'datetime of last test',
+            'predicates': []
+        }
+        status = {
+            'identifier': 2,
+            'visualization': 'T',
+            'description': 'was tested',
+            'predicates': [
+                {'predicate': 'testsuite_done', 'color': ''}
+            ]
+        }
+        group = {
+            'identifier': 3,
+            'visualization': 'G',
+            'desrcription': "is group project",
+            'predicates': [
+                {'predicate': 'group', 'color': ''}
+            ]
+        }
+        plagiat = {
+            'identifier': 4,
+            'visualization': '!',
+            'description': 'is plagiat',
+            'predicates': [
+                {'predicate': 'plag', 'color': 'red'}
+            ]
+        }
+
+        # test results
+        """
+        test1 = {
+            'identifier': 8,
+            'visualization': '.',
+            'description': 'test1 result',
+            'predicates': [
+                {'predicate': 'test1_fail', 'color': 'red'},
+                {'predicate': 'test1_ok', 'color': 'green'}
+            ]
+        }
+        test2 = {
+            'identifier': 7,
+            'visualization': '.',
+            'description': 'test2 result',
+            'predicates': [
+                {'predicate': 'test2_fail', 'color': 'red'},
+                {'predicate': 'test2_ok', 'color': 'green'}
+            ]
+        }
+        """
+
+        solution_info = [date, status, group, plagiat, test1, test2, test3, test4]
+        return solution_info
+
     def to_dict(self):
+        
+        solution_info = self.get_solution_info()
         return {
             'created': self.created,
             'tests_dir': self.tests_dir,
             'solution_id': self.solution_id,
             'solution_type_dir': self.solution_type_dir,
             'sut_required': self.sut_required,
-            'sut_ext_variants': self.sut_ext_variants
+            'sut_ext_variants': self.sut_ext_variants,
+            'solution_info': solution_info
         }
         #     'tests_dir': self.tests_dir
         #     'test_timeout': self.test_timeout
