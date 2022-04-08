@@ -54,22 +54,12 @@ class Directory:
 
     def get_proj_conf(self):
         try:
-            cur_dir = self.path
-            while True:
-                file_list = os.listdir(cur_dir)
-                parent_dir = os.path.dirname(cur_dir)
-                if PROJECT_FILE in file_list:
-                    proj_data = load_proj_from_conf_file(cur_dir)
-
-                    """ create Project obj from proj data """
-                    self.proj = Project(cur_dir)
-                    self.proj.set_values_from_conf(proj_data)
-                    return
-                else:
-                    if cur_dir == parent_dir:
-                        return
-                    else:
-                        cur_dir = parent_dir
+            proj_path = get_proj_path(self.path)
+            if proj_path is not None:
+                proj_data = load_proj_from_conf_file(proj_path)
+                # create Project obj from proj data
+                self.proj = Project(proj_path)
+                self.proj.set_values_from_conf(proj_data)
         except Exception as err:
             log("get proj conf | "+str(err)+" | "+str(traceback.format_exc()))
 
@@ -81,7 +71,6 @@ class Project:
         self.created = None
         self.tests_dir = None
         self.solution_id = None
-        self.solution_type_dir = True # True = solution id matches directory, False = solution id matches file
 
         self.sut_required = ""
         self.sut_ext_variants = []
@@ -97,7 +86,6 @@ class Project:
             self.created = data['created']
             self.tests_dir = data['tests_dir']
             self.solution_id = data['solution_id']
-            self.solution_type_dir = data['solution_type_dir']
             self.sut_required = data['sut_required']
             self.sut_ext_variants = data['sut_ext_variants']
         except:
@@ -108,7 +96,6 @@ class Project:
         self.created = datetime.date.today() # date of creation
         self.tests_dir = "tests"
         self.solution_id =  "x[a-z]{5}[0-9]{2}" # default solution identifier: xlogin00
-        self.solution_type_dir = True # default solution type is directory
         self.sut_required = "sut" # default file name of project solution is "sut" (system under test)
         self.sut_ext_variants = ["*sut*", "sut.sh", "sut.bash"]
 
@@ -213,7 +200,7 @@ class Project:
             'visualization': 'T',
             'description': 'was tested',
             'predicates': [
-                {'predicate': 'testsuite_done', 'color': ''}
+                {'predicate': 'testsuite_done', 'color': ''} # tag: testsuite_done sa prida na konci testsuite.sh
             ]
         }
         group = {
@@ -265,7 +252,6 @@ class Project:
             'created': self.created,
             'tests_dir': self.tests_dir,
             'solution_id': self.solution_id,
-            'solution_type_dir': self.solution_type_dir,
             'sut_required': self.sut_required,
             'sut_ext_variants': self.sut_ext_variants,
             'solution_info': solution_info
@@ -282,8 +268,8 @@ class Project:
 
 """ class for currently set filters (by path, file content or tag) """
 class Filter:
-    def __init__(self, project):
-        self.project = project # search for filtered files only in current project
+    def __init__(self, root):
+        self.root = root # root path
 
         self.path = None
         self.content = None
@@ -307,26 +293,26 @@ class Filter:
         self.tag = tag
 
 
-    """ search for files with match of all set filters in project directory """
+    """ search for files with match of all set filters in root directory """
     def find_files(self, env):
         matches = []
 
         if self.path:
-            matches = self.get_files_by_path(self.project, self.path)
+            matches = self.get_files_by_path(self.root, self.path)
 
         if self.content:
             # if some filtering has already been done, search for files only in its matches
-            # else search all files in project directory
-            files = matches if self.path else self.get_files_in_dir_recursive(self.project)
+            # else search all files in root directory
+            files = matches if self.path else self.get_files_in_dir_recursive(self.root)
             matches = self.get_files_by_content(files)
 
         if self.tag:
-            files = matches if (self.path or self.content) else self.get_files_in_dir_recursive(self.project)
-            matches = self.get_files_by_tag(files)
+            files = matches if (self.path or self.content) else self.get_files_in_dir_recursive(self.root)
+            matches = self.get_files_by_tag(env, files)
 
         filtered_files = []
         for file_path in matches:
-            file_name = os.path.relpath(file_path, self.project)
+            file_name = os.path.relpath(file_path, self.root)
             filtered_files.append(file_name)
         filtered_files.sort()
         self.files = filtered_files
@@ -407,9 +393,22 @@ class Filter:
     files: files to filter
     tag: tag to match, ex: "test1(0,.*,2,[0-5],5)"
     """
-    def get_files_by_tag(self, files):
+    def get_files_by_tag(self, env, files):
+        return files
+        # TODO !!!!!!!!!
+        # if len(files) > 10:
+        #     upozornenie_moze_to_dlho_trvat
+        #     chces_naozaj_pokracovat??
+        #     if no:
+        #         return files
+
+
+        if not is_in_project_dir(self.root):
+            log("filter by tag | there is no tags (bcs you are not in proj dir)")
+            return files
+
         try:
-            tag_matches = []
+            tag_matches = set()
 
             """ parse tag """
             tag_parsing_ok = False
@@ -432,7 +431,7 @@ class Filter:
                     tags = load_tags_from_file(file_path)
                     if tags and len(tags)>0:
                         if tags.find(tag_name, compare_args):
-                            tag_matches.append(file_path)
+                            tag_matches.add(file_path)
                 return tag_matches
         except Exception as err:
             log("Filter by tag | "+str(err)+" | "+str(traceback.format_exc()))

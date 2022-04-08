@@ -11,8 +11,8 @@ from utils.match import *
 from modules.directory import Project
 
 
-def add_tag_to_file(file_path, tag_name, tag_args):
-    tags = load_tags_from_file(file_path)
+def add_tag_to_solution(solution_dir, tag_name, tag_args):
+    tags = load_solution_tags(solution_dir)
     if tags is not None:
         tags.set_tag(tag_name, tag_args)
         save_tags_to_file(tags)
@@ -28,7 +28,7 @@ def get_path_relative_to_solution_dir(dest_path):
     while True:
         file_list = os.listdir(cur_dir)
         parent_dir = os.path.dirname(cur_dir)
-        if PROJECT_FILE in file_list:
+        if PROJ_CONF_FILE in file_list:
             proj_data = load_proj_from_conf_file(cur_dir)
             proj = Project(cur_dir)
             proj.set_values_from_conf(proj_data)

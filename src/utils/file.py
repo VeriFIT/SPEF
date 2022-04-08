@@ -74,7 +74,7 @@ def rename_solutions(src_dirs, required_name, extended_variants):
                     new_file = os.path.join(os.path.dirname(old_file), required_name)
                     shutil.copy(old_file, new_file)
                     renamed.append(solution)
-                    add_tag_to_file(old_file, "renamed", ["-1b"])
+                    add_tag_to_solution(solution, "renamed_sut", [f"{os.path.basename(old_file)}-->{os.path.basename(new_file)}"])
                 else:
                     fail.append(solution)
         except:

@@ -13,7 +13,3 @@ window:
   bottom_edge: 1
 editor:
   tab_size: 4
-messages:
-  empty_path_filter: "add path filter... ex: test1/unit "
-  empty_content_filter: "add content filter... ex: def test1 "
-  empty_tag_filter: "add tag filter... ex: plagiat(^[0-5]$) "

@@ -82,6 +82,7 @@ def print_hint(env):
     size = screen.getmaxyx()
 
     line_nums_switch = "hide" if env.line_numbers else "show"
+    cached_files = "hide" if env.show_cached_files else "show"
     # note_switch = "hide" if env.note_highlight else "show"
     tags_switch = "hide" if env.show_tags else "show"
     view_switch = "off" if env.quick_view else "on"
@@ -95,8 +96,8 @@ def print_hint(env):
     N_HELP = {"F1":"help", "F2":"edit", "F3":"create new", "F4":"insert from menu", 
                 "F5":"go to", "F6":f"{typical_note} typical", "F8":"delete", "F10":"exit"}
 
-    B_HELP = {"F1":"help", "F2":"menu", "F3":f"view {view_switch}","F4":"edit", "F5":"copy",
-                "F6":"rename", "F8":"delete", "F9":"filter", "F10":"exit"}
+    B_HELP = {"F1":"help", "F2":"menu", "F3":f"view {view_switch}","F4":"edit",
+                "F6":f"{cached_files} cached files", "F8":"delete", "F9":"filter", "F10":"exit"}
 
     E_HELP = {"F1":"help", "F2":"save", "F3":f"{tags_switch} tags", "F4":"edit file", "F5":f"{line_nums_switch} lines",
                 "F6":"note highlight", "F7":"note mgmt", "F8":"reload", "F9":"show typical notes", "ESC":"manage file", "F10":"exit"}
@@ -158,7 +159,6 @@ def print_help(screen, max_cols, max_rows, env, custom_help=None):
             "F3": "set quick view mode on/off",
             "F4": "opent file for edit",
             "F6": "show/hide cached files (tags, report)",
-            "F7": "show/hide project info",
             "F9": "set filter by path",
             "F10": "exit program",
             "TAB": "change focus to file view or edit",
@@ -379,9 +379,9 @@ def show_filter(screen, user_input, max_rows, max_cols, env):
     if not user_input.text:
         # show default message with example usage of filter
         empty_message = ""
-        if env.is_brows_mode(): empty_message = env.messages['empty_path_filter']
-        elif env.is_view_mode(): empty_message = env.messages['empty_content_filter']
-        elif env.is_tag_mode(): empty_message = env.messages['empty_tag_filter']
+        if env.is_brows_mode(): empty_message = EMPTY_PATH_FILTER_MESSAGE
+        elif env.is_view_mode(): empty_message = EMPTY_CONTENT_FILTER_MESSAGE
+        elif env.is_tag_mode(): empty_message = EMPTY_TAG_FILTER_MESSAGE
         empty_message += " "*(max_cols-1-len(empty_message))
         screen.addstr(max_rows, 1, empty_message[:max_cols-1], curses.color_pair(COL_FILTER) | curses.A_ITALIC)
     else:

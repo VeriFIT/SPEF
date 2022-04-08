@@ -38,6 +38,7 @@ QUICK_VIEW_ON_OFF = 100
 OPEN_FILE = 101
 OPEN_MENU = 102
 DELETE_FILE = 103
+SHOW_OR_HIDE_CACHED_FILES = 104
 
 """ tag management control """
 EDIT_TAG = 200
@@ -161,6 +162,7 @@ def map_brows_function(str_fce):
         'show_help': SHOW_HELP,
         'open_menu': OPEN_MENU,
         'quick_view_on_off': QUICK_VIEW_ON_OFF,
+        'show_or_hide_cached_files': SHOW_OR_HIDE_CACHED_FILES,
         'open_file': OPEN_FILE,
         'delete_file': DELETE_FILE,
         'change_focus': CHANGE_FOCUS,

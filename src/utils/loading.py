@@ -9,21 +9,8 @@ from modules.buffer import Buffer, Report, Tags, Note
 
 # from utils.printing import *
 from utils.logger import *
+from utils.match import *
 
-
-REPORT_SUFFIX = "_report.yaml"
-TAGS_SUFFIX = "_tags.yaml"
-CONFIG_FILE = "config.yaml"
-CONTROL_FILE = "control.yaml"
-TYPICAL_NOTES_FILE = "typical_notes.txt"
-PROJECT_FILE = "proj_conf.yaml"
-
-REPORT_DIR = "reports"
-TESTS_DIR = "tests"
-
-SCORING_FILE = "scoring"
-TEST_FILE = "dotest.sh"
-TESTSUITE_FILE = "testsuite.sh"
 
 
 """ **************** CONFIG **************** """
@@ -55,7 +42,7 @@ def load_control_from_file():
 """ **************** PROJECT **************** """
 def load_proj_from_conf_file(path):
     # load data from yaml file
-    project_file = os.path.join(path, PROJECT_FILE)
+    project_file = os.path.join(path, PROJ_CONF_FILE)
     try:
         with open(project_file, 'r') as f:
             data = yaml.safe_load(f)
@@ -65,7 +52,7 @@ def load_proj_from_conf_file(path):
         return None
 
 def save_proj_to_conf_file(path, data):
-    project_file = os.path.join(path, PROJECT_FILE)
+    project_file = os.path.join(path, PROJ_CONF_FILE)
     try:
         with open(project_file, 'w+', encoding='utf8') as f:
             yaml.dump(data, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
@@ -180,7 +167,8 @@ def get_tags_file_name(path):
     file_name = os.path.splitext(path)[:-1]
     return str(os.path.join(*file_name))+TAGS_SUFFIX
 
-def load_tags_from_file(path):
+# def load_tags_from_file(path):
+def tmp(path):
     tags_file = get_tags_file_name(path)
     tags = None
     try:
@@ -193,14 +181,112 @@ def load_tags_from_file(path):
         tags = Tags(tags_file, {})
     except Exception as err:
         log("load tags | "+str(err)+" | "+str(traceback.format_exc()))
-
     return tags
 
 
-def save_tags_to_file(tags):
-    with open(tags.path, 'w+', encoding='utf8') as f:
-        yaml.dump(tags.data, f, default_flow_style=False, allow_unicode=True)
 
+def load_solution_tags(solution_dir):
+    if os.path.exists(solution_dir):
+        tags_file = os.path.join(solution_dir, SOLUTION_TAGS)
+        return load_tags(tags_file)
+    else:
+        return None
+
+def load_tests_tags(solution_tests_dir):
+    if os.path.exists(solution_tests_dir):
+        tags_file = os.path.join(solution_tests_dir, TESTS_TAGS)
+        return load_tags(tags_file)
+    else:
+        return None
+
+def load_testsuite_tags(proj_tests_dir):
+    if os.path.exists(proj_tests_dir):
+        tags_file = os.path.join(proj_tests_dir, TESTSUITE_TAGS)
+        return load_tags(tags_file)
+    else:
+        return None
+
+def load_testcase_tags(proj_testcase_dir):
+    if os.path.exists(proj_tests_dir):
+        tags_file = os.path.join(proj_testcase_dir, TESTCASE_TAGS)
+        return load_tags(tags_file)
+    else:
+        return None
+
+
+def load_tags(tags_file):
+    if tags_file is None:
+        return None
+    tags = None
+    try:
+        with open(tags_file, 'r+') as f:
+            data = yaml.safe_load(f)
+        tags = Tags(tags_file, data)
+    except yaml.YAMLError as err:
+        tags = Tags(tags_file, {})
+    except FileNotFoundError:
+        tags = Tags(tags_file, {})
+    except Exception as err:
+        log("load tags | "+str(err)+" | "+str(traceback.format_exc()))
+    finally:
+        return tags
+
+
+
+def load_tags_from_file(path):
+    tags_file = get_tags_file(path)
+    if tags_file is None:
+        return None
+    return load_tags(tags_file)
+
+
+# in proj/solution/tests/   show "tests_tags.yaml"
+# in proj/solution/         show "solution_tags.yaml"
+# in proj/tests/testxx/     show "test_tags.yaml"
+# in proj/tests/            show "testsuite_tags.yaml"
+# else cant use tags
+def get_tags_file(path, proj=None):
+    if not os.path.exists(path):
+        log(f"get tags file | path '{path}' doesnt exists ")
+        return None
+
+    if proj is not None:
+        solution_id = proj.solution_id
+    else:
+        solution_id = None
+        proj_path = get_proj_path(path)
+        if proj_path is not None:
+            proj_data = load_proj_from_conf_file(proj_path)
+            if proj_data is not None:
+                solution_id = proj_data['solution_id']
+
+    if solution_id is not None:
+        tags_file = None
+        path_dir = path if os.path.isdir(path) else os.path.dirname(path)
+        solution_root_dir = get_root_solution_dir(solution_id, path)
+        tests_root_dir = get_root_tests_dir(path)
+        if solution_root_dir is not None:
+            if tests_root_dir is not None:
+                tags_file = os.path.join(tests_root_dir, TESTS_TAGS)
+            else:
+                tags_file = os.path.join(solution_root_dir, SOLUTION_TAGS)
+        elif tests_root_dir is not None:
+            testcase_dir = get_root_testcase_dir(path)
+            if testcase_dir is not None:
+                tags_file = os.path.join(testcase_dir, TESTCASE_TAGS)
+            else:
+                tags_file = os.path.join(tests_root_dir, TESTSUITE_TAGS)
+        return tags_file
+    else:
+        log(f"get tags file | path '{path}' is probably not in proj dir ")
+    return None
+
+
+
+def save_tags_to_file(tags):
+    if tags is not None:
+        with open(tags.path, 'w+', encoding='utf8') as f:
+            yaml.dump(tags.data, f, default_flow_style=False, allow_unicode=True)
 
 
 """ **************** BUFFER AND TAGS **************** """
@@ -208,7 +294,6 @@ def load_buffer_and_tags(env):
     """ try load file content to buffer """
     file_already_loaded = False
     if env.buffer and env.buffer.path == env.file_to_open:
-        file_already_loaded = True
         buffer = env.buffer
     else:
         try:
@@ -223,19 +308,23 @@ def load_buffer_and_tags(env):
             log("load file content ("+str(env.file_to_open)+") | "+str(err)+" | "+str(traceback.format_exc()))
             env.set_exit_mode()
             return env, None, False
-
-    """ try load file tags to env - only for view, tags will not change """
-    if (not env.tags or not file_already_loaded): # tag file wasnt loaded yet
-        tags = load_tags_from_file(env.file_to_open)
-        if tags is None:
-            env.set_exit_mode()
-            return env, None, False
-        else:
-            env.tags = tags
-
+    env = load_tags_if_changed(env)
     return env, buffer, True
-    # return env, buffer, succes
 
+
+def load_tags_if_changed(env, path=None):
+    if path is None:
+        path = env.file_to_open
+    if path is not None and env.cwd.proj is not None:
+        """ try load file tags to env """
+        tags_file = get_tags_file(path, env.cwd.proj)
+        if tags_file is not None:
+            if not env.tags:
+                env.tags = load_tags(tags_file)
+            else:
+                if env.tags.path != tags_file:
+                    env.tags = load_tags(tags_file)
+    return env
 
 
 """ **************** SAVE BUFFER **************** """

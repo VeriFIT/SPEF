@@ -71,11 +71,12 @@ def directory_browsing(stdscr, env):
                 if is_archive_file(selected_file):
                     pass
                 else:
+                    old_file_to_open = env.file_to_open
                     env.set_file_to_open(selected_file)
                     env, buffer, succ = load_buffer_and_tags(env) # try to load file
                     if not succ: # couldnt load buffer and/or fags for current file
-                        env.set_file_to_open(None)
-                        env.set_brows_mode() # contnue to browsing without showing file content (instead of exit mode)
+                        env.set_file_to_open(old_file_to_open)
+                        env.set_brows_mode() # continue to browsing without showing file content (instead of exit mode)
                     else:
                         """ set line numbers """
                         if env.line_numbers or env.start_with_line_numbers:
@@ -83,9 +84,11 @@ def directory_browsing(stdscr, env):
                             env.enable_line_numbers(buffer)
             # if its project directory, show project info and test results
             else:
+
                 if env.cwd.proj is not None: # current working directory is a project subdirectory (ex: "proj1/")
                     # env.cwd.proj
-                    selected_dir = dirs_and_files[idx]
+                    selected_dir =  os.path.join(env.cwd.path, dirs_and_files[idx])
+                    env = load_tags_if_changed(env, selected_dir)
                     # if proj.match_solution_id(selected_dir): # selected item is solution directory (ex: "proj1/xlogin00/")
                         # if proj.quick_view_file in selected_dir.files():
                         #    show_file_and_tags(proj.quick_view_file)
@@ -194,6 +197,10 @@ def run_function(stdscr, env, fce, key):
     # ======================= QUICK VIEW =======================
     elif fce == QUICK_VIEW_ON_OFF:
         env.quick_view = not env.quick_view
+    # ====================== CACHED FILES ======================
+    elif fce == SHOW_OR_HIDE_CACHED_FILES:
+        env.show_cached_files = not env.show_cached_files
+        env.cwd = get_directory_content(env)
     # ======================= OPEN FILE =======================
     elif fce == OPEN_FILE:
         idx = win.cursor.row
@@ -262,7 +269,7 @@ def run_menu_function(stdscr, env, fce, key):
     # ====================== EDIT PROJ CONFIG ======================
     elif fce == EDIT_PROJ_CONF:
         if env.cwd.proj is not None:
-            env.set_file_to_open(os.path.join(env.cwd.proj.path, PROJECT_FILE))
+            env.set_file_to_open(os.path.join(env.cwd.proj.path, PROJ_CONF_FILE))
             env.switch_to_next_mode()
             return env, True
     # ============================ EXPAND ===========================

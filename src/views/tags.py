@@ -22,18 +22,9 @@ def tag_management(stdscr, env):
     curses.curs_set(0)
     screen, win = env.get_screen_for_current_mode()
 
-    """ read tags from file """
-    if env.tags: # tag file was already loaded
-        tags = env.tags
-    else:
-        tags = load_tags_from_file(env.file_to_open)
-        # win.reset(0,0)
-        if tags is None:
-            log("unexpected exception while load tags from file")
-            env.set_exit_mode()
-            return env
-        else:
-            env.tags = tags
+    if env.tags is None: # there is no tags loaded
+        env.set_brows_mode()
+        return env
 
 
     while True:

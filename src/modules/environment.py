@@ -11,9 +11,6 @@ TAG = 3
 NOTES = 4
 EXIT = -1
 
-PROJ_DIR = "subjectA/projectA"
-# PROJ_DIR = "subject1/2021/project"
-
 
 """ current framework environment """
 class Environment:
@@ -35,41 +32,37 @@ class Environment:
         self.quick_view = conf['env']['quick_view']
         self.show_tags = conf['env']['show_tags']
         self.note_highlight = conf['env']['note_highlight']
-        self.show_cached_files = conf['env']['show_cached_files'] # tags and report
+        self.show_cached_files = conf['env']['show_cached_files'] # *_tags.yaml and *_report.yaml
         self.start_with_line_numbers = conf['env']['start_with_line_numbers']
 
         self.tab_size = conf['editor']['tab_size']
-        self.messages = conf['messages'] # {'empty_path_filter': txt, 'empty_tag_filter': txt, ... }
 
+        """ file view/edit """
         self.file_edit_mode = True # file edit or file management
-        self.show_menu = False
         self.line_numbers = None # None or str(number_of_lines_in_buffer)
-        self.note_management = False
         self.specific_line_highlight = None # (line_number, color)
 
-        self.file_to_open = None
-        self.cwd = None # Directory(path, dirs, files)
-        self.buffer = None # Buffer(path, lines)
-        self.tags = None # Tags(path, data)
+        """ notes """
+        self.note_management = False
+        self.typical_notes = [] # [notes] all saved typical notes (from all projects)
 
         """ filter """
         self.filter = None # Filter()
         self.filter_mode = False
 
+        """ menu and user input """
+        self.show_menu = False
         self.menu_mode = False
         self.user_input_mode = False
 
+        self.file_to_open = None
+        self.cwd = None # Directory(path, dirs, files)
+        self.buffer = None # Buffer(path, lines)
+        self.tags = None # Tags(path, data)
         self.report = None # Report(path, data)
 
-        """ reports """
-        self.code_review = None # Report(path, data) for current file
-        # self.other_notes = None # Report(path, data) for current project TODO
-        # self.auto_notes = None # Report(path, data) for current project TODO
-        # self.auto_report = None # TODO
-
-        self.typical_notes = [] # [notes] all saved typical notes (from all projects)
-
         self.control = Control()
+
 
     def set_user_control(self, contr):
         self.control.set_file_functions(contr)
@@ -79,12 +72,6 @@ class Environment:
         self.control.set_filter_functions(contr)
         self.control.set_menu_functions(contr)
         self.control.set_user_input_functions(contr)
-
-
-    # TODO: get current project dir
-    def get_project_path(self):
-        return os.path.join(HOME, PROJ_DIR)
-
 
 
     def set_file_to_open(self, file_to_open):
