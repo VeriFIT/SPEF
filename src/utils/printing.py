@@ -440,7 +440,7 @@ def show_directory_content(env):
                         space = 2 # refers to visual space between dir name and its info
                         stop = len(txt)+space
 
-                        x = max_cols-2
+                        x = max_cols
                         for item in infos:
                             info, col = item
                             x = x-len(info)-1
@@ -1016,7 +1016,6 @@ def get_info_for_solution(env, proj, solution_dir):
                 color = curses.A_NORMAL
                 if visualization is None:
                     match, visual = False, ' '*length
-                    # infos.append((identifier, ' '*length, color))
                 else:
                     predicate_matches = False if len(predicates)>0 else True
                     for predicate in predicates:
@@ -1025,13 +1024,8 @@ def get_info_for_solution(env, proj, solution_dir):
                         if predicate_matches:
                             color = col
                             break
-
                     match = predicate_matches
                     visual = visualization if match else ' '*length
-                    # if predicate_matches:
-                        # infos.append((identifier, visualization, color))
-                    # else:
-                        # infos.append((identifier, ' '*length, color))
 
                 if identifier not in infos_dict:
                     infos_dict[identifier] = (match, visual, color)
@@ -1041,13 +1035,9 @@ def get_info_for_solution(env, proj, solution_dir):
                     if not last_match: # if the last one failed to match, add second one
                         infos_dict[identifier] = (match, visual, color)
 
-
         for info in infos_dict:
             _, visual, color = infos_dict[info]
             result.append((visual, color))
-
-        # log(str(result))
-        # result = [('x', green), ('x', red), ('x', green), ('x', green), ('!!', red), ('G', blue), ('T', blue), ("8-4 15:30", normal)]
 
         return result
     except Exception as err:

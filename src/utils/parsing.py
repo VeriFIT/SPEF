@@ -43,58 +43,63 @@ def parse_solution_info_predicate(predicate, solution_dir):
     blue = curses.color_pair(HL_BLUE)
     normal = curses.A_NORMAL
 
-    match = False
+    total_match = True
     color = normal
 
     if 'predicate' in predicate:
-        cond = str(predicate['predicate']).strip()
+        conditions = predicate['predicate']
+        if len(conditions) > 0:
+            for cond in conditions:
+                cond = str(cond).strip()
+                match = False
+                # check if predicate condition refers to param from tag
+                # matches: param2 FROM #tag_name(param1, param2, param3) > compare_with
+                if re.match("^\w+ FROM #\w+\(\w+(,\s*\w+)*\)", cond):
+                    components = re.split('\)', cond)
 
-        # check if predicate condition refers to param from tag
-        # matches: param2 FROM #tag_name(param1, param2, param3) > compare_with
-        if re.match("^\w+ FROM #\w+\(\w+(,\s*\w+)*\)", cond):
-            components = re.split('\)', cond)
-
-            # log(str(components))
-            if len(components)==2:
-                param, comparison = components
-                param = get_param_from_tag(str(param)+')', solution_dir)
-                if param is not None:
-                    comparison = str(comparison).strip()
-                    if comparison == "":
-                        # there is no comparison so predicate refers to existance of tag parameter
-                        match = True
+                    # log(str(components))
+                    if len(components)==2:
+                        param, comparison = components
+                        param = get_param_from_tag(str(param)+')', solution_dir)
+                        if param is not None:
+                            comparison = str(comparison).strip()
+                            if comparison == "":
+                                # there is no comparison so predicate refers to existance of tag parameter
+                                match = True
+                            else:
+                                # compare given parameter from tag
+                                if re.match("[<>=]\s*\w+$", comparison):
+                                    op, value = comparison[0], str(comparison[1:]).strip()
+                                    if op == '<': match = param < value
+                                    elif op == '>': match = param > value
+                                    elif op == '=': match = param == value
+                                else:
+                                    log("invalid comparison part in info predicate (in proj conf)")
                     else:
-                        # compare given parameter from tag
-                        if re.match("[<>=]\s*\w+$", comparison):
-                            op, value = comparison[0], str(comparison[1:]).strip()
-                            if op == '<': match = param < value
-                            elif op == '>': match = param > value
-                            elif op == '=': match = param == value
-                        else:
-                            log("invalid comparison part in info predicate (in proj conf)")
-            else:
-                log("invalid info predicate (in proj conf)")
-        elif cond == '':
-            # condition is empty
-            match = True
-        else:
-            # predicate condition refers to existance of tag
-            succ, tag_name, tag_args = parse_tag(cond)
-            if succ and tag_name is not None:
-                # try to find given tag in solution tags (like in tag filter)
-                solution_tags = load_solution_tags(solution_dir)
-                if solution_tags is not None and len(solution_tags)>0:
-                    match = solution_tags.find(tag_name, tag_args)
+                        log("invalid info predicate (in proj conf)")
+                elif cond == '':
+                    # condition is empty
+                    match = True
+                else:
+                    # predicate condition refers to existance of tag
+                    succ, tag_name, tag_args = parse_tag(cond)
+                    if succ and tag_name is not None:
+                        # try to find given tag in solution tags (like in tag filter)
+                        solution_tags = load_solution_tags(solution_dir)
+                        if solution_tags is not None and len(solution_tags)>0:
+                            match = solution_tags.find(tag_name, tag_args)
 
-                # try to find given tag in tests tags (like in tag filter)
+                        # try to find given tag in tests tags (like in tag filter)
+                        if not match:
+                            solution_tests_dir = os.path.join(solution_dir, TESTS_DIR)
+                            tests_tags = load_tests_tags(solution_tests_dir)
+                            if tests_tags is not None and len(tests_tags)>0:
+                                match = tests_tags.find(tag_name, tag_args)
+                    else:
+                        log("invalid info predicate (in proj conf)")
                 if not match:
-                    solution_tests_dir = os.path.join(solution_dir, TESTS_DIR)
-                    tests_tags = load_tests_tags(solution_tests_dir)
-                    if tests_tags is not None and len(tests_tags)>0:
-                        match = tests_tags.find(tag_name, tag_args)
-            else:
-                log("invalid info predicate (in proj conf)")
-
+                    total_match = False
+                    break
 
     if 'color' in predicate:
         col = str(predicate['color']).lower()

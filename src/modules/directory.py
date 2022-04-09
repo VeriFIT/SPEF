@@ -135,14 +135,15 @@ class Project:
     * description = strucny popis informacie
                 -- lubovolny retazec (idealne nie moc dlhy)
                 -- zobrazi sa v nahlade informacii (po zadani "show details about project solution informations" v menu)
-    * predicates = zoznam predikatov
+    * predicates = zoznam predikatov vo forme predikat + farba
                 -- urcuju za akych podniemok sa informacia zobrazi a s akou farbou
                 -- na zobrazenie informacie sa musi aspon jedna podniemka z predikatov [...] vyhodnotit ako True
                 -- ak su splnene viacere podmienky predikatov, pouzije sa farba z prveho, ktory sa matchne
                 * predicate = podmienka zobrazenia informacie
-                        -- pracuje s tagmi (funguje rovnako ako filter podla tagov)
+                        -- pracuje s tagmi pripadne s ich parametrami
                         -- u tagov sa skuma:
-                            -- existencia   = odkazuje na vsoebecnu existenciu tagu bez ohladu na parameter,  napr: plag
+                            -- existencia   (funguje rovnako ako filter podla tagov)
+                                            = odkazuje na vsoebecnu existenciu tagu bez ohladu na parameter,  napr: plag
                                             = odkazuje na zhodu tagu aj parametru podla regex,                napr: scoring(^[0-5])
                             -- porovnanie = odkazuje na porovnanie tagu s niecim,                             napr: body FROM #scoring(body) > 0
                 * color = farba zobrazenia informacie
@@ -215,7 +216,7 @@ class Project:
             'visualization': 'T',
             'description': "was tested -- tag added at the end of testsuite.sh",
             'predicates': [
-                {'predicate': 'testsuite_done', 'color': ''} # tag: testsuite_done sa prida na konci testsuite.sh
+                {'predicate': ['testsuite_done'], 'color': ''} # tag: testsuite_done sa prida na konci testsuite.sh
             ]
         }
         group = {
@@ -223,7 +224,7 @@ class Project:
             'visualization': 'G',
             'desrcription': "is group project",
             'predicates': [
-                {'predicate': 'group', 'color': ''}
+                {'predicate': ['group'], 'color': ''}
             ]
         }
         plagiat = {
@@ -231,7 +232,7 @@ class Project:
             'visualization': '!',
             'description': "is plagiat",
             'predicates': [
-                {'predicate': 'plag', 'color': 'red'}
+                {'predicate': ['plag'], 'color': 'red'}
             ]
         }
 
@@ -242,8 +243,8 @@ class Project:
             'visualization': '.',
             'description': "test1 result",
             'predicates': [
-                {'predicate': 'test1_fail', 'color': 'red'},
-                {'predicate': 'test1_ok', 'color': 'green'}
+                {'predicate': ['test1_fail'], 'color': 'red'},
+                {'predicate': ['test1_ok'], 'color': 'green'}
             ]
         }
         test2 = {
@@ -251,8 +252,8 @@ class Project:
             'visualization': '.',
             'description': "test2 result",
             'predicates': [
-                {'predicate': 'test2_fail', 'color': 'red'},
-                {'predicate': 'test2_ok', 'color': 'green'}
+                {'predicate': ['test2_fail'], 'color': 'red'},
+                {'predicate': ['test2_ok'], 'color': 'green'}
             ]
         }
         """
