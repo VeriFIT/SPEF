@@ -207,7 +207,7 @@ class Project:
         date = {
             'identifier': 1,
             'visualization': "datetime FROM #last_testing(datetime)", # vypise sa ak existuje tag #last_testing
-            'length': 12, #10-12 15:30
+            'length': 12, #10.12.-15:30
             'description': "datetime of last test",
             'predicates': []
         }

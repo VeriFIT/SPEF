@@ -433,24 +433,23 @@ def show_directory_content(env):
                 txt = str(dir_name[:max_cols-2])+"/"
                 screen.addstr(i, 1, txt, coloring | curses.A_BOLD)
 
-                if solution_id is not None:
+                if env.show_solution_info and solution_id is not None:
                     if match_regex(solution_id, dir_name):
                         solution_dir = os.path.join(cwd.path, dir_name)
                         infos = get_info_for_solution(env, cwd.proj, solution_dir) # !! vykreslovat zprava
-                        space = 2 # refers to visual space between dir name and its info
-                        stop = len(txt)+space
-
-                        x = max_cols
-                        for item in infos:
-                            info, col = item
-                            x = x-len(info)-1
-                            if x <= stop:
-                                break
-                            color = (curses.color_pair(COL_SELECT) if i+win.row_shift == win.cursor.row+1 else col)
-                            screen.addstr(i, x, str(info)+' ', color)
-
-                        if x > stop:
-                            screen.addstr(i, len(txt), ' '*(x-stop+space), coloring)
+                        if infos:
+                            space = 2 # refers to visual space between dir name and its info
+                            stop = len(txt)+space
+                            x = max_cols
+                            for item in infos:
+                                info, col = item
+                                x = x-len(info)-1
+                                if x <= stop:
+                                    break
+                                color = (curses.color_pair(COL_SELECT) if i+win.row_shift == win.cursor.row+1 else col)
+                                screen.addstr(i, x, str(info)+' ', color)
+                            if x > stop: # empty space between dir name and its info
+                                screen.addstr(i, len(txt)+1, ' '*(x-stop-1+space), coloring)
 
                 i+=1
             for file_name in files:
@@ -999,10 +998,12 @@ def get_info_for_solution(env, proj, solution_dir):
     try:
         # get required solution info for project
         solution_info = proj.get_only_valid_solution_info()
-        solution_info = sorted(solution_info, key=lambda d: d['identifier'])
+        if not solution_info:
+            return []
 
         result = []
         infos_dict = {} # 'identifier' = (match, visualization, color)
+        solution_info = sorted(solution_info, key=lambda d: d['identifier'])
 
         for info in solution_info:
             identifier = info['identifier']

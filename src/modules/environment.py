@@ -31,6 +31,7 @@ class Environment:
         self.mode = conf['env']['mode']
         self.quick_view = conf['env']['quick_view']
         self.show_tags = conf['env']['show_tags']
+        self.show_solution_info = conf['env']['show_solution_info']
         self.note_highlight = conf['env']['note_highlight']
         self.show_cached_files = conf['env']['show_cached_files'] # *_tags.yaml and *_report.yaml
         self.start_with_line_numbers = conf['env']['start_with_line_numbers']

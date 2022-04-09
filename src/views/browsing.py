@@ -342,7 +342,7 @@ def run_menu_function(stdscr, env, fce, key):
         pass
     # ======================= SHOW INFO =======================
     elif fce == SHOW_OR_HIDE_PROJ_INFO:
-        pass
+        env.show_solution_info = not env.show_solution_info
     elif fce == SHOW_CODE_REVIEW: # on solution dir
         pass
     elif fce == SHOW_AUTO_REPORT: # on solution dir
