@@ -49,12 +49,12 @@ def rewrite_all_wins(env):
     """ print hint for user """
     print_hint(env)
 
-    if env.note_management:
+    if env.show_notes:
         show_notes(env)
     else:
         show_directory_content(env)
     show_file_content(env)
-    if not env.show_tags:
+    if env.show_tags:
         show_tags(env)
 
 def rewrite_brows(env, hint=True):
@@ -66,7 +66,7 @@ def rewrite_file(env, hint=True):
     if hint:
         print_hint(env)
     show_file_content(env)
-    if not env.show_tags:
+    if env.show_tags:
         show_tags(env)
 
 def rewrite_notes(env, hint=True):
@@ -166,36 +166,31 @@ def print_help(screen, max_cols, max_rows, env, custom_help=None):
             "Arrows": "brows between files and dirs"}
         elif env.is_view_mode():
             if env.show_tags:
-                mode = "FILE EDIT"
-                actions = {
-                "F1": "show this user help",
-                "F2": "save file changes",
-                "F3": "change to file view/tag mode",
-                "F4": "open note management",
-                "F5": "show/hide line numbers",
-                "F6": "show/hide note highlight",
-                "F8": "reload file content from last save",
-                "F9": "set filter by content",
-                "F10": "exit program",
-                "TAB": "change focus to directory browsing or note management",
-                "Arrows": "move cursor in file content",
-                "Delete, Backspace": "delete symbol in file on current cursor position",
-                "Ascii character": "insert symbol in file on current cursor position",
-                "Enter": "insert new line in file on current cursor position",
-                "CTRL + Up/Down": "jump to prev/next line with note in file",
-                "CTRL + L": "reload file content from original buffer",
-                "CTRL + R": "remove all notes on current line"}
+                tab_action = "change focus to tag management"
+            elif env.show_notes:
+                tab_action = "change focus to note management"
             else:
-                mode = "FILE VIEW"
-                actions = {
-                "F1": "show this user help",
-                "F4": "change to file edit mode",
-                "F5": "show/hide line numbers",
-                "F6": "show/hide note highlight",
-                "F9": "set filter by content",
-                "F10": "exit program",
-                "TAB": "change focus to tag management",
-                "Arrows": "move cursor in file content"}
+                tab_action = "change focus to directory browsing"
+
+            mode = "FILE EDIT"
+            actions = {
+            "F1": "show this user help",
+            "F2": "save file changes",
+            "F3": "change to file view/tag mode",
+            "F4": "open note management",
+            "F5": "show/hide line numbers",
+            "F6": "show/hide note highlight",
+            "F8": "reload file content from last save",
+            "F9": "set filter by content",
+            "F10": "exit program",
+            "TAB": f"{tab_action}",
+            "Arrows": "move cursor in file content",
+            "Delete, Backspace": "delete symbol in file on current cursor position",
+            "Ascii character": "insert symbol in file on current cursor position",
+            "Enter": "insert new line in file on current cursor position",
+            "CTRL + Up/Down": "jump to prev/next line with note in file",
+            "CTRL + L": "reload file content from original buffer",
+            "CTRL + R": "remove all notes on current line"}
         elif env.is_tag_mode():
             mode = "TAG MANAGEMENT"
             actions = {
@@ -400,7 +395,7 @@ def show_directory_content(env):
     max_cols = win.end_x - win.begin_x
     max_rows = win.end_y - win.begin_y - 1
 
-    cwd = Directory(env.filter.project, files=env.filter.files) if env.filter_not_empty() else env.cwd
+    cwd = Directory(env.filter.root, files=env.filter.files) if env.filter_not_empty() else env.cwd
     dirs, files = cwd.get_shifted_dirs_and_files(win.row_shift)
 
 
@@ -474,8 +469,8 @@ def show_directory_content(env):
 
 
 def rewrite_one_line_in_file(env, line_num):
-    screen = env.screens.right if env.show_tags else env.screens.right_up
-    win = env.windows.edit if env.show_tags else env.windows.view
+    screen = env.screens.right_up if env.show_tags else env.screens.right
+    win = env.windows.view if env.show_tags else env.windows.edit
     max_cols = win.end_x - win.begin_x
     max_rows = win.end_y - win.begin_y - 1
 
@@ -552,8 +547,8 @@ def rewrite_one_line_in_file(env, line_num):
 
 """ view file content """
 def show_file_content(env):
-    screen = env.screens.right if env.show_tags else env.screens.right_up
-    win = env.windows.edit if env.show_tags else env.windows.view
+    screen = env.screens.right_up if env.show_tags else env.screens.right
+    win = env.windows.view if env.show_tags else env.windows.edit
 
 
     max_cols = win.end_x - win.begin_x
@@ -1013,8 +1008,8 @@ def get_info_for_solution(env, proj, solution_dir):
 
             # parse visualization and length
             visualization, length = parse_solution_info_visualization(info, solution_dir)
-            log("visual: "+str(visualization))
-            log("length: "+str(length))
+            # log("visual: "+str(visualization))
+            # log("length: "+str(length))
 
             # check predicates and get color
             if length is not None:

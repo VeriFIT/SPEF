@@ -105,7 +105,7 @@ def run_function(stdscr, env, fce, key):
                 env.report.data[win.cursor.row].text = ''.join(text)
     # ================== CREATE NEW NOTE ==================
     elif fce == ADD_CUSTOM_NOTE:
-        file_win = env.windows.edit if env.show_tags else env.windows.view
+        file_win = env.windows.view if env.show_tags else env.windows.edit
         note_row, note_col = file_win.cursor.row, file_win.cursor.col - file_win.begin_x
 
         # define specific highlight for current line which is related to the new note
@@ -128,7 +128,7 @@ def run_function(stdscr, env, fce, key):
             env.report.add_note(note_row, note_col, ''.join(text))
     # ================ INSERT TYPICAL NOTE ================
     elif fce == ADD_TYPICAL_NOTE:
-        file_win = env.windows.edit if env.show_tags else env.windows.view
+        file_win = env.windows.view if env.show_tags else env.windows.edit
         note_row, note_col = file_win.cursor.row, file_win.cursor.col - file_win.begin_x
 
         # define specific highlight for current line which is related to the new note

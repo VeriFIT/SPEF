@@ -34,6 +34,7 @@ def filter_management(stdscr, screen, win, env):
             env.filter = Filter(env.cwd.proj.path)
         else:
             env.filter = Filter(env.cwd.path)
+    log("path: "+str(env.filter.root))
 
     old_filter_text = ''.join(user_input.text)
 

@@ -290,7 +290,28 @@ class Filter:
 
     """ add filter by tag """
     def add_tag(self, tag):
-        self.tag = tag
+        tag_parsing_ok, n, a = self.parse_tag(tag)
+        if not tag_parsing_ok:
+            log("invalid input for tag filter")
+        else:
+            log(f"name: {n}, args: {a}")
+            self.tag = tag
+
+    def parse_tag(self, tag):
+        """ parse tag """
+        tag_parsing_ok = False
+        tag_name = None
+        compare_args = None
+        if re.match('[\w\(\)]+', tag):
+            components = re.split('[()]', tag)
+            # log(components)
+            if len(components)>0:
+                # search only for tag name
+                tag_name = components[0]
+                tag_parsing_ok = True
+                if len(components)>1 and components[1]!="":
+                    compare_args = list(map(str, components[1].split(',')))
+        return tag_parsing_ok, tag_name, compare_args
 
 
     """ search for files with match of all set filters in root directory """
@@ -314,6 +335,8 @@ class Filter:
         for file_path in matches:
             file_name = os.path.relpath(file_path, self.root)
             filtered_files.append(file_name)
+
+        filtered_files = filter_intern_files(filtered_files)
         filtered_files.sort()
         self.files = filtered_files
 
@@ -394,7 +417,8 @@ class Filter:
     tag: tag to match, ex: "test1(0,.*,2,[0-5],5)"
     """
     def get_files_by_tag(self, env, files):
-        return files
+        # return files
+
         # TODO !!!!!!!!!
         # if len(files) > 10:
         #     upozornenie_moze_to_dlho_trvat
@@ -403,36 +427,22 @@ class Filter:
         #         return files
 
 
-        if not is_in_project_dir(self.root):
-            log("filter by tag | there is no tags (bcs you are not in proj dir)")
-            return files
+        # if not is_in_project_dir(self.root):
+        #     log("filter by tag | there is no tags (bcs you are not in proj dir)")
+        #     return files
 
         try:
+            succ, tag_name, compare_args = self.parse_tag(self.tag)
+            if not succ or tag_name is None:
+                return set()
+
             tag_matches = set()
-
-            """ parse tag """
-            tag_parsing_ok = False
-            if re.match('\w(...)', self.tag):
-                components = re.split('[()]', self.tag)
-                # log(components)
-                if len(components)>0:
-                    # search only for tag name
-                    tag_name = components[0]
-                    compare_args = None
-                    tag_parsing_ok = True
-                    if len(components)>1 and components[1]!="":
-                        compare_args = list(map(str, components[1].split(',')))
-
-            if not tag_parsing_ok:
-                log("invalid input for tag filter")
-                return files
-            else:
-                for file_path in files:
-                    tags = load_tags_from_file(file_path)
-                    if tags and len(tags)>0:
-                        if tags.find(tag_name, compare_args):
-                            tag_matches.add(file_path)
-                return tag_matches
+            for file_path in files:
+                tags = load_tags_from_file(file_path)
+                if tags and len(tags)>0:
+                    if tags.find(tag_name, compare_args):
+                        tag_matches.add(file_path)
+            return tag_matches
         except Exception as err:
             log("Filter by tag | "+str(err)+" | "+str(traceback.format_exc()))
             return files

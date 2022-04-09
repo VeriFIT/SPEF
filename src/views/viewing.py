@@ -36,7 +36,10 @@ def file_viewing(stdscr, env):
     screen, win = env.get_screen_for_current_mode()
 
     if not env.file_to_open or is_archive_file(env.file_to_open): # there is no file to open
-        env.set_brows_mode()
+        if env.show_tags and env.tags is not None:
+            env.set_tag_mode()
+        else:
+            env.set_brows_mode()
         return env
 
     """ try load file content and tags """

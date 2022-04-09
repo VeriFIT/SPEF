@@ -43,7 +43,7 @@ class Environment:
         self.specific_line_highlight = None # (line_number, color)
 
         """ notes """
-        self.note_management = False
+        self.show_notes = False
         self.typical_notes = [] # [notes] all saved typical notes (from all projects)
 
         """ filter """
@@ -78,9 +78,9 @@ class Environment:
         if self.file_to_open != file_to_open:
             self.file_to_open = file_to_open
             if self.show_tags:
-                self.windows.edit.reset()
-            else:
                 self.windows.view.reset()
+            else:
+                self.windows.edit.reset()
             self.windows.tag.reset(0,0)
             self.windows.notes.reset(0,0)
             self.report = None
@@ -90,9 +90,9 @@ class Environment:
             return self.screens.left, self.windows.brows
         if self.is_view_mode():
             if self.show_tags:
-                return self.screens.right, self.windows.edit
-            else:
                 return self.screens.right_up, self.windows.view
+            else:
+                return self.screens.right, self.windows.edit
         if self.is_tag_mode():
             return self.screens.right_down, self.windows.tag
         if self.is_notes_mode():
@@ -104,9 +104,9 @@ class Environment:
             self.windows.brows = win
         if self.is_view_mode():
             if self.show_tags:
-                self.windows.edit = win
-            else:
                 self.windows.view = win
+            else:
+                self.windows.edit = win
         if self.is_tag_mode():
             self.windows.tag = win
         if self.is_notes_mode():
@@ -173,9 +173,9 @@ class Environment:
 
     def update_viewing_data(self, win, buffer, report=None):
         if self.show_tags:
-            self.windows.edit = win
-        else:
             self.windows.view = win
+        else:
+            self.windows.edit = win
         self.buffer = buffer
         if report:
             self.report = report
@@ -199,10 +199,10 @@ class Environment:
 
     """ note management """
     def enable_note_management(self):
-        self.note_management = True
+        self.show_notes = True
 
     def disable_note_management(self):
-        self.note_management = False
+        self.show_notes = False
 
 
     """ line numbers """
@@ -242,14 +242,14 @@ class Environment:
             self.mode = VIEW # Brows -> View
         elif self.is_view_mode():
             if self.show_tags:
-                if self.note_management:
+                self.mode = TAG # View -> Tag
+            else:
+                if self.show_notes:
                     self.mode = NOTES # View -> Notes
                 else:
                     self.mode = BROWS # View -> Brows
-            else:
-                self.mode = TAG # View -> Tag
         elif self.is_tag_mode():
-            if self.note_management:
+            if self.show_notes:
                 self.mode = NOTES # Tag -> Notes
             else:
                 self.mode = BROWS # Tag -> Brows

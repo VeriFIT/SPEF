@@ -28,8 +28,8 @@ from utils.file import *
 
 def get_directory_content(env):
     if env.filter_not_empty():
-        cwd = Directory(env.filter.project, files=env.filter.files)
-        cwd.proj_conf_path = env.filter.project
+        cwd = Directory(env.filter.root, files=env.filter.files)
+        cwd.get_proj_conf()
         return cwd
 
     path = os.getcwd() # current working directory path
