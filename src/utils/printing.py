@@ -10,6 +10,7 @@ from utils.highlighter import parse_code
 from utils.loading import save_buffer, load_solution_tags, load_tests_tags
 from utils.coloring import *
 from utils.logger import *
+from utils.parsing import parse_solution_info_visualization, parse_solution_info_predicate
 from utils.match import match_regex, is_root_project_dir
 
 ESC = 27
@@ -435,17 +436,21 @@ def show_directory_content(env):
                 if solution_id is not None:
                     if match_regex(solution_id, dir_name):
                         solution_dir = os.path.join(cwd.path, dir_name)
-                        infos = get_info_for_solution(env, cwd.proj, solution_dir)
-                        all_infos = ' '.join(list(zip(*infos))[0])
-                        space = ' '*(max_cols-2-len(txt)-len(all_infos))
+                        infos = get_info_for_solution(env, cwd.proj, solution_dir) # !! vykreslovat zprava
+                        space = 2 # refers to visual space between dir name and its info
+                        stop = len(txt)+space
 
-                        screen.addstr(i, 1+len(txt), space, coloring)
-                        x = 1+len(txt)+len(space)
+                        x = max_cols-2
                         for item in infos:
-                            info, color = item
-                            coloring = (curses.color_pair(COL_SELECT) if i+win.row_shift == win.cursor.row+1 else color)
-                            screen.addstr(i, x, str(info)+' ', coloring)
-                            x += len(info)+1
+                            info, col = item
+                            x = x-len(info)-1
+                            if x <= stop:
+                                break
+                            color = (curses.color_pair(COL_SELECT) if i+win.row_shift == win.cursor.row+1 else col)
+                            screen.addstr(i, x, str(info)+' ', color)
+
+                        if x > stop:
+                            screen.addstr(i, len(txt), ' '*(x-stop+space), coloring)
 
                 i+=1
             for file_name in files:
@@ -996,11 +1001,8 @@ def get_info_for_solution(env, proj, solution_dir):
         solution_info = proj.get_only_valid_solution_info()
         solution_info = sorted(solution_info, key=lambda d: d['identifier'])
 
-        infos = []
-        green = curses.color_pair(HL_GREEN)
-        blue = curses.color_pair(HL_BLUE)
-        red = curses.color_pair(HL_RED)
-        normal = curses.A_NORMAL
+        result = []
+        infos_dict = {} # 'identifier' = (match, visualization, color)
 
         for info in solution_info:
             identifier = info['identifier']
@@ -1008,119 +1010,47 @@ def get_info_for_solution(env, proj, solution_dir):
 
             # parse visualization and length
             visualization, length = parse_solution_info_visualization(info, solution_dir)
-            # log("visual: "+str(visualization))
-            # log("length: "+str(length))
 
             # check predicates and get color
             if length is not None:
-                color = normal
+                color = curses.A_NORMAL
                 if visualization is None:
-                    infos.append((' '*length, color))
+                    match, visual = False, ' '*length
+                    # infos.append((identifier, ' '*length, color))
                 else:
                     predicate_matches = False if len(predicates)>0 else True
                     for predicate in predicates:
-                        pass
-                        # TODO
-                        # match first predicate
-                        # color = get_color_from_predicate
+                        # match first predicate and get its color
+                        predicate_matches, col = parse_solution_info_predicate(predicate, solution_dir)
+                        if predicate_matches:
+                            color = col
+                            break
 
-                    if predicate_matches:
-                        log("predicate matches")
-                        infos.append((visualization, color))
-                    else:
-                        infos.append((' '*length, color))
+                    match = predicate_matches
+                    visual = visualization if match else ' '*length
+                    # if predicate_matches:
+                        # infos.append((identifier, visualization, color))
+                    # else:
+                        # infos.append((identifier, ' '*length, color))
 
-        # infos = [('x', green), ('x', red), ('x', green), ('x', green), ('!!', red), ('G', blue), ('T', blue), ("8-4 15:30", normal)]
+                if identifier not in infos_dict:
+                    infos_dict[identifier] = (match, visual, color)
+                else:
+                    # if there is more than one info with this identifier
+                    last_match, _, _ = infos_dict[identifier]
+                    if not last_match: # if the last one failed to match, add second one
+                        infos_dict[identifier] = (match, visual, color)
 
-        return infos
+
+        for info in infos_dict:
+            _, visual, color = infos_dict[info]
+            result.append((visual, color))
+
+        # log(str(result))
+        # result = [('x', green), ('x', red), ('x', green), ('x', green), ('!!', red), ('G', blue), ('T', blue), ("8-4 15:30", normal)]
+
+        return result
     except Exception as err:
         log("get info for solution | "+str(err))
         return []
 
-
-"""
-    a) if visualization je hodnota parametru tagu
-        1. zisti tuto hodnotu
-        2. ak taky tag neexistuje --> nezobrazuj info a chod dalej
-        3. pozri ci je definovana length
-        4. ak neni, by default daj length = 1 medzera
-    b) else
-        1. pozri ci je definovana length
-        2. ak neni, by default daj length = len(visualization)
-"""
-
-"""
-returns visual + length
-visual:
-    * param (if visualization refers to param from tag)
-    * None (if visualization refers to param from tag that doesnt exist or has no param) --> skip this info
-    * string (if visualization is just string)
-length:
-    * length (if 'length' is defined)
-    * 1 (if visualization refers to param from tag and 'length' is not defined)
-    * len(string) (if visualization is just string and 'length' is not defined)
-"""
-def parse_solution_info_visualization(info, solution_dir):
-    visualization = info['visualization']
-
-    visual = None
-    length = None
-
-    # check if visualization refers to param from tag
-    # if re.match("^\w* FROM #\w*\(\w*\)$", visualization):
-    if re.match("^\w+ FROM #\w+\(\w+(,\s*\w+)*\)$", visualization):
-        req_param, tag  = re.split(' FROM #', visualization)
-        components = re.split('[()]', tag)
-        if len(components) == 3:
-            tag_name, tag_params, _ = components
-            tag_params = [tag.strip() for tag in tag_params.split(',')]
-
-            # check if tag exists
-            matched_tag_params = find_tag_for_solution(solution_dir, tag_name)
-            if matched_tag_params is not None:
-                # check if tag has required param
-                param_idx = 0
-                for idx, tag_param in enumerate(tag_params):
-                    if tag_param == req_param:
-                        param_idx = idx
-                
-                # log("tag_params: "+str(tag_params))
-                # log("req_param: "+str(req_param))
-                # log("param_idx: "+str(param_idx))
-                # log("matched_tag_params: "+str(matched_tag_params))
-                # log("len matched_tag_params: "+str(len(matched_tag_params)))
-
-                if len(matched_tag_params) > param_idx:
-                    visual = str(matched_tag_params[param_idx])
-
-        length = info['length'] if 'length' in info else 1
-    else:
-        visual = str(visualization)
-        length = info['length'] if 'length' in info else len(visual)
-
-    # log("visual: "+str(visual))
-    # log("length: "+str(length))
-
-    return visual, length
-
-
-
-def find_tag_for_solution(solution_dir, tag_name):
-    args = None
-
-    # try to find required tag in solution tags
-    solution_tags = load_solution_tags(solution_dir)
-    if solution_tags is not None and len(solution_tags)>0:
-        args = solution_tags.get_args_for_tag(tag_name)
-        if args is not None:
-            return list(args)
-
-    # try to find required tag in tests tags
-    solution_tests_dir = os.path.join(solution_dir, TESTS_DIR)
-    tests_tags = load_tests_tags(solution_tests_dir)
-    if tests_tags is not None:
-        args = tests_tags.get_args_for_tag(tag_name)
-        if args is not None:
-            return list(args)
-
-    return args

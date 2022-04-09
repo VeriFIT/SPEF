@@ -212,6 +212,8 @@ class Window:
         bottom = self.height - 2 - self.bottom_edge - (1 if filter_on else 0) + self.border + self.row_shift
         if (self.cursor.row == bottom) and (self.cursor.row - self.begin_y + self.bottom_edge < len(buffer)):
             self.row_shift += 1
+        elif (self.cursor.row == bottom + self.bottom_edge) and (self.cursor.row - self.begin_y < len(buffer)):
+            self.row_shift += 1
 
         # _, col = self.get_cursor_position()
         # width = self.end_x - self.begin_x

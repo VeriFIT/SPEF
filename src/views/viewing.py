@@ -137,13 +137,13 @@ def run_function(stdscr, env, fce, key):
     # ======================= FOCUS =======================
     elif fce == CHANGE_FOCUS:
         if env.show_tags:
+            env.switch_to_next_mode()
+            return env, rewrite, True
+        else:
             if file_changes_are_saved(stdscr, env):
                 env.switch_to_next_mode()
                 return env, rewrite, True
             rewrite = True
-        else:
-            env.switch_to_next_mode()
-            return env, rewrite, True
     # ======================= RESIZE =======================
     elif fce == RESIZE_WIN:
         env = resize_all(stdscr, env)

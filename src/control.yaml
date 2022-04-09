@@ -53,6 +53,7 @@ brows_functions:
   open_menu: 'F2'
   quick_view_on_off: 'F3'
   open_file: 'F4'
+  go_to_tags: 'F5'
   show_or_hide_cached_files: 'F6'
   delete_file: 'F8'
   filter: 'BACKSLASH'

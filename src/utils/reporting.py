@@ -31,7 +31,9 @@ def get_path_relative_to_solution_dir(dest_path):
         if PROJ_CONF_FILE in file_list:
             proj_data = load_proj_from_conf_file(cur_dir)
             proj = Project(cur_dir)
-            proj.set_values_from_conf(proj_data)
+            succ = proj.set_values_from_conf(proj_data)
+            if not succ:
+                proj = None
             break
         else:
             if cur_dir == parent_dir:

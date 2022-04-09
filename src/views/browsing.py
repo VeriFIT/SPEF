@@ -134,6 +134,10 @@ def run_function(stdscr, env, fce, key):
     elif fce == CHANGE_FOCUS:
         env.switch_to_next_mode()
         return env, True
+    # ==================== FOCUS TO TAGS ====================
+    elif fce == GO_TO_TAGS:
+        env.set_tag_mode()
+        return env, True
     # ======================= RESIZE =======================
     elif fce == RESIZE_WIN:
         env = resize_all(stdscr, env)

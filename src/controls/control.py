@@ -252,6 +252,8 @@ def get_function_for_key(env, key):
             return env.control.get_function(env, 'CTRL+N')
         elif ctrl_key == '^R':
             return env.control.get_function(env, 'CTRL+R')
+        elif ctrl_key == '^T':
+            return env.control.get_function(env, 'CTRL+T')
         # ===============>>> HERE YOU CAN ADD CTRL KEYS TO MATCH <<<===============
 
     return None

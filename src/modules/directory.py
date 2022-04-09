@@ -11,6 +11,7 @@ from modules.buffer import Tags, UserInput
 from utils.loading import *
 from utils.logger import *
 from utils.match import *
+from utils.parsing import parse_tag
 
 
 """ represents content of current working directory (cwd)"""
@@ -59,7 +60,9 @@ class Directory:
                 proj_data = load_proj_from_conf_file(proj_path)
                 # create Project obj from proj data
                 self.proj = Project(proj_path)
-                self.proj.set_values_from_conf(proj_data)
+                succ = self.proj.set_values_from_conf(proj_data)
+                if not succ:
+                    self.proj = None
         except Exception as err:
             log("get proj conf | "+str(err)+" | "+str(traceback.format_exc()))
 
@@ -85,8 +88,10 @@ class Project:
             self.sut_required = data['sut_required']
             self.sut_ext_variants = data['sut_ext_variants']
             self.solution_info = data['solution_info']
+            return True
         except:
             log("wrong data for proj")
+            return False
 
 
     def set_default_values(self):
@@ -137,9 +142,9 @@ class Project:
                 * predicate = podmienka zobrazenia informacie
                         -- pracuje s tagmi (funguje rovnako ako filter podla tagov)
                         -- u tagov sa skuma:
-                            -- existencia = odkazuje na vsoebecnu existenciu tagu bez ohladu na parameter,  napr: plag
-                            -- zhoda = odkazuje na zhodu tagu aj parametru podla regex,                     napr: scoring(^[0-5])
-                            -- porovnanie = odkazuje na porovnanie tagu s niecim,                           napr: body FROM #scoring(body) > 0
+                            -- existencia   = odkazuje na vsoebecnu existenciu tagu bez ohladu na parameter,  napr: plag
+                                            = odkazuje na zhodu tagu aj parametru podla regex,                napr: scoring(^[0-5])
+                            -- porovnanie = odkazuje na porovnanie tagu s niecim,                             napr: body FROM #scoring(body) > 0
                 * color = farba zobrazenia informacie
                         -- ak sa podmienka v danom predikate vyhodnoti na True
                         -- potom sa pouzije tato definovana farba na vyzobrazenie informacie
@@ -149,10 +154,12 @@ class Project:
                                 ??? GRB hodnot
                                 ??? #hex hodnot
     -- tagy mozno pouzit u visualization a predicate
-    -- ak ma nejake info rovnaky indentifier, porovnaju sa jeho predikaty...
-        -- ak je splneny predikat len jednej z info --> zobrazi sa
-        -- ak nie je splneny predikat ziadnej       --> nezobrazi sa ziadna
-        -- ak je splneny predikat oboch             --> zobrazi sa prva v poradi v zozname
+    -- ak ma nejake info rovnaky indentifier, porovnaju sa jeho predikaty... --> idealne sa tomuto vyhnut !!!
+        -- mozu s tym byt problemy ked je rozne dlha vizualizacia informacii s rovnakym identifikatorom
+            -- ak je splneny predikat niektorej z info  --> zobrazi sa info ktora sa prva matchne
+            -- ak nie je splneny predikat ziadnej       --> zobrazi sa prazdne miesto poslednej nematchnutej (jej length)
+            -- ak je splneny predikat viacerych         --> zobrazi sa info ktora je prva v poradi v zozname (prva ktora matchne)
+
 
     POSTUP PRI ZOBRAZOVANI:
     1. get solution_info from proj conf
@@ -290,28 +297,12 @@ class Filter:
 
     """ add filter by tag """
     def add_tag(self, tag):
-        tag_parsing_ok, n, a = self.parse_tag(tag)
+        tag_parsing_ok, n, a = parse_tag(tag)
         if not tag_parsing_ok:
             log("invalid input for tag filter")
         else:
             log(f"name: {n}, args: {a}")
             self.tag = tag
-
-    def parse_tag(self, tag):
-        """ parse tag """
-        tag_parsing_ok = False
-        tag_name = None
-        compare_args = None
-        if re.match('[\w\(\)]+', tag):
-            components = re.split('[()]', tag)
-            # log(components)
-            if len(components)>0:
-                # search only for tag name
-                tag_name = components[0]
-                tag_parsing_ok = True
-                if len(components)>1 and components[1]!="":
-                    compare_args = list(map(str, components[1].split(',')))
-        return tag_parsing_ok, tag_name, compare_args
 
 
     """ search for files with match of all set filters in root directory """
@@ -432,7 +423,7 @@ class Filter:
         #     return files
 
         try:
-            succ, tag_name, compare_args = self.parse_tag(self.tag)
+            succ, tag_name, compare_args = parse_tag(self.tag)
             if not succ or tag_name is None:
                 return set()
 
