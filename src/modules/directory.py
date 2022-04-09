@@ -69,7 +69,6 @@ class Project:
     def __init__(self, path):
         self.path = path
         self.created = None
-        self.tests_dir = None
         self.solution_id = None
 
         self.sut_required = ""
@@ -77,33 +76,27 @@ class Project:
 
         self.description = ""
         self.test_timeout = 0
-        self.solutions_dir = None
-        self.solution_quick_view = None
-        self.solution_test_quick_view = None
+        self.solution_info = []
 
     def set_values_from_conf(self, data):
         try:
             self.created = data['created']
-            self.tests_dir = data['tests_dir']
             self.solution_id = data['solution_id']
             self.sut_required = data['sut_required']
             self.sut_ext_variants = data['sut_ext_variants']
+            self.solution_info = data['solution_info']
         except:
             log("wrong data for proj")
 
 
     def set_default_values(self):
         self.created = datetime.date.today() # date of creation
-        self.tests_dir = "tests"
         self.solution_id =  "x[a-z]{5}[0-9]{2}" # default solution identifier: xlogin00
         self.sut_required = "sut" # default file name of project solution is "sut" (system under test)
         self.sut_ext_variants = ["*sut*", "sut.sh", "sut.bash"]
 
-
         self.test_timeout = 5
-        self.solutions_dir = "solutions"
-        self.solution_quick_view = "auto_report"
-        self.solution_test_quick_view = "stdout"
+        self.solution_info = self.get_solution_info()
 
 
     """
@@ -184,21 +177,36 @@ class Project:
 
     """
 
+    def get_only_valid_solution_info(self):
+        result = []
+
+        required_keys = ["identifier", "visualization", "predicates"]
+        supported_keys = required_keys.copy()
+        supported_keys.extend(["length", "description"])
+        for info in self.solution_info:
+            info_keys = list(info.keys())
+            all_required_in = all(required in info_keys for required in required_keys)
+            all_keys_supported = all(info in supported_keys for info in info_keys)
+            if all_required_in and all_keys_supported:
+                result.append(info)
+        return result
+
+
     def get_solution_info(self):
         # sorting by id: [... 3 2 1]
 
         # default info
         date = {
             'identifier': 1,
-            'visualization': 'datetime FROM #last_testing(datetime)', # vypise sa ak existuje tag #last_testing
+            'visualization': "datetime FROM #last_testing(datetime)", # vypise sa ak existuje tag #last_testing
             'length': 12, #10-12 15:30
-            'description': 'datetime of last test',
+            'description': "datetime of last test",
             'predicates': []
         }
         status = {
             'identifier': 2,
             'visualization': 'T',
-            'description': 'was tested',
+            'description': "was tested -- tag added at the end of testsuite.sh",
             'predicates': [
                 {'predicate': 'testsuite_done', 'color': ''} # tag: testsuite_done sa prida na konci testsuite.sh
             ]
@@ -214,7 +222,7 @@ class Project:
         plagiat = {
             'identifier': 4,
             'visualization': '!',
-            'description': 'is plagiat',
+            'description': "is plagiat",
             'predicates': [
                 {'predicate': 'plag', 'color': 'red'}
             ]
@@ -225,7 +233,7 @@ class Project:
         test1 = {
             'identifier': 8,
             'visualization': '.',
-            'description': 'test1 result',
+            'description': "test1 result",
             'predicates': [
                 {'predicate': 'test1_fail', 'color': 'red'},
                 {'predicate': 'test1_ok', 'color': 'green'}
@@ -234,7 +242,7 @@ class Project:
         test2 = {
             'identifier': 7,
             'visualization': '.',
-            'description': 'test2 result',
+            'description': "test2 result",
             'predicates': [
                 {'predicate': 'test2_fail', 'color': 'red'},
                 {'predicate': 'test2_ok', 'color': 'green'}
@@ -242,27 +250,19 @@ class Project:
         }
         """
 
-        solution_info = [date, status, group, plagiat, test1, test2, test3, test4]
+        solution_info = [date, status, group, plagiat]
+        # solution_info = [date, status, group, plagiat, test1, test2]
         return solution_info
 
     def to_dict(self):
-        
-        solution_info = self.get_solution_info()
         return {
             'created': self.created,
-            'tests_dir': self.tests_dir,
             'solution_id': self.solution_id,
             'sut_required': self.sut_required,
             'sut_ext_variants': self.sut_ext_variants,
-            'solution_info': solution_info
+            'solution_info': self.solution_info
         }
-        #     'tests_dir': self.tests_dir
         #     'test_timeout': self.test_timeout
-        #     'solutions_dir': self.solutions_dir
-        #     'solution_id': self.solution_id
-        #     'solution_quick_view': self.solution_quick_view
-        #     'solution_test_quick_view': self.solution_test_quick_view
-        # }
 
 
 

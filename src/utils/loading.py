@@ -163,28 +163,6 @@ def save_report_to_file(report):
 
 
 """ **************** TAGS **************** """
-def get_tags_file_name(path):
-    file_name = os.path.splitext(path)[:-1]
-    return str(os.path.join(*file_name))+TAGS_SUFFIX
-
-# def load_tags_from_file(path):
-def tmp(path):
-    tags_file = get_tags_file_name(path)
-    tags = None
-    try:
-        with open(tags_file, 'r') as f:
-            data = yaml.safe_load(f)
-        tags = Tags(tags_file, data)
-    except yaml.YAMLError as err:
-        tags = Tags(tags_file, {})
-    except FileNotFoundError:
-        tags = Tags(tags_file, {})
-    except Exception as err:
-        log("load tags | "+str(err)+" | "+str(traceback.format_exc()))
-    return tags
-
-
-
 def load_solution_tags(solution_dir):
     if os.path.exists(solution_dir):
         tags_file = os.path.join(solution_dir, SOLUTION_TAGS)
@@ -280,7 +258,6 @@ def get_tags_file(path, proj=None):
     else:
         log(f"get tags file | path '{path}' is probably not in proj dir ")
     return None
-
 
 
 def save_tags_to_file(tags):

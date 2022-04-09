@@ -43,6 +43,12 @@ class Tags:
     def set_tag(self, tag_name, args):
         self.data[tag_name] = [*args]
 
+    # return arguments for tag_name if exists (else returns None)
+    def get_args_for_tag(self, tag_name):
+        for key in self.data:
+            if re.search(tag_name, key):
+                return self.data[key]
+        return None
 
     def find(self, tag_name, args=None):
         for key in self.data:
