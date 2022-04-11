@@ -7,9 +7,14 @@ import json
 import yaml
 import os
 import re
+import io
 import sys
 import fnmatch
 import glob
+import time
+import threading
+import select
+import signal
 
 
 from views.browsing import get_directory_content, directory_browsing
@@ -32,40 +37,19 @@ from utils.printing import *
 from utils.logger import *
 
 
-
-""" hladanie cesty projektu v ktorom su odovzdane riesenia
-    TODO: 1
-    -v aktualnej ceste buffer.file_name sa bude hladat cesta suboru s projektom
-    -hlada sa od definovaneho HOME az kym nenajde xlogin00 subor
-    -xlogin00 sa najde podla regexu x[a-z][a-z][a-z][a-z][a-z][0-9][0-9]
-    -teda z cesty HOME/.../.../xlogin00/dir/file bude subor projektu .../...
-
-    TODO: 2
-    -kazdy projekt bude nejak reprezentovany
-    -nazvy/cesty projektovych suborov budu niekde ulozene
-    -prehlada sa zoznam projektov
-    -skontroluje sa ci aktualna cesta buffer.file_name ma prefix zhodny s niektorym projektom
-"""
-
+global bash_proc
 
 
 """
--spracovat to tak aby text obsahoval len jeden riadok (nesmie tam byt ziaden \n)
--text musi byt indenticky s lines
--idealne spravit lines ako pole objektov: text, style
+- set ncurses settings
+- returns env object with
+    * created screens and windwos for ncurese
+    * loaded config from file
+    * loaded controls from file
+    * loaded typical notes from file
 
-
--win zmensit o jeden riadok a dva stlpce
--prvy riadok vzdy skipnut a nechat ho na zobrazenie nazvu suboru
--nakreslit okolo win ramcek
 """
-
-
-
-""" ======================= START MAIN ========================= """
-def main(stdscr):
-    log("START")
-    stdscr.clear()
+def prepare_environment(stdscr):
     curses.set_escdelay(1)
 
     """ set coloring """
@@ -85,41 +69,58 @@ def main(stdscr):
     """ load config from file and create framework environment """
     config = load_config_from_file()
     if config is None:
-        exit(-1)
+        return None
     env = Environment(screens, windows, config)
 
     """ load control from file """
     control = load_control_from_file()
     if control is None:
-        exit(-1)
+        return None
     env.set_user_control(control)
-
 
     """ load saved typical notes from file """
     env.typical_notes = load_typical_notes_from_file()
 
+    """ get current files and dirs """
+    env.cwd = get_directory_content(env)
+    return env
+
+
+
+""" ======================= START MAIN ========================= """
+def main(stdscr):
+    global bash_proc
+    log("START")
+
+    """ prepare env from configuration files """
+    env = prepare_environment(stdscr)
+    if env is None:
+        bash_proc.stop()
+        exit(-1)
 
     """ show all main screens """
+    stdscr.clear()
     stdscr.erase()
     stdscr.refresh()
     refresh_main_screens(env)
 
-    """ get current files and dirs """
-    env.cwd = get_directory_content(env)
-
+    """ main loop """
     while True:
-
-        print_hint(env)
-        if env.is_exit_mode():
-            break
-        elif env.is_brows_mode():
-            env = directory_browsing(stdscr, env)
-        elif env.is_view_mode():
-            env = file_viewing(stdscr, env)
-        elif env.is_tag_mode():
-            env = tag_management(stdscr, env)
-        elif env.is_notes_mode():
-            env = notes_management(stdscr, env)
+        if env.bash_active:
+            env = executing_bash(stdscr, env)
+        else:
+            print_hint(env)
+            if env.is_exit_mode():
+                bash_proc.set_reader(False)
+                break
+            elif env.is_brows_mode():
+                env = directory_browsing(stdscr, env)
+            elif env.is_view_mode():
+                env = file_viewing(stdscr, env)
+            elif env.is_tag_mode():
+                env = tag_management(stdscr, env)
+            elif env.is_notes_mode():
+                env = notes_management(stdscr, env)
 
     """ save typical notes to file """
     save_typical_notes_to_file(env.typical_notes)
@@ -129,8 +130,90 @@ def main(stdscr):
 
 
 
-# TODO: cache all tags and reports to local files TAG_DIR and REPORT_DIR
+def executing_bash(stdscr, env):
+    global bash_proc 
 
+    # set bash as active
+    bash_proc.set_active(True)
+    curses.curs_set(1) # set cursor as visible
+
+    # rewrite screen with bash buffer
+    os.system("clear")
+    bash_proc.print_buff()
+
+    # set exit key from env (else CTRL+O by default (like in mc))
+    exit_key = env.bash_exit_key if env.bash_exit_key is not None else '0f'
+
+    # bash loop
+    while True:
+        c = sys.stdin.read(1)
+        hex_c = c.encode("utf-8").hex()
+
+        # exit bash
+        if hex_c == exit_key:
+            # set bash as inactive
+            bash_proc.set_active(False)
+            env.bash_active = False
+
+            # rewrite screen with ncurses
+            os.system("clear")
+            stdscr.clear()
+            stdscr.erase()
+            stdscr.refresh()
+            refresh_main_screens(env)
+            rewrite_all_wins(env)
+            return env
+        else:
+            os.write(bash_proc.fd, c.encode("utf-8"))
+
+
+
+class Bash_process():
+    def __init__(self, pid, fd):
+        self.pid = pid # pid for bash subprocess
+        self.fd = fd
+
+        self.buff_lock = threading.Lock()
+        self.buff = "" # bash buffer
+        self.active = False # bash is active
+        self.reader_run = True
+
+    def set_active(self, mode):
+        with self.buff_lock:
+            self.active = mode
+
+    def print_buff(self):
+        with self.buff_lock:
+            print(self.buff, end="", flush=True)
+
+    def set_reader(self, mode):
+        with self.buff_lock:
+            self.reader_run = mode
+
+    def async_reader(self):
+        while self.reader_run:
+            r, _, _ = select.select([self.fd], [], [], 1)
+            if self.fd in r:
+                # read from bash and save it to bash buffer
+                data = os.read(self.fd, 1024)
+                with self.buff_lock:
+                    self.buff += data.decode("utf-8")
+
+                    if self.active:
+                        # if bash is active print bash
+                        print(data.decode("utf-8"), end="", flush=True)
+
+    def stop(self):
+        self.set_reader(False)
+        os.system(f"kill {self.pid}") # os.kill(self.pid)
+
+    def signal_handler(self, sig, frame):
+        self.stop()
+        sys.exit(0)
+
+
+
+# TODO: cache all tags and reports to local files TAG_DIR and REPORT_DIR
 def preparation():
     """ clear log file """
     with open(LOG_FILE, 'w+'): pass
@@ -142,9 +225,36 @@ def preparation():
 
 
 if __name__ == "__main__":
-    preparation()
+    # clear log file
+    with open(LOG_FILE, 'w+'): pass
 
-    stdscr = curses.initscr()
-    stdscr.keypad(True) # enable read special keys
-    curses.wrapper(main)
-    curses.endwin()
+    # prepare bash subprocess
+    pid, fd = os.forkpty()
+    bash_proc = Bash_process(pid, fd)
+
+    # set signal handler
+    signal.signal(signal.SIGINT, bash_proc.signal_handler)
+    signal.signal(signal.SIGABRT, bash_proc.signal_handler)
+    signal.signal(signal.SIGHUP, bash_proc.signal_handler)
+    signal.signal(signal.SIGTERM, bash_proc.signal_handler)
+    # signal.signal(signal.SIGQUIT, bash_proc.signal_handler)
+
+    if pid == 0:
+        # ======= child =======
+        os.system("stdbuf -i0 -o0 -e0 bash") # bash without buffering stdin, stdout, stderr
+    else:
+        # ====== parent ======
+        # thread for reading bash output and save it to buffer
+        th = threading.Thread(target=bash_proc.async_reader)
+        th.start()
+
+        # run ncurses main function
+        stdscr = curses.initscr()
+        stdscr.keypad(True) # enable read special keys
+        curses.wrapper(main)
+        curses.endwin()
+
+        th.join()
+        bash_proc.set_reader(False)
+        os.system(f"kill {pid}")
+

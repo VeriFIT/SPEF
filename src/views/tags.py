@@ -57,6 +57,12 @@ def run_function(stdscr, env, fce, key):
         save_tags_to_file(env.tags)
         env.set_exit_mode()
         return env, True
+    # ======================= BASH =======================
+    elif fce == BASH_SWITCH:
+        hex_key = "{0:x}".format(key)
+        env.bash_exit_key = ('0' if len(hex_key)%2 else '')+str(hex_key)
+        env.bash_active = True
+        return env, True
     # ======================= FOCUS =======================
     elif fce == CHANGE_FOCUS:
         save_tags_to_file(env.tags)

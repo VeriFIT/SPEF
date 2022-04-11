@@ -63,6 +63,8 @@ class Environment:
         self.report = None # Report(path, data)
 
         self.control = Control()
+        self.bash_active = False
+        self.bash_exit_key = '0f' # hex value of key (by default CTRL+O)
 
 
     def set_user_control(self, contr):

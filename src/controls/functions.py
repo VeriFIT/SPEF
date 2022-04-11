@@ -1,5 +1,8 @@
 # functions identification
 
+BASH_SWITCH = 1000
+
+
 """ file (edit/manage) control """
 EXIT_PROGRAM = 1
 CHANGE_FOCUS = 2
@@ -125,6 +128,8 @@ EDIT_TEST = 735
 """ mapping of functions from controls.yaml to intern representation of function id """
 def map_file_function(str_fce):
     functions = {
+        'exit_program': EXIT_PROGRAM,
+        'bash_switch': BASH_SWITCH,
         'show_help': SHOW_HELP,
         'save_file': SAVE_FILE,
         'show_or_hide_tags': SHOW_OR_HIDE_TAGS,
@@ -134,7 +139,6 @@ def map_file_function(str_fce):
         'open_note_management': OPEN_NOTE_MANAGEMENT,
         'reload_file_from_last_save': RELOAD_FILE_FROM_LAST_SAVE,
         'show_typical_notes': SHOW_TYPICAL_NOTES,
-        'exit_program': EXIT_PROGRAM,
         'set_manage_file_mode': SET_MANAGE_FILE_MODE,
         'change_focus': CHANGE_FOCUS,
         'resize_win': RESIZE_WIN,
@@ -160,6 +164,8 @@ def map_file_function(str_fce):
 
 def map_brows_function(str_fce):
     functions = {
+        'exit_program': EXIT_PROGRAM,
+        'bash_switch': BASH_SWITCH,
         'show_help': SHOW_HELP,
         'open_menu': OPEN_MENU,
         'quick_view_on_off': QUICK_VIEW_ON_OFF,
@@ -173,8 +179,7 @@ def map_brows_function(str_fce):
         'cursor_down': CURSOR_DOWN,
         'cursor_left': CURSOR_LEFT,
         'cursor_right': CURSOR_RIGHT,
-        'filter': FILTER,
-        'exit_program': EXIT_PROGRAM}
+        'filter': FILTER}
     if str_fce in functions:
         return functions[str_fce]
     else:
@@ -183,6 +188,8 @@ def map_brows_function(str_fce):
 
 def map_tags_function(str_fce):
     functions = {
+        'exit_program': EXIT_PROGRAM,
+        'bash_switch': BASH_SWITCH,
         'show_help': SHOW_HELP,
         'edit_tag': EDIT_TAG,
         'add_tag': ADD_TAG,
@@ -192,8 +199,7 @@ def map_tags_function(str_fce):
         'resize_win': RESIZE_WIN,
         'cursor_up': CURSOR_UP,
         'cursor_down': CURSOR_DOWN,
-        'filter': FILTER,
-        'exit_program': EXIT_PROGRAM}
+        'filter': FILTER}
     if str_fce in functions:
         return functions[str_fce]
     else:
@@ -202,6 +208,8 @@ def map_tags_function(str_fce):
 
 def map_notes_function(str_fce):
     functions = {
+        'exit_program': EXIT_PROGRAM,
+        'bash_switch': BASH_SWITCH,
         'show_help': SHOW_HELP,
         'edit_note': EDIT_NOTE,
         'add_custom_note': ADD_CUSTOM_NOTE,
@@ -209,7 +217,6 @@ def map_notes_function(str_fce):
         'go_to_note': GO_TO_NOTE,
         'save_as_typical_note': SAVE_AS_TYPICAL_NOTE,
         'delete_note': DELETE_NOTE,
-        'exit_program': EXIT_PROGRAM,
         'exit_notes': EXIT_NOTES,
         'change_focus': CHANGE_FOCUS,
         'resize_win': RESIZE_WIN,
@@ -223,9 +230,10 @@ def map_notes_function(str_fce):
 
 def map_filter_function(str_fce):
     functions = {
+        'exit_program': EXIT_PROGRAM,
+        'bash_switch': BASH_SWITCH,
         'show_help': SHOW_HELP,
         'remove_filter': REMOVE_FILTER,
-        'exit_program': EXIT_PROGRAM,
         'exit_filter': EXIT_FILTER,
         'cursor_up': CURSOR_UP,
         'cursor_down': CURSOR_DOWN,
@@ -245,6 +253,7 @@ def map_filter_function(str_fce):
 def map_menu_function(str_fce):
     functions = {
         'exit_program': EXIT_PROGRAM,
+        'bash_switch': BASH_SWITCH,
         'exit_menu': EXIT_MENU,
         'resize_win': RESIZE_WIN,
         'cursor_up': CURSOR_UP,
@@ -261,6 +270,7 @@ def map_menu_function(str_fce):
 def map_user_input_function(str_fce):
     functions = {
         'exit_program': EXIT_PROGRAM,
+        'bash_switch': BASH_SWITCH,
         'exit_user_input': EXIT_USER_INPUT,
         'resize_win': RESIZE_WIN,
         'cursor_up': CURSOR_UP,

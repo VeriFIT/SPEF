@@ -24,6 +24,8 @@ from utils.logger import *
 from utils.reporting import *
 from utils.match import *
 from utils.file import *
+from utils.testing import *
+
 
 
 def get_directory_content(env):
@@ -129,6 +131,12 @@ def run_function(stdscr, env, fce, key):
     # ======================= EXIT =======================
     if fce == EXIT_PROGRAM:
         env.set_exit_mode()
+        return env, True
+    # ======================= BASH =======================
+    elif fce == BASH_SWITCH:
+        hex_key = "{0:x}".format(key)
+        env.bash_exit_key = ('0' if len(hex_key)%2 else '')+str(hex_key)
+        env.bash_active = True
         return env, True
     # ======================= FOCUS =======================
     elif fce == CHANGE_FOCUS:
@@ -324,7 +332,13 @@ def run_menu_function(stdscr, env, fce, key):
     elif fce == TEST_ALL_STUDENTS: # ALL STUDENTS
         pass
     elif fce == TEST_STUDENT: # on solution dir
-        pass
+        if env.cwd.proj is not None:
+            # idx = win.cursor.row
+            # dirs_and_files = env.cwd.get_all_items()
+            # path = os.path.join(env.cwd.path, dirs_and_files[idx]) # selected item
+            if is_root_solution_dir(env.cwd.proj.solution_id, env.cwd.path):
+                run_testsuite(env, env.cwd.path)
+
     elif fce == TEST_CLEAN: # on solution dir
         pass
     # =================== GENERATE REPORT ===================

@@ -28,6 +28,7 @@ general:
   cursor_right: 'RIGHT'
   backspace: 'BACKSPACE'
   delete: 'DELETE'
+  bash_switch: 'CTRL+O'
 file_functions:
   save_file: 'F2'
   show_or_hide_tags: 'F3'
