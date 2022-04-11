@@ -16,6 +16,7 @@ from views.menu import brows_menu
 from views.input import get_user_input
 
 from modules.directory import Directory, Project
+from modules.environment import BASH_CMD, BASH_EXE
 
 from utils.loading import *
 from utils.screens import *
@@ -137,6 +138,7 @@ def run_function(stdscr, env, fce, key):
         hex_key = "{0:x}".format(key)
         env.bash_exit_key = ('0' if len(hex_key)%2 else '')+str(hex_key)
         env.bash_active = True
+        env.bash_function = BASH_EXE
         return env, True
     # ======================= FOCUS =======================
     elif fce == CHANGE_FOCUS:
@@ -181,10 +183,13 @@ def run_function(stdscr, env, fce, key):
         curses.curs_set(0)
     # ======================= OPEN MENU =======================
     elif fce == OPEN_MENU:
+        idx = win.cursor.row
+        dirs_and_files = env.cwd.get_all_items()
+        selected_item = os.path.join(env.cwd.path, dirs_and_files[idx]) # selected item
         # show menu with functions
-        in_proj_dir = is_in_project_dir(env.cwd.path)
-        in_solution_dir = is_in_solution_dir(env.cwd.proj.solution_id, env.cwd.path) if env.cwd.proj is not None else False
-        is_test_dir = is_testcase_dir(env.cwd.path)
+        in_proj_dir = is_in_project_dir(selected_item)
+        in_solution_dir = is_in_solution_dir(env.cwd.proj.solution_id, selected_item) if env.cwd.proj is not None else False
+        is_test_dir = is_testcase_dir(env.cwd.path) or is_testcase_dir(selected_item)
         menu_functions = get_menu_functions(in_proj_dir, in_solution_dir, is_test_dir)
         # menu_functions = brows_menu_functions()
 
@@ -333,11 +338,29 @@ def run_menu_function(stdscr, env, fce, key):
         pass
     elif fce == TEST_STUDENT: # on solution dir
         if env.cwd.proj is not None:
-            # idx = win.cursor.row
-            # dirs_and_files = env.cwd.get_all_items()
-            # path = os.path.join(env.cwd.path, dirs_and_files[idx]) # selected item
+            idx = win.cursor.row
+            dirs_and_files = env.cwd.get_all_items()
+            selected_item = os.path.join(env.cwd.path, dirs_and_files[idx]) # selected item
+            solution = None
             if is_root_solution_dir(env.cwd.proj.solution_id, env.cwd.path):
-                run_testsuite(env, env.cwd.path)
+                solution = env.cwd.path
+            elif is_root_solution_dir(env.cwd.proj.solution_id, selected_item):
+                solution = selected_item
+
+            if solution is not None:
+                tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
+                # scoring_file = os.path.join(tests_dir, SCORING_FILE)
+                # testsuite_file = os.path.join(tests_dir, TESTSUITE_FILE)
+ 
+
+                t_script = os.path.join(tests_dir, 'src', 't')
+                command = f"cd {solution}; {t_script}\n"
+
+                env.bash_active = True
+                env.bash_function = BASH_CMD
+                env.bash_cmd = command
+                return env, True
+                # run_testsuite(stdscr, env, solution)
 
     elif fce == TEST_CLEAN: # on solution dir
         pass

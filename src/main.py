@@ -25,7 +25,7 @@ from views.notes import notes_management
 
 from views.help import show_help
 
-from modules.environment import Environment
+from modules.environment import Environment, BASH_CMD, BASH_EXE
 from modules.buffer import Buffer, Report, UserInput
 from modules.directory import Directory
 from modules.window import Window, Cursor
@@ -107,7 +107,13 @@ def main(stdscr):
     """ main loop """
     while True:
         if env.bash_active:
-            env = executing_bash(stdscr, env)
+            if env.bash_function == BASH_CMD:
+                env = run_in_bash(stdscr, env, env.bash_cmd)
+                # show_in_bash(stdscr, env, "echo hallo...\n")
+            elif env.bash_function == BASH_EXE:
+                env = executing_bash(stdscr, env)
+            else:
+                env.bash_active = False
         else:
             print_hint(env)
             if env.is_exit_mode():
@@ -129,66 +135,38 @@ def main(stdscr):
 """ ======================= END MAIN ========================= """
 
 
-
-def executing_bash(stdscr, env):
-    global bash_proc 
-
-    # set bash as active
-    bash_proc.set_active(True)
-    curses.curs_set(1) # set cursor as visible
-
-    # rewrite screen with bash buffer
-    os.system("clear")
-    bash_proc.print_buff()
-
-    # set exit key from env (else CTRL+O by default (like in mc))
-    exit_key = env.bash_exit_key if env.bash_exit_key is not None else '0f'
-
-    # bash loop
-    while True:
-        c = sys.stdin.read(1)
-        hex_c = c.encode("utf-8").hex()
-
-        # exit bash
-        if hex_c == exit_key:
-            # set bash as inactive
-            bash_proc.set_active(False)
-            env.bash_active = False
-
-            # rewrite screen with ncurses
-            os.system("clear")
-            stdscr.clear()
-            stdscr.erase()
-            stdscr.refresh()
-            refresh_main_screens(env)
-            rewrite_all_wins(env)
-            return env
-        else:
-            os.write(bash_proc.fd, c.encode("utf-8"))
-
-
-
 class Bash_process():
-    def __init__(self, pid, fd):
+    def __init__(self, pid, fd, cwd):
         self.pid = pid # pid for bash subprocess
         self.fd = fd
 
         self.buff_lock = threading.Lock()
         self.buff = "" # bash buffer
+
+        self.cwd = cwd
         self.active = False # bash is active
         self.reader_run = True
+        self.pause = False
 
     def set_active(self, mode):
         with self.buff_lock:
             self.active = mode
+            if mode == True:
+                os.system("clear")
+                print(self.buff, end="", flush=True)
+
+
+    def set_reader(self, mode):
+        with self.buff_lock:
+            self.reader_run = mode
 
     def print_buff(self):
         with self.buff_lock:
             print(self.buff, end="", flush=True)
 
-    def set_reader(self, mode):
-        with self.buff_lock:
-            self.reader_run = mode
+    def write_command(self, cmd):
+        os.write(self.fd, cmd.encode("utf-8"))
+
 
     def async_reader(self):
         while self.reader_run:
@@ -213,6 +191,76 @@ class Bash_process():
 
 
 
+""" switch to bash """
+def executing_bash(stdscr, env):
+    global bash_proc 
+
+    # go to current working direcotry
+    if bash_proc.cwd != env.cwd.path:
+        bash_proc.write_command(f"cd {env.cwd.path}\n")
+        bash_proc.cwd = env.cwd.path
+
+    # set bash as active (rewrite screen with bash buffer)
+    bash_proc.set_active(True)
+    curses.curs_set(1) # set cursor as visible
+
+    # set exit key from env (else CTRL+O by default (like in mc))
+    exit_key = env.bash_exit_key if env.bash_exit_key is not None else '0f'
+
+    # bash loop
+    while True:
+        c = sys.stdin.read(1)
+        hex_c = c.encode("utf-8").hex()
+
+        # exit bash
+        if hex_c == exit_key:
+            # set bash as inactive
+            bash_proc.set_active(False)
+            env.bash_active = False
+
+            # rewrite screen with ncurses
+            os.system("clear")
+            stdscr.clear()
+            stdscr.erase()
+            stdscr.refresh()
+            refresh_main_screens(env)
+            rewrite_all_wins(env)
+            return env
+        else:
+            # os.write(bash_proc.fd, c.encode("utf-8"))
+            bash_proc.write_command(c)
+
+
+
+""" run command in bash """
+def run_in_bash(stdscr, env, cmd):
+    global bash_proc
+
+    # write cmd in bash
+    bash_proc.write_command(cmd)
+
+    # rewrite screen with bash buffer (show in bash)
+    bash_proc.set_active(True)
+
+    # wait for any char
+    c = sys.stdin.read(1)
+
+    # go back and rewrtie screen with ncurses
+    env.bash_active = False
+    bash_proc.set_active(False)
+
+    os.system("clear")
+    stdscr.clear()
+    stdscr.erase()
+    stdscr.refresh()
+    refresh_main_screens(env)
+    rewrite_all_wins(env)
+    return env
+
+
+
+""" ======================================================================= """
+
 # TODO: cache all tags and reports to local files TAG_DIR and REPORT_DIR
 def preparation():
     """ clear log file """
@@ -230,7 +278,8 @@ if __name__ == "__main__":
 
     # prepare bash subprocess
     pid, fd = os.forkpty()
-    bash_proc = Bash_process(pid, fd)
+    cwd = os.getcwd()
+    bash_proc = Bash_process(pid, fd, cwd)
 
     # set signal handler
     signal.signal(signal.SIGINT, bash_proc.signal_handler)

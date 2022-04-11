@@ -62,6 +62,7 @@ def run_function(stdscr, env, fce, key):
         hex_key = "{0:x}".format(key)
         env.bash_exit_key = ('0' if len(hex_key)%2 else '')+str(hex_key)
         env.bash_active = True
+        env.bash_function = BASH_EXE
         return env, True
     # ======================= FOCUS =======================
     elif fce == CHANGE_FOCUS:

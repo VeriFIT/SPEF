@@ -11,6 +11,8 @@ TAG = 3
 NOTES = 4
 EXIT = -1
 
+BASH_CMD = 10
+BASH_EXE = 11
 
 """ current framework environment """
 class Environment:
@@ -64,6 +66,8 @@ class Environment:
 
         self.control = Control()
         self.bash_active = False
+        self.bash_function = None # BASH_CMD (only run command), BASH_EXE (execute bash)
+        self.bash_cmd = ""
         self.bash_exit_key = '0f' # hex value of key (by default CTRL+O)
 
 
