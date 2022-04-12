@@ -16,7 +16,7 @@ from views.menu import brows_menu
 from views.input import get_user_input
 
 from modules.directory import Directory, Project
-from modules.environment import BASH_CMD, BASH_EXE
+from modules.bash import Bash_action
 
 from utils.loading import *
 from utils.screens import *
@@ -136,9 +136,9 @@ def run_function(stdscr, env, fce, key):
     # ======================= BASH =======================
     elif fce == BASH_SWITCH:
         hex_key = "{0:x}".format(key)
-        env.bash_exit_key = ('0' if len(hex_key)%2 else '')+str(hex_key)
+        env.bash_action = Bash_action()
+        env.bash_action.set_exit_key(('0' if len(hex_key)%2 else '')+str(hex_key))
         env.bash_active = True
-        env.bash_function = BASH_EXE
         return env, True
     # ======================= FOCUS =======================
     elif fce == CHANGE_FOCUS:
@@ -337,6 +337,7 @@ def run_menu_function(stdscr, env, fce, key):
     elif fce == TEST_ALL_STUDENTS: # ALL STUDENTS
         pass
     elif fce == TEST_STUDENT: # on solution dir
+        """ run testsuite on student solution directory """
         if env.cwd.proj is not None:
             idx = win.cursor.row
             dirs_and_files = env.cwd.get_all_items()
@@ -348,20 +349,65 @@ def run_menu_function(stdscr, env, fce, key):
                 solution = selected_item
 
             if solution is not None:
-                tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
-                # scoring_file = os.path.join(tests_dir, SCORING_FILE)
-                # testsuite_file = os.path.join(tests_dir, TESTSUITE_FILE)
- 
-
-                t_script = os.path.join(tests_dir, 'src', 't')
-                command = f"cd {solution}; {t_script}\n"
-
-                env.bash_active = True
-                env.bash_function = BASH_CMD
-                env.bash_cmd = command
+                env = run_testsuite(stdscr, env, solution)
                 return env, True
-                # run_testsuite(stdscr, env, solution)
 
+                # tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
+                # t_script = os.path.join(tests_dir, 'src', 't')
+                # command = f"cd {solution}\n{t_script}\n"
+
+                # env.bash_action = Bash_action()
+                # env.bash_action.dont_jump_to_cwd()
+                # env.bash_action.add_command(command)
+                # env.bash_active = True
+                # return env, True
+    elif fce == RUN_TEST: # on solution dir
+        """ select one or more tests and run this tests on student solution directory """
+        if env.cwd.proj is not None:
+            idx = win.cursor.row
+            dirs_and_files = env.cwd.get_all_items()
+            selected_item = os.path.join(env.cwd.path, dirs_and_files[idx]) # selected item
+            solution = None
+            if is_root_solution_dir(env.cwd.proj.solution_id, env.cwd.path):
+                solution = env.cwd.path
+            elif is_root_solution_dir(env.cwd.proj.solution_id, selected_item):
+                solution = selected_item
+
+            """ show menu with tests for selection """
+            # title = "Press 'enter' to select test, press 'esc' to run selected tests..."
+            # selected_tests = []
+            # run_selection = True
+            # while run_selection:
+            #     # show menu
+            #     key = stdscr.getch()
+            #     if key == '\n':
+            #         run_selection = False
+            #     elif key == 's':
+
+            #     test_names = get_valid_tests_names(env)
+            #     title = "Select from typical notes: "
+            #     color = curses.color_pair(COL_TITLE)
+            #     env, option_idx = brows_menu(stdscr, env, test_names, color=color, title=title)
+
+
+            #     options = {}
+            #     if len(test_names) > 0:
+            #         for idx, name in enumerate(test_names):
+            #             if idx+1 > 35:
+            #                 break
+            #             key = idx+1 if idx < 9 else chr(idx+1+55) # 1-9 or A-Z (chr(10+55)='A')
+            #             options[str(idx+1)] = name
+
+            #     options = env.get_typical_notes_dict()
+            #     char_key = chr(key)
+            #     if char_key in options.keys():
+            #         str_text = options[char_key]
+            #         note_row, note_col = win.cursor.row, win.cursor.col - win.begin_x
+            #         env.report.add_note(note_row, note_col, str_text)
+            #     rewrite_all_wins(env)
+
+
+            # run_test
     elif fce == TEST_CLEAN: # on solution dir
         pass
     # =================== GENERATE REPORT ===================

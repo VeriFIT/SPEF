@@ -177,6 +177,8 @@ class Window:
         # if (self.cursor.row - self.begin_y - self.top_edge == self.row_shift - 1) and (self.row_shift > 0):
         if (self.cursor.row == self.border + self.top_edge + self.row_shift - 1) and (self.row_shift > 0):
             self.row_shift -= 1
+        elif (self.cursor.row == self.border + self.row_shift - 1) and (self.row_shift > 0):
+            self.row_shift -= 1
 
     def down(self, buffer, filter_on=False, use_restrictions=True):
         self.cursor.down(buffer, self, use_restrictions)
@@ -187,14 +189,20 @@ class Window:
         bottom = self.height - 2 - self.bottom_edge - (1 if filter_on else 0) + self.border + self.row_shift
         if (self.cursor.row == bottom) and (self.cursor.row - self.begin_y + self.bottom_edge < len(buffer)):
             self.row_shift += 1
+        elif (self.cursor.row == bottom + self.bottom_edge) and (self.cursor.row - self.begin_y < len(buffer)):
+            self.row_shift += 1
 
 
     def left(self, buffer):
+        old_row = self.cursor.row
         self.cursor.left(buffer, self)
 
         """ window shift """
         self.horizontal_shift()
-        if (self.cursor.row == self.row_shift + 1) and (self.row_shift > 0):
+        # if (self.cursor.row == self.row_shift + 1) and (self.row_shift > 0):
+        if (self.cursor.row == self.row_shift + self.top_edge) and (self.row_shift > 0) and (self.cursor.row < old_row):
+            self.row_shift -= 1
+        elif (self.cursor.row == self.row_shift) and (self.row_shift > 0) and (self.cursor.row < old_row):
             self.row_shift -= 1
 
         # _, col = self.get_cursor_position()
@@ -204,15 +212,16 @@ class Window:
 
 
     def right(self, buffer, filter_on=False):
+        old_row = self.cursor.row
         self.cursor.right(buffer, self)
 
         """ window shift """
         self.horizontal_shift()
         # bottom = self.bottom - (1 if filter_on else 0) - self.bottom_edge
         bottom = self.height - 2 - self.bottom_edge - (1 if filter_on else 0) + self.border + self.row_shift
-        if (self.cursor.row == bottom) and (self.cursor.row - self.begin_y + self.bottom_edge < len(buffer)):
+        if (self.cursor.row == bottom) and (self.cursor.row - self.begin_y + self.bottom_edge < len(buffer)) and (self.cursor.row > old_row):
             self.row_shift += 1
-        elif (self.cursor.row == bottom + self.bottom_edge) and (self.cursor.row - self.begin_y < len(buffer)):
+        elif (self.cursor.row == bottom + self.bottom_edge) and (self.cursor.row - self.begin_y < len(buffer)) and (self.cursor.row > old_row):
             self.row_shift += 1
 
         # _, col = self.get_cursor_position()

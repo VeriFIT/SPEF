@@ -388,5 +388,15 @@ def get_solution_archives(env):
 
 # return list of test dirs (dirs from project_dir/tests_dir/*)
 # with_check=True means it returns only valid test dirs (with 'dotest.sh' file in it)
-def get_test_dirs(with_check=True):
-    pass
+def get_valid_tests_names(env):
+    result_names = set()
+    if env.cwd.proj is not None:
+        tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
+        items = os.listdir(tests_dir) # list all dirs and files in tests dir
+        for item in items:
+            path = os.path.join(tests_dir, item)
+            if is_testcase_dir(path, with_check=True):
+                result_names.add(item)
+    else:
+        log("get_solution_dirs | cwd is not project root directory")
+    return list(result_names)

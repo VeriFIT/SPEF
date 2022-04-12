@@ -74,10 +74,13 @@ def run_function(stdscr, menu_options, env, fce, key):
         return option, env, True
     # ======================= RESIZE =======================
     elif fce == RESIZE_WIN:
+        old_shift, old_row = win.row_shift, win.cursor.row - win.row_shift
         env = resize_all(stdscr, env)
-        screen, win = env.get_center_win()
-        win.reset()
-        win.set_position(old_position, screen)
+        screen, win = env.get_center_win(reset=True, row=0, col=0)
+        new_row = max(min(old_row, win.end_y-win.begin_y-win.border-2), 0)
+        win.set_cursor(new_row+old_shift, 0)
+        win.row_shift = old_shift
+        win.set_border(0)
         rewrite_all_wins(env)
     # ======================= SHOW HELP =======================
     # elif fce == SHOW_HELP:

@@ -22,7 +22,7 @@ def get_user_input(stdscr, env, title=None, user_input=None):
     env.user_input_mode = True
 
     screen, win = env.get_center_win(reset=True)
-    position = win.position
+
 
     if user_input is None:
         user_input = UserInput()
@@ -80,7 +80,7 @@ def run_function(stdscr, user_input, env, fce, key):
         env = resize_all(stdscr, env)
         screen, win = env.get_center_win()
         win.reset()
-        win.set_position(position, screen)
+        win.set_position(old_position, screen)
         rewrite_all_wins(env)
     # ======================= SHOW HELP =======================
     # elif fce == SHOW_HELP:

@@ -955,6 +955,7 @@ def show_menu(screen, win, menu_options, max_rows, max_cols, env, color=None, ti
         row += 1
 
     shift = len(str(min(max_rows,len(menu_options))))+1
+    # shift = len(str(len(win.row_shift + max_rows)))+1
 
     try:
         """ show options """

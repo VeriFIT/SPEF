@@ -11,9 +11,6 @@ TAG = 3
 NOTES = 4
 EXIT = -1
 
-BASH_CMD = 10
-BASH_EXE = 11
-
 """ current framework environment """
 class Environment:
     def __init__(self, screens, windows, conf):
@@ -66,9 +63,9 @@ class Environment:
 
         self.control = Control()
         self.bash_active = False
-        self.bash_function = None # BASH_CMD (only run command), BASH_EXE (execute bash)
-        self.bash_cmd = ""
-        self.bash_exit_key = '0f' # hex value of key (by default CTRL+O)
+        self.bash_action = None
+
+        # self.bash_exit_key = '0f' # hex value of key (by default CTRL+O)
 
 
     def set_user_control(self, contr):

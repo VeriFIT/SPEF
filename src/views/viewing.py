@@ -18,6 +18,7 @@ from views.help import show_help
 from views.input import get_user_input
 
 from modules.buffer import UserInput
+from modules.bash import Bash_action
 
 from utils.loading import *
 from utils.screens import *
@@ -134,9 +135,9 @@ def run_function(stdscr, env, fce, key):
     # ======================= BASH =======================
     elif fce == BASH_SWITCH:
         hex_key = "{0:x}".format(key)
-        env.bash_exit_key = ('0' if len(hex_key)%2 else '')+str(hex_key)
+        env.bash_action = Bash_action()
+        env.bash_action.set_exit_key(('0' if len(hex_key)%2 else '')+str(hex_key))
         env.bash_active = True
-        env.bash_function = BASH_EXE
         return env, rewrite, True
     # ======================= FOCUS =======================
     elif fce == CHANGE_FOCUS:

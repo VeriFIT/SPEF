@@ -25,10 +25,11 @@ from views.notes import notes_management
 
 from views.help import show_help
 
-from modules.environment import Environment, BASH_CMD, BASH_EXE
+from modules.environment import Environment
 from modules.buffer import Buffer, Report, UserInput
 from modules.directory import Directory
 from modules.window import Window, Cursor
+from modules.bash import Bash_action
 
 from utils.loading import *
 from utils.screens import *
@@ -107,11 +108,8 @@ def main(stdscr):
     """ main loop """
     while True:
         if env.bash_active:
-            if env.bash_function == BASH_CMD:
-                env = run_in_bash(stdscr, env, env.bash_cmd)
-                # show_in_bash(stdscr, env, "echo hallo...\n")
-            elif env.bash_function == BASH_EXE:
-                env = executing_bash(stdscr, env)
+            if env.bash_action is not None:
+                env = run_in_bash(stdscr, env)
             else:
                 env.bash_active = False
         else:
@@ -136,29 +134,35 @@ def main(stdscr):
 
 
 class Bash_process():
-    def __init__(self, pid, fd, cwd):
+    def __init__(self, pid, fd):
         self.pid = pid # pid for bash subprocess
         self.fd = fd
 
         self.buff_lock = threading.Lock()
         self.buff = "" # bash buffer
 
-        self.cwd = cwd
         self.active = False # bash is active
         self.reader_run = True
         self.pause = False
 
+    # set bash as active (reader will print data)
     def set_active(self, mode):
         with self.buff_lock:
             self.active = mode
             if mode == True:
+                # rewrite screen with bash buffer
                 os.system("clear")
                 print(self.buff, end="", flush=True)
 
-
+    # set entry and exit condition for reader
     def set_reader(self, mode):
         with self.buff_lock:
             self.reader_run = mode
+
+    # reader will still run but it wont save data to buffer and print it
+    def pause_reader(self, mode):
+        with self.buff_lock:
+            self.pause = mode
 
     def print_buff(self):
         with self.buff_lock:
@@ -175,11 +179,12 @@ class Bash_process():
                 # read from bash and save it to bash buffer
                 data = os.read(self.fd, 1024)
                 with self.buff_lock:
-                    self.buff += data.decode("utf-8")
+                    if not self.pause:
+                        self.buff += data.decode("utf-8")
 
-                    if self.active:
-                        # if bash is active print bash
-                        print(data.decode("utf-8"), end="", flush=True)
+                        if self.active:
+                            # if bash is active print bash
+                            print(data.decode("utf-8"), end="", flush=True)
 
     def stop(self):
         self.set_reader(False)
@@ -196,9 +201,12 @@ def executing_bash(stdscr, env):
     global bash_proc 
 
     # go to current working direcotry
-    if bash_proc.cwd != env.cwd.path:
-        bash_proc.write_command(f"cd {env.cwd.path}\n")
-        bash_proc.cwd = env.cwd.path
+    bash_proc.pause_reader(True)
+    bash_proc.write_command(f"cd {env.cwd.path}\n")
+    time.sleep(0.2)
+    bash_proc.pause_reader(False)
+    bash_proc.write_command("\n")
+
 
     # set bash as active (rewrite screen with bash buffer)
     bash_proc.set_active(True)
@@ -233,29 +241,57 @@ def executing_bash(stdscr, env):
 
 
 """ run command in bash """
-def run_in_bash(stdscr, env, cmd):
+def run_in_bash(stdscr, env):
     global bash_proc
 
-    # write cmd in bash
-    bash_proc.write_command(cmd)
+    if env.bash_action is None:
+        env.bash_active = False
+        return env
+
+    if env.bash_action.run_in_cwd:
+        # go to current working direcotry
+        bash_proc.pause_reader(True)
+        bash_proc.write_command(f"cd {env.cwd.path}\n")
+        time.sleep(0.2)
+        bash_proc.pause_reader(False)
+        bash_proc.write_command("\n")
+
+    # send command to bash
+    if env.bash_action.cmd:
+        bash_proc.write_command(env.bash_action.cmd)
+
 
     # rewrite screen with bash buffer (show in bash)
     bash_proc.set_active(True)
+    curses.curs_set(1) # set cursor as visible
 
-    # wait for any char
-    c = sys.stdin.read(1)
 
-    # go back and rewrtie screen with ncurses
-    env.bash_active = False
-    bash_proc.set_active(False)
+    while True:
+        # wait for any char
+        c = sys.stdin.read(1)
 
-    os.system("clear")
-    stdscr.clear()
-    stdscr.erase()
-    stdscr.refresh()
-    refresh_main_screens(env)
-    rewrite_all_wins(env)
-    return env
+        # if exit_key is not set, exit on any key
+        if not env.bash_action.exit_key:
+            exit_cond = True
+        else:
+            hex_c = c.encode("utf-8").hex()
+            exit_cond = hex_c == env.bash_action.exit_key
+
+        if exit_cond:
+            # go back and rewrtie screen with ncurses
+            env.bash_active = False
+            bash_proc.set_active(False)
+
+            os.system("clear")
+            stdscr.clear()
+            stdscr.erase()
+            stdscr.refresh()
+            refresh_main_screens(env)
+            rewrite_all_wins(env)
+            return env
+        else:
+            bash_proc.write_command(c)
+
 
 
 
@@ -279,14 +315,14 @@ if __name__ == "__main__":
     # prepare bash subprocess
     pid, fd = os.forkpty()
     cwd = os.getcwd()
-    bash_proc = Bash_process(pid, fd, cwd)
+    bash_proc = Bash_process(pid, fd)
 
     # set signal handler
     signal.signal(signal.SIGINT, bash_proc.signal_handler)
     signal.signal(signal.SIGABRT, bash_proc.signal_handler)
     signal.signal(signal.SIGHUP, bash_proc.signal_handler)
     signal.signal(signal.SIGTERM, bash_proc.signal_handler)
-    # signal.signal(signal.SIGQUIT, bash_proc.signal_handler)
+    signal.signal(signal.SIGQUIT, bash_proc.signal_handler)
 
     if pid == 0:
         # ======= child =======

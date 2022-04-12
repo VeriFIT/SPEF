@@ -11,6 +11,7 @@ from views.input import get_user_input
 from views.help import show_help
 
 from modules.buffer import Tags, UserInput
+from modules.bash import Bash_action
 
 from utils.loading import save_report_to_file
 from utils.screens import *
@@ -65,9 +66,9 @@ def run_function(stdscr, env, fce, key):
     # ======================= BASH =======================
     elif fce == BASH_SWITCH:
         hex_key = "{0:x}".format(key)
-        env.bash_exit_key = ('0' if len(hex_key)%2 else '')+str(hex_key)
+        env.bash_action = Bash_action()
+        env.bash_action.set_exit_key(('0' if len(hex_key)%2 else '')+str(hex_key))
         env.bash_active = True
-        env.bash_function = BASH_EXE
         return env, True
     # ================ EXIT NOTE MANAGEMENT ================
     elif fce == EXIT_NOTES:
@@ -145,6 +146,8 @@ def run_function(stdscr, env, fce, key):
         color = curses.color_pair(COL_TITLE)
         menu_options = [note.text for note in env.typical_notes]
         env, option_idx = brows_menu(stdscr, env, menu_options, color=color, title=title)
+        if env.is_exit_mode():
+            return env, True
         screen, win = env.get_screen_for_current_mode()
         curses.curs_set(0)
         env.specific_line_highlight = None
