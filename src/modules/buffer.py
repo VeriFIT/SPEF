@@ -40,6 +40,13 @@ class Tags:
                 return key, self.data[key]
         return None, None
 
+    def get_param_by_idx(self, tag_name, idx):
+        if tag_name in self.data:
+            tag_args = self.data[tag_name]
+            if idx < len(tag_args):
+                return tag_args[idx]
+        return None
+
     def set_tag(self, tag_name, args):
         self.data[tag_name] = [*args]
 
