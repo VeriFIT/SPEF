@@ -40,14 +40,13 @@ def show_help(stdscr, env):
             if hex(key) == "0x222" or hex(key) == "0x231":
                 if hex(key) == "0x222": # move left
                     if position == 2:
-                        position = 1
+                        win.set_position(1, screen)
                     elif position == 3:
-                        position = 2
+                        win.set_position(2, screen)
                 elif hex(key) == "0x231": # move right
                     if position == 1:
-                        position = 2
+                        win.set_position(2, screen)
                     elif position == 2:
-                        position = 3
-                win.set_position(position, screen)
+                        win.set_position(3, screen)
                 rewrite_all_wins(env)
 

@@ -1,75 +1,10 @@
-import os
-import subprocess
-
-from pathlib import Path
 
 
-from utils.logger import *
-from utils.loading import *
-
-from modules.bash import Bash_action
-
-
-DST_BASH_DIR = 'src'
-DST_BASH_FILE = os.path.join(DST_BASH_DIR, 'tst') # proj_dir/tests_dir/DST_BASH_FILE
-SRC_BASH_FILE = os.path.join(Path(__file__), 'bash_functions_for_tests.sh')
-
-
-def check_bash_functions_for_testing(proj_dir):
-    tests_dir = os.path.join(proj_dir, TESTS_DIR)
-    bash_file = os.path.join(tests_dir, DST_BASH_FILE)
-    bash_file_exists = False
-    if os.path.exists(bash_file):
-        bash_file_exists = True
-    else:
-        try:
-            if os.path.exists(SRC_BASH_FILE):
-                shutil.copyfile(SRC_BASH_FILE, bash_file)
-                bash_file_exists = True
-        except Exception as err:
-            log("copy bash functions | "+str(err))
-    return bash_file_exists
-
-
-""" /bin/n --> nacita /tests/scoring + spusti /tests/tst sum"""
-def add_note(stdscr, env):
-    pass
-    # from testing import tst
-    # tst_sum()
-
-
-""" /bin/tst run param --> spusti /tests/tst run param"""
-def run_test(stdscr, env, solution_dir, test_name):
-    pass
-    # cd student
-    # sut in student
-    # tst run cat1
-
-    """
-PROJDIR=$(realpath ..)
-TESTSDIR=$PROJDIR/tests
-# if [ -f $PROJDIR/sandbox.config ]; then
-    # . $PROJDIR/sandbox.config
-# fi
-# export SANDBOXUSER
-# export SANDBOXDIR
-# export SANDBOXLOCK
-export TESTSDIR
-if [ -d "$TESTSDIR" ]; then
-    $TESTSDIR/tst "$@"
-else
-    echo "chyba: spatne nastavena promenna TESTSDIR=$TESTSDIR" >&2
-    exit 1
-fi
-
-    """
-
-    # from testing import tst
-    # tst_run()
 
 
 """ /bin/t --> spusti /tests/testsuite.sh --- ten spusta /bin/tst run param """
-def run_testsuite(stdscr, env, solution_dir):
+# def run_testsuite(stdscr, env, solution_dir):
+def tmp_fce(stdscr, env, solution_dir):
     if not env.cwd.proj or not solution_dir:
         log("run testsuite | run from solution dir in some project dir")
         return
@@ -115,9 +50,14 @@ def run_testsuite(stdscr, env, solution_dir):
         return env
 
 
-    ############### 4. spristupni bash funkcie ###############
-    bash_dir = os.path.join(tests_dir, DST_BASH_DIR)
-    command += f"export PATH={bash_dir}:$PATH\n"  
+    ############### 4. spristupni tst funkcie ###############
+    # spristupnit bin/tst (run_test), bin/n (add_note) pre testsuite.sh
+    # TODO !!!!!!!
+    # SRC_BASH_DIR = '/testing/tst.py'  --> SRC_BASH_DIR/tst.py run test_name
+    # SRC_BASH_DIR = '/testing/tst'     --> SRC_BASH_DIR/tst run test_name
+    # command += f"export PATH={SRC_BASH_DIR}:$PATH\n"  
+    tmp_dir = os.path.join(tests_dir, DST_BASH_DIR)
+    command += f"export PATH={tmp_dir}:$PATH\n"  
     command += f"export TESTSDIR={tests_dir}\n"
 
 

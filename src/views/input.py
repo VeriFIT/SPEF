@@ -113,17 +113,15 @@ def run_function(stdscr, user_input, env, fce, key):
     # ========================= MOVE WIN ========================= 
     elif fce == MOVE_LEFT:
         if old_position == 2:
-            new_position = 1
+            win.set_position(1, screen)
         elif old_position == 3:
-            new_position = 2
-        win.set_position(new_position, screen)
+            win.set_position(2, screen)
         rewrite_all_wins(env)
     elif fce == MOVE_RIGHT:
         if old_position == 1:
-            new_position = 2
+            win.set_position(2, screen)
         elif old_position == 2:
-            new_position = 3
-        win.set_position(new_position, screen)
+            win.set_position(3, screen)
         rewrite_all_wins(env)
 
 

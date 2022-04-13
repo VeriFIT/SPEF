@@ -266,6 +266,11 @@ def save_tags_to_file(tags):
             yaml.dump(tags.data, f, default_flow_style=False, allow_unicode=True)
 
 
+def add_tag_to_file(file_path, tags_dir):
+    with open(file_path, 'a+', encoding='utf8') as f:
+        yaml.dump(tags_dir, f, default_flow_style=False, allow_unicode=True)
+
+
 """ **************** BUFFER AND TAGS **************** """
 def load_buffer_and_tags(env):
     """ try load file content to buffer """

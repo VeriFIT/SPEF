@@ -18,17 +18,23 @@ from utils.logger import *
 menu_options = []
 returns env, option
 """
-def brows_menu(stdscr, env, menu_options, color=None, title=None):
+def brows_menu(stdscr, env, menu_options, keys=False, color=None, title=None):
     curses.curs_set(0)
 
     env.menu_mode = True
 
+    if color is None:
+        color = curses.color_pair(COL_TITLE)
 
     screen, win = env.get_center_win(reset=True, row=0, col=0)
     win.set_border(0)
 
     rewrite_all_wins(env)
 
+    keys_list = None
+    if keys:
+        keys_list = [str(i) for i in "123456789"]
+        keys_list.extend([str(c) for c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"])
 
     while True:
         screen, win = env.get_center_win()
@@ -37,15 +43,14 @@ def brows_menu(stdscr, env, menu_options, color=None, title=None):
         max_cols = win.end_x - win.begin_x - 1
         max_rows = win.end_y - win.begin_y - 1
 
-        show_menu(screen, win, menu_options, max_rows, max_cols, env, color=color, title=title)
-
+        show_menu(screen, win, menu_options, max_rows, max_cols, env, keys=keys_list, color=color, title=title)
 
         key = stdscr.getch()
 
         try:
             function = get_function_for_key(env, key)
             if function is not None:
-                option, env, exit_program = run_function(stdscr, menu_options, env, function, key)
+                option, env, exit_program = run_function(stdscr, keys_list, menu_options, env, function, key)
                 if exit_program:
                     env.menu_mode = False
                     return env, option
@@ -58,7 +63,7 @@ def brows_menu(stdscr, env, menu_options, color=None, title=None):
 
 
 """ implementation of functions for browsing in menu """
-def run_function(stdscr, menu_options, env, fce, key):
+def run_function(stdscr, keys_list, menu_options, env, fce, key):
     screen, win = env.get_center_win()
     old_position = win.position
 
@@ -95,23 +100,29 @@ def run_function(stdscr, menu_options, env, fce, key):
     elif fce == SAVE_OPTION:
         option = win.cursor.row
         return option, env, True
-    # TODO: select option by idx (number [1..last option] or char [a..z])
+    elif fce == SELECT_BY_IDX:
+        if keys_list is not None:
+            char_key = chr(key)
+            if char_key in keys_list:
+                if char_key in [str(i) for i in "123456789"]:
+                    option = int(char_key)-1
+                    return option, env, True
+                elif char_key in [str(c) for c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"]:
+                    option = ord(char_key)-55-1
+                    return option, env, True
     # ========================= MOVE WIN ========================= 
     elif fce == MOVE_LEFT:
         if old_position == 2:
-            new_position = 1
+            win.set_position(1, screen)
         elif old_position == 3:
-            new_position = 2
-        win.set_position(new_position, screen)
+            win.set_position(2, screen)
         rewrite_all_wins(env)
     elif fce == MOVE_RIGHT:
         if old_position == 1:
-            new_position = 2
+            win.set_position(2, screen)
         elif old_position == 2:
-            new_position = 3
-        win.set_position(new_position, screen)
+            win.set_position(3, screen)
         rewrite_all_wins(env)
-
 
     env.update_center_win(win)
     return option, env, False

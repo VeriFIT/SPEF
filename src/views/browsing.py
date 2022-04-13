@@ -25,8 +25,9 @@ from utils.logger import *
 from utils.reporting import *
 from utils.match import *
 from utils.file import *
-from utils.testing import *
+# from utils.testing import *
 
+from testing.tst import *
 
 
 def get_directory_content(env):
@@ -196,7 +197,7 @@ def run_function(stdscr, env, fce, key):
         title = "Select function from menu: "
         color = curses.color_pair(COL_TITLE)
         menu_options = [key for key in menu_functions]
-        env, option_idx = brows_menu(stdscr, env, menu_options, color=color, title=title)
+        env, option_idx = brows_menu(stdscr, env, menu_options, keys=True, color=color, title=title)
         if env.is_exit_mode():
             return env, True
         screen, win = env.get_screen_for_current_mode()
@@ -318,7 +319,7 @@ def run_menu_function(stdscr, env, fce, key):
             idx = win.cursor.row
             dirs_and_files = env.cwd.get_all_items()
             path = os.path.join(env.cwd.path, dirs_and_files[idx]) # selected item
-            if is_solution_file(env, env.cwd.proj.solution_id, path):
+            if is_solution_file(env.cwd.proj.solution_id, path):
                 if is_archive_file(path):
                     # try extract solution archive file 
                     problem_solutions = extract_archives([path])
@@ -374,7 +375,7 @@ def run_menu_function(stdscr, env, fce, key):
                 solution = selected_item
 
             """ show menu with tests for selection """
-            # title = "Press 'enter' to select test, press 'esc' to run selected tests..."
+            title = "Press 'enter' to select test, press 'esc' to run selected tests..."
             # selected_tests = []
             # run_selection = True
             # while run_selection:
@@ -384,30 +385,21 @@ def run_menu_function(stdscr, env, fce, key):
             #         run_selection = False
             #     elif key == 's':
 
-            #     test_names = get_valid_tests_names(env)
-            #     title = "Select from typical notes: "
-            #     color = curses.color_pair(COL_TITLE)
-            #     env, option_idx = brows_menu(stdscr, env, test_names, color=color, title=title)
+            test_names = get_valid_tests_names(env)
+            env, option_idx = brows_menu(stdscr, env, test_names, title=title)
+            if env.is_exit_mode():
+                return env, True
+            screen, win = env.get_screen_for_current_mode()
+            curses.curs_set(0)
+
+            # run selected test
+            if option_idx is not None and len(test_names) > option_idx:
+                test_name = test_names[option_idx]
+                log("test name:" + str(test_name))
+                env = run_test(stdscr, env, solution, test_name)
+                return env, True
 
 
-            #     options = {}
-            #     if len(test_names) > 0:
-            #         for idx, name in enumerate(test_names):
-            #             if idx+1 > 35:
-            #                 break
-            #             key = idx+1 if idx < 9 else chr(idx+1+55) # 1-9 or A-Z (chr(10+55)='A')
-            #             options[str(idx+1)] = name
-
-            #     options = env.get_typical_notes_dict()
-            #     char_key = chr(key)
-            #     if char_key in options.keys():
-            #         str_text = options[char_key]
-            #         note_row, note_col = win.cursor.row, win.cursor.col - win.begin_x
-            #         env.report.add_note(note_row, note_col, str_text)
-            #     rewrite_all_wins(env)
-
-
-            # run_test
     elif fce == TEST_CLEAN: # on solution dir
         pass
     # =================== GENERATE REPORT ===================

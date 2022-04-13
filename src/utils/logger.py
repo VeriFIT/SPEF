@@ -28,7 +28,7 @@ MAIL_TEXT = "mail.txt"
 REPROT_TEMPLATE = "report_template.jinja"
 
 # proj/HISTORY_DIR/
-TESTSUITE_HISTORY_FILE = "testsuite_history.txt"
+HISTORY_FILE = "testsuite_history.txt"
 
 # proj/TESTS_DIR/
 SUM_FILE = "sum"

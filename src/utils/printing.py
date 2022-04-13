@@ -945,7 +945,7 @@ def show_notes(env):
         screen.refresh()
 
 
-def show_menu(screen, win, menu_options, max_rows, max_cols, env, color=None, title=None):
+def show_menu(screen, win, menu_options, max_rows, max_cols, env, keys=None, color=None, title=None):
     screen.erase()
     screen.border(0)
 
@@ -954,8 +954,7 @@ def show_menu(screen, win, menu_options, max_rows, max_cols, env, color=None, ti
         screen.addstr(row+1, 1, title[:max_cols], color if color else curses.A_NORMAL)
         row += 1
 
-    shift = len(str(min(max_rows,len(menu_options))))+1
-    # shift = len(str(len(win.row_shift + max_rows)))+1
+    # shift = len(str(min(max_rows,len(menu_options))))+1
 
     try:
         """ show options """
@@ -970,7 +969,12 @@ def show_menu(screen, win, menu_options, max_rows, max_cols, env, color=None, ti
                 else:
                     coloring = curses.A_NORMAL
 
-                screen.addstr(row+1, 1, str(row+win.row_shift), curses.color_pair(COL_HELP))
+                if keys is not None and len(keys) > row-1+win.row_shift:
+                    key = keys[row-1+win.row_shift]
+                else:
+                    key = row+win.row_shift
+                screen.addstr(row+1, 1, str(key), curses.color_pair(COL_HELP))
+                shift = len(str(key))+1
                 screen.addstr(row+1, 1+shift, str(option[:max_cols-(1+shift)]), coloring)
                 row += 1
         else:

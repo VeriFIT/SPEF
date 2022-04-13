@@ -11,7 +11,7 @@ from utils.printing import *
 from utils.logger import *
 from utils.match import *
 from utils.reporting import *
-
+from utils.history import history_new_test
 
 
 
@@ -83,11 +83,59 @@ def rename_solutions(src_dirs, required_name, extended_variants):
 
 
 
-def create_test_suite(testsuite_file):
+############ HISTORY ############
+def create_tests_history_dir(history_dir):
+    testsuite_history = os.path.join(history_dir, HISTORY_FILE)
+    if not os.path.exists(history_dir):
+        os.mkdir(history_dir)
+        with open(testsuite_history, 'w+') as f: pass
+
+
+############ TESTS ############
+# create tests dir with necessary files
+def create_tests_dir(tests_dir):
+    testsuite_file = os.path.join(tests_dir, TESTSUITE_FILE)
+    scoring_file = os.path.join(tests_dir, SCORING_FILE)
+    sum_file = os.path.join(tests_dir, SUM_FILE)
+    testsuite_tags = os.path.join(tests_dir, TESTSUITE_TAGS)
+    if not os.path.exists(tests_dir):
+        os.mkdir(tests_dir)
+    create_scoring_file(scoring_file) # create scoring file
+    create_sum_file(sum_file) # create sum file
+    create_testsuite(testsuite_file) # create testsuite file
+    create_testsuite_tags_file(testsuite_tags) # create file for testsuite tags 
+
+
+############ SUM ############
+def create_sum_file(sum_file):
+    if not os.path.exists(sum_file):
+        with open(sum_file, 'w+') as f:
+            f.write("SUM=\n")
+
+
+############ SCORING ############
+def create_scoring_file(scoring_file):
+    if not os.path.exists(scoring_file):
+        with open(scoring_file, 'w+') as f:
+            f.write("MAX_POINT=0\n")
+
+
+############ TESTSUITE.SH ############
+def create_testsuite(testsuite_file):
     if not os.path.exists(testsuite_file):
         with open(testsuite_file, 'w+') as f:
             f.write("#!/usr/bin/env bash\n")
             f.write("# ***** write test strategy here *****\n")
+
+
+############ TESTSUITE_TAGS ############
+def create_testsuite_tags_file(testsuite_tags):
+    if not os.path.exists(testsuite_tags):
+        with open(testsuite_tags, 'w+') as f: pass
+        # add default tag for testsuite version
+        version_tag = {"version": [1]}
+        add_tag_to_file(testsuite_tags, version_tag)
+
 
 
 # condition: path is root project dir (or path in proj dir)
@@ -102,16 +150,19 @@ def create_new_test(proj_dir, test_name=None):
                 log("create new test | must be in project (sub)dir")
                 return None
 
+        ############### TESTS ###############
         # create tests dir if not exists
         tests_dir = os.path.join(proj_dir, TESTS_DIR)
-        scoring_file = os.path.join(tests_dir, SCORING_FILE)
-        testsuite_file = os.path.join(tests_dir, TESTSUITE_FILE)
-        if not os.path.exists(tests_dir):
-            os.mkdir(tests_dir)
-            with open(scoring_file, 'w+'): pass # create scoring file
-            create_test_suite(testsuite_file) # create testsuite file
+        create_tests_dir(tests_dir)
+
+        ############### HISTORY ###############
+        # create tests history dir if not exists
+        history_dir = os.path.join(proj_dir, HISTORY_DIR)
+        if not os.path.exists(history_dir):
+            create_tests_history_dir(history_dir)
 
 
+        ############### TEST ###############
         # create subdir in tests dir for new test --> TODO: define "test_dir_base" and "i"
         file_list = os.listdir(tests_dir)
         if (not test_name) or (test_name in file_list):
@@ -125,13 +176,26 @@ def create_new_test(proj_dir, test_name=None):
         new_test_dir = os.path.join(tests_dir, test_name)
         os.mkdir(new_test_dir)
 
+        ############ DOTEST.SH ############
         # create file for test script (dotest.sh)
         with open(os.path.join(new_test_dir, TEST_FILE), 'w+') as f:
             f.write("#!/bin/bash\n")
             f.write("# ***** write test here *****\n")
             f.write("# press Fx to see all available functions and variables you can use")
 
+        ############ TEST_TAGS ############
+        # create file for test tags
+        test_tags = os.path.join(new_test_dir, TESTCASE_TAGS)
+        with open(test_tags, 'w+') as f: pass
+        # add default tag for testsuite version
+        version_tag = {"version": [1]}
+        add_tag_to_file(test_tags, version_tag)
+
+        # add event about creating new test to testsuite history
+        # history_new_test(proj_dir, test_name)
+
         # set default scoring for new test
+        scoring_file = os.path.join(tests_dir, SCORING_FILE)
         with open(scoring_file, 'a+') as f:
             f.write(f"{test_name}_ok=1; {test_name}_fail=0\n")
 

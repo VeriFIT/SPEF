@@ -67,6 +67,7 @@ EXIT_MENU = 500
 SAVE_OPTION = 501
 MOVE_LEFT = 502
 MOVE_RIGHT = 503
+SELECT_BY_IDX = 504
 
 """ user input control """
 EXIT_USER_INPUT = 600
@@ -100,25 +101,26 @@ SHOW_HISTOGRAM = 717
 # in solution dir
 TEST_STUDENT = 720
 TEST_CLEAN = 721
-GEN_CODE_REVIEW = 722
-GEN_AUTO_REPORT = 723
-ADD_AUTO_NOTE = 724
-ADD_USER_NOTE = 725
-SHOW_CODE_REVIEW = 726
-SHOW_AUTO_REPORT = 727
-SHOW_TOTAL_REPORT = 728
-SHOW_TEST_RESULTS = 729
+RUN_TEST = 722
+GEN_CODE_REVIEW = 723
+GEN_AUTO_REPORT = 724
+ADD_AUTO_NOTE = 725
+ADD_USER_NOTE = 726
+
+SHOW_CODE_REVIEW = 730
+SHOW_AUTO_REPORT = 731
+SHOW_TOTAL_REPORT = 732
+SHOW_TEST_RESULTS = 733
 
 # in tests dir
-ADD_TEST = 730
-EDIT_TESTSUITE = 731
-CHANGE_SCORING = 732
-DEFINE_TEST_FAILURE = 733
+ADD_TEST = 740
+EDIT_TESTSUITE = 741
+CHANGE_SCORING = 742
+DEFINE_TEST_FAILURE = 743
 
 # in tests/test dir
-REMOVE_TEST = 734
-EDIT_TEST = 735
-
+REMOVE_TEST = 744
+EDIT_TEST = 745
 
 
 #########################################################################
@@ -259,6 +261,7 @@ def map_menu_function(str_fce):
         'cursor_up': CURSOR_UP,
         'cursor_down': CURSOR_DOWN,
         'save_option': SAVE_OPTION,
+        'select_by_idx': SELECT_BY_IDX,
         'move_left': MOVE_LEFT,
         'move_right': MOVE_RIGHT}
     if str_fce in functions:
@@ -379,6 +382,7 @@ def get_menu_functions(in_proj_dir=False, in_solution_dir=False, is_test_dir=Fal
     student = {
         'student - run tests (testsuite)': TEST_STUDENT,
         'student - clean from test results': TEST_CLEAN,
+        'student - run test':RUN_TEST,
         'student - generate code review from notes': GEN_CODE_REVIEW,
         'student - generate auto report from tests': GEN_AUTO_REPORT, # TODO
         'student - add note to auto report': ADD_AUTO_NOTE, # TODO
