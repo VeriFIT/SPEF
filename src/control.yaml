@@ -32,20 +32,21 @@ general:
 file_functions:
   save_file: 'F2'
   show_or_hide_tags: 'F3'
-  set_edit_file_mode: 'F4'
+  show_test_functions: 'F4'
   show_or_hide_line_numbers: 'F5'
   show_or_hide_note_highlight: 'F6'
   open_note_management: 'F7'
   reload_file_from_last_save: 'F8'
   show_typical_notes: 'F9'
-  set_manage_file_mode: 'ESC'
   go_to_prev_note: 'CTRL+UP'
   go_to_next_note: 'CTRL+DOWN'
   reload_original_buff: 'CTRL+L'
 edit_file_functions:
+  set_manage_file_mode: 'ESC'
   print_new_line: 'ENTER'
   print_char: 'ASCII'
 manage_file_functions:
+  set_edit_file_mode: 'a'
   filter: 'BACKSLASH'
   add_custom_note: '0'
   add_typical_note: ['1','2','3','4','5','6','7','8','9','A..Z']
@@ -76,7 +77,6 @@ notes_functions:
   edit_note: 'F2'
   add_custom_note: '0' # 'F3'
   add_typical_note: 'F9' # 'F4'
-  # show_typical_notes: 'F9'
   go_to_note: 'F5'
   save_as_typical_note: 'F6'
   delete_note: 'F8'

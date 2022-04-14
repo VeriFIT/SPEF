@@ -222,9 +222,15 @@ def get_function_for_key(env, key):
         if char_key == '/':
             function = env.control.get_function(env, 'BACKSLASH')
         elif char_key in [str(i) for i in range(0,10)]:
-            function = env.control.get_function(env, char_key) # number 0..10
+            function = env.control.get_function(env, char_key) # number 0..9
+        elif char_key in "abcdefghijklmnopqrstuvwxyz":
+            function = env.control.get_function(env, char_key)
+            if function is None:
+                function = env.control.get_function(env, 'a..z')
         elif char_key in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
-            function = env.control.get_function(env, 'A..Z')
+            function = env.control.get_function(env, char_key)
+            if function is None:
+                function = env.control.get_function(env, 'A..Z')
         # ============>>> HERE YOU CAN ADD SPECIFIC SYMBOLS TO MATCH <<<============
 
         if function is None:

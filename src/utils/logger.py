@@ -4,9 +4,18 @@ import os
 from pathlib import Path
 
 
-HOME = str(Path(__file__).parents[2])
+HOME = str(Path(__file__).parents[1])
 LOG_FILE = os.path.join(HOME,"debug.log")
-TAG_DIR = os.path.join(HOME,"tags")
+
+
+# TODO: SRC_BASH_FILE rozdelit na dva subory: podpora pre "dotest.sh" a funkcie pre "testsuite.sh"
+# shell supported functions for testing
+SRC_BASH_FILE = os.path.join(HOME, 'testing', 'tst_orig.sh')
+
+DST_BASH_DIR = 'src'
+DST_BASH_FILE = os.path.join(DST_BASH_DIR, 'tst')
+# funkcie pre "testsuite.sh" a "dotest.sh" su v "tests/src/tst" (tst run, tst sum, tst clean,...)
+
 
 
 REPORT_SUFFIX = "_report.yaml"

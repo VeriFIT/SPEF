@@ -108,10 +108,27 @@ def create_tests_dir(tests_dir):
 
 ############ SUM ############
 def create_sum_file(sum_file):
+    mess = """# POZOR:
+#   * mozno pouzivat len tagy s prefixom 'scoring_'
+#       - prefix sa pri parsovani rovnice pre vypocet SUM prida automaticky
+#       - ak teda existuje tag 'scoring_test_1', v rovnici ho pouzi ako 'test_1'
+#   * mozno pouzivat len tagy ktore maju presne jeden parameter
+#       - tag s viacerymi parametrami --> do rovnice sa berie hodnota prveho parametra
+#       - tag bez parametra --> v rovnici sa ignoruje (a vypise sa upozornenie)
+#       - tag, ktory neexistuje --> v rovnici sa ignoruje (a vypise sa upozornenie)
+#   * v rovnici mozno pouzit len znamienka: + - *
+#   * zatvorky nie su podporovane
+#       - pre zlozitejsie vypocty je potreba vytvorit extra tag pre medzivypocet
+#       - napr. vytvorim manualne tag 'scoring_medzihodnota(body)' ktory sa pouzije v SUM ako 'medzihodnota'
+#   * okrem tagov mozno pouzit specialnu funkciu SUM_ALL_TESTS
+#       - tato funkcia scita hodnoty tagov z platnych testov
+#       - moze sa pouzit v kombinacii s dalsimi tagmi
+#       - napr: SUM=SUM_ALL_TESTS + documentation - renamed_solution
+"""
     if not os.path.exists(sum_file):
         with open(sum_file, 'w+') as f:
-            f.write("SUM=\n")
-
+            f.write(mess)
+            f.write("SUM=SUM_ALL_TESTS\n")
 
 ############ SCORING ############
 def create_scoring_file(scoring_file):

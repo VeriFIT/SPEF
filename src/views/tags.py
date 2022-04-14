@@ -82,8 +82,7 @@ def run_function(stdscr, env, fce, key):
         win.down(env.tags, filter_on=env.tag_filter_on(), use_restrictions=False)
     # ======================= SHOW HELP =======================
     elif fce == SHOW_HELP:
-        env = show_help(stdscr, env)
-        screen, win = env.get_screen_for_current_mode()
+        show_help(stdscr, env)
         curses.curs_set(0)
     # ======================= EDIT TAG =======================
     elif fce == EDIT_TAG:

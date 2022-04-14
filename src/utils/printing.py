@@ -445,9 +445,9 @@ def show_directory_content(env):
                             x = max_cols
                             for item in infos:
                                 info, col = item
-                                x = x-len(info)-1
-                                if x <= stop:
+                                if x-len(info)-1 <= stop:
                                     break
+                                x = x-len(info)-1
                                 color = (curses.color_pair(COL_SELECT) if i+win.row_shift == win.cursor.row+1 else col)
                                 screen.addstr(i, x, str(info)+' ', color)
                             if x > stop: # empty space between dir name and its info

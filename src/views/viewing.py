@@ -48,6 +48,9 @@ def file_viewing(stdscr, env):
         env.set_brows_mode() # instead of exit mode
         return env
 
+    if os.path.basename(env.file_to_open) == TEST_FILE:
+        env.editing_test_file = True
+
 
     # check if file is from some project directory
     # buffer_dir = Directory(os.path.dirname(buffer.path))
@@ -177,8 +180,7 @@ def run_function(stdscr, env, fce, key):
         rewrite = (old_shifts != (win.row_shift, win.col_shift))
     # ======================= SHOW HELP =======================
     elif fce == SHOW_HELP:
-        env = show_help(stdscr, env)
-        screen, win = env.get_screen_for_current_mode()
+        show_help(stdscr, env)
         curses.curs_set(1)
         rewrite_all_wins(env)
     # ======================= SAVE FILE =======================
@@ -207,15 +209,10 @@ def run_function(stdscr, env, fce, key):
         env.set_notes_mode()
         return env, rewrite, True
     elif fce == SHOW_TYPICAL_NOTES:
-        center_screen, center_win = env.get_center_win(reset=True)
-        max_cols = center_win.end_x - center_win.begin_x
-        max_rows = center_win.end_y - center_win.begin_y
         # show list of typical notes with indexes
         options = env.get_typical_notes_dict()
         custom_help = (None, "Typical notes:", options)
-        curses.curs_set(0)
-        print_help(center_screen, max_cols, max_rows, env, custom_help=custom_help)
-        key = stdscr.getch()
+        env, key = show_help(stdscr, env, custom_help=custom_help, exit_key=[])
         curses.curs_set(1)
         # if key represents index of typical note, add this note to current line in file
         if curses.ascii.isprint(key):
@@ -225,6 +222,17 @@ def run_function(stdscr, env, fce, key):
                 note_row, note_col = win.cursor.row, win.cursor.col - win.begin_x
                 env.report.add_note(note_row, note_col, str_text)
         rewrite_all_wins(env)
+    # ==================== SHOW TEST FUNCTIONS ====================
+    elif fce == SHOW_TEST_FUNCTIONS:
+        if env.editing_test_file:
+            # show supported functions for dotest.sh while user is writing/editing some test
+            # show list of implemented functions for testing
+            options = env.get_supported_test_functions()
+            custom_help = (None, "Supported functions:", options)
+            env, key = show_help(stdscr, env, custom_help=custom_help, exit_key=[])
+            print_help(center_screen, max_cols, max_rows, env, custom_help=custom_help)
+            curses.curs_set(1)
+            rewrite_all_wins(env)
     # ======================= NOTES JUMP =======================
     elif fce == GO_TO_PREV_NOTE:
         if env.note_highlight:

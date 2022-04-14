@@ -12,15 +12,11 @@ from utils.loading import *
 
 from modules.bash import Bash_action
 
-
-SRC_BASH_DIR = os.path.join(Path(os.path.dirname(__file__)).parent,'testing')
-SRC_BASH_FILE = os.path.join(SRC_BASH_DIR, 'tst_orig.sh')
-
+# SRC_BASH_FILE = 'testing/tst_orig.sh"
+# DST_BASH_FILE = 'src/tst"
+# bash_file = os.path.join(tests_dir, DST_BASH_FILE)
 
 # funkcie pre testsuite.sh a dotest.sh su v "tests/src/tst" (tst run, tst sum, tst clean,...)
-DST_BASH_DIR = 'src'
-DST_BASH_FILE = os.path.join(DST_BASH_DIR, 'tst')
-# bash_file = os.path.join(tests_dir, DST_BASH_FILE)
 
 
 def check_bash_functions_for_testing(proj_dir):

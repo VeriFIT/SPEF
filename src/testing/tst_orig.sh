@@ -220,9 +220,43 @@ type realpath &>/dev/null || die "chybi utilita realpath"
 
 trap on_exit INT TERM HUP
 
+
+get_fce_for_dotest(){
+    cat <<EOF
+wrappers_on [adresar]       = zapne wrappery pro shell utility
+wrappers_off                = vypne wrappery pro shell utility
+run_test sut [param]        = wrapper pro spusteni testovaneho programu (sut)
+sort_out                    = seradi soubor 'stdout' in-situ
+sortu_out                   = seradi soubor 'stdout' in-situ a unikatne
+nwdiff f1 f2                = diffne soubory, ignoruje  bile znaky vcetne konce radku
+diffni [-s|-u] [ref test]   = diffne soubory (by default 'stdout' a 'stdout.ref')
+diffall                     = diffne 'stdout' s 'stdout.ref', a 'stderr' s 'stderr.ref'
+diffdir [-b] ref test       = diff soubory v ref/ se soubory v test/ (soubory navic ignoruje)
+diffdirboth [-b] ref test   = diff soubory v ref/ se soubory v test/
+auto_report "popis testu"   = vypise report o vysledku
+asserterror "popis testu"   = vypise report o vysledku (ocekava nenulovy 'errcode' a 'stderr')
+EOF
+}
+
+if [[ "$1" == "get_fce" ]]; then
+    get_fce_for_dotest; exit 0;
+fi
+
 ##############################################################################
 # PUBLIC funkce (pro dotest.sh)
 ##############################################################################
+
+
+# add_score tag_name
+# tag_name = scoring_{test_name}
+# param1 = body
+# param2 = poznamka
+add_score(){
+
+
+}
+
+
 
 # wrappers_on/off zapne/vypne wrappery pro shell utility.
 # pouziti: wrappers_on [adresar s wrappery] nebo

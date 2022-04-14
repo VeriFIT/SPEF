@@ -20,20 +20,21 @@ SET_MANAGE_FILE_MODE = 11
 SHOW_OR_HIDE_TAGS = 12
 SHOW_OR_HIDE_LINE_NUMBERS = 13
 SHOW_OR_HIDE_NOTE_HIGHLIGHT = 14
-SHOW_TYPICAL_NOTES = 15
-OPEN_NOTE_MANAGEMENT = 16
-ADD_CUSTOM_NOTE = 17
-ADD_TYPICAL_NOTE = 18
-GO_TO_PREV_NOTE = 19
-GO_TO_NEXT_NOTE = 20
-RELOAD_FILE_FROM_LAST_SAVE = 21
-RELOAD_ORIGINAL_BUFF = 22
+SHOW_TEST_FUNCTIONS = 15
+SHOW_TYPICAL_NOTES = 16
+OPEN_NOTE_MANAGEMENT = 17
+ADD_CUSTOM_NOTE = 18
+ADD_TYPICAL_NOTE = 19
+GO_TO_PREV_NOTE = 20
+GO_TO_NEXT_NOTE = 21
+RELOAD_FILE_FROM_LAST_SAVE = 22
+RELOAD_ORIGINAL_BUFF = 23
 
-DELETE = 23
-BACKSPACE = 24
-PRINT_NEW_LINE = 25
-PRINT_CHAR = 26
-SAVE_FILE = 27
+DELETE = 30
+BACKSPACE = 31
+PRINT_NEW_LINE = 32
+PRINT_CHAR = 33
+SAVE_FILE = 34
 
 
 """ directory browsing control """
@@ -136,12 +137,13 @@ def map_file_function(str_fce):
         'show_help': SHOW_HELP,
         'save_file': SAVE_FILE,
         'show_or_hide_tags': SHOW_OR_HIDE_TAGS,
-        'set_edit_file_mode': SET_EDIT_FILE_MODE,
         'show_or_hide_line_numbers': SHOW_OR_HIDE_LINE_NUMBERS,
         'show_or_hide_note_highlight': SHOW_OR_HIDE_NOTE_HIGHLIGHT,
         'open_note_management': OPEN_NOTE_MANAGEMENT,
         'reload_file_from_last_save': RELOAD_FILE_FROM_LAST_SAVE,
+        'show_test_functions': SHOW_TEST_FUNCTIONS,
         'show_typical_notes': SHOW_TYPICAL_NOTES,
+        'set_edit_file_mode': SET_EDIT_FILE_MODE,
         'set_manage_file_mode': SET_MANAGE_FILE_MODE,
         'change_focus': CHANGE_FOCUS,
         'resize_win': RESIZE_WIN,

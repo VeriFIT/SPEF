@@ -56,6 +56,8 @@ class Environment:
         self.user_input_mode = False
 
         self.file_to_open = None
+        self.editing_test_file = False # True while editing test (if file_to_open is TEST_FILE)
+    
         self.cwd = None # Directory(path, dirs, files)
         self.buffer = None # Buffer(path, lines)
         self.tags = None # Tags(path, data)
@@ -78,9 +80,10 @@ class Environment:
         self.control.set_user_input_functions(contr)
 
 
-    def set_file_to_open(self, file_to_open):
+    def set_file_to_open(self, file_to_open, is_test_file=False):
         if self.file_to_open != file_to_open:
             self.file_to_open = file_to_open
+            self.editing_test_file = is_test_file
             if self.show_tags:
                 self.windows.view.reset()
             else:
@@ -168,6 +171,15 @@ class Environment:
                     break
                 key = idx+1 if idx < 9 else chr(idx+1+55) # 1-9 or A-Z (chr(10+55)='A')
                 options[str(key)] = note.text
+        return options
+
+    def get_supported_test_functions(self):
+        options = {}
+        fce_str = os.popen(f'{SRC_BASH_FILE} get_fce 2>/dev/null').read()
+        for item in fce_str.splitlines():
+            fce, descr = item.split('=')
+            fce, descr = fce.strip(), descr.strip()
+            options[str(fce)] = str(descr)
         return options
 
     """ update data """

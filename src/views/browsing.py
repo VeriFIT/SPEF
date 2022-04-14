@@ -181,8 +181,7 @@ def run_function(stdscr, env, fce, key):
                     win.down(env.cwd, filter_on=env.path_filter_on(), use_restrictions=False)
     # ======================= SHOW HELP =======================
     elif fce == SHOW_HELP:
-        env = show_help(stdscr, env)
-        screen, win = env.get_screen_for_current_mode()
+        show_help(stdscr, env)
         curses.curs_set(0)
     # ======================= OPEN MENU =======================
     elif fce == OPEN_MENU:
@@ -457,7 +456,7 @@ def run_menu_function(stdscr, env, fce, key):
                 win.reset(0,0)
 
                 # open shell script "dotest.sh" to implement the test
-                env.set_file_to_open(os.path.join(new_test_dir, TEST_FILE))
+                env.set_file_to_open(os.path.join(new_test_dir, TEST_FILE), is_test_file=True)
                 env.switch_to_next_mode()
                 return env, True
     # =================== EDIT TESTSUITE ===================

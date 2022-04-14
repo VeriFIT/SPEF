@@ -299,9 +299,6 @@ def preparation():
     """ clear log file """
     with open(LOG_FILE, 'w+'): pass
 
-    """ create dirs for tags and reports """
-    if not os.path.exists(TAG_DIR):
-        os.makedirs(TAG_DIR)
 
 
 
