@@ -5,7 +5,9 @@ import yaml
 import os
 import traceback
 
-from modules.buffer import Buffer, Report, Tags, Note
+from modules.buffer import Buffer
+from modules.report import Report, Note
+from modules.tags import Tags
 
 # from utils.printing import *
 from utils.logger import *
@@ -279,10 +281,13 @@ def load_buffer_and_tags(env):
         buffer = env.buffer
     else:
         try:
-            with open(env.file_to_open, 'r') as f:
-                lines = f.read().splitlines()
-            buffer = Buffer(env.file_to_open, lines)
-            env.buffer = buffer
+            if os.path.isfile(env.file_to_open):
+                with open(env.file_to_open, 'r') as f:
+                    lines = f.read().splitlines()
+                buffer = Buffer(env.file_to_open, lines)
+                env.buffer = buffer
+            else:
+                return env, None, False
         except UnicodeDecodeError as err:
             log("load file content ("+str(env.file_to_open)+") | "+str(err))
             return env, None, False

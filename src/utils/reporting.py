@@ -8,7 +8,8 @@ from utils.logger import *
 from utils.loading import *
 from utils.match import *
 
-from modules.directory import Project
+from modules.project import Project
+
 
 
 def add_tag_to_solution(solution_dir, tag_name, tag_args):

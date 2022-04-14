@@ -7,7 +7,7 @@ from controls.control import *
 from views.help import show_help
 
 from modules.buffer import UserInput
-from modules.directory import Filter
+from modules.filter import Filter
 
 from utils.screens import *
 from utils.printing import *
@@ -32,9 +32,10 @@ def filter_management(stdscr, screen, win, env):
     if not env.filter:
         if env.cwd.proj:
             env.filter = Filter(env.cwd.proj.path)
+            # env.filter = Filter(env.cwd.path)
         else:
             env.filter = Filter(env.cwd.path)
-    log("path: "+str(env.filter.root))
+    # log("path: "+str(env.filter.root))
 
     old_filter_text = ''.join(user_input.text)
 
@@ -129,6 +130,11 @@ def run_function(stdscr, filter_data, old_filter_text, env, fce, key):
         env.filter.find_files(env)
         if old_filter_text != text:
             env.prepare_browsing_after_filter()
+        return filter_data, env, True
+    elif fce == AGGREGATE_FILTER:
+        env.filter.aggregate = not env.filter.aggregate
+        env.filter.find_files(env)
+        env.prepare_browsing_after_filter()
         return filter_data, env, True
     # ======================= REMOVE FILTER =======================
     elif fce == REMOVE_FILTER:

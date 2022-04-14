@@ -112,7 +112,7 @@ def print_hint(env):
         elif env.is_tag_mode(): filter_type = "tag"
         else: filter_type = None
 
-        F_HELP = {"F1":"help", "ESC":"exit filter mode", 
+        F_HELP = {"F1":"help", "ESC":"exit filter mode", "F4":"aggregate",
                 "F8":"remove all filters", "F9":f"edit {filter_type} filter"}
         help_dict = {} if not filter_type else F_HELP
     elif env.is_brows_mode():
@@ -146,6 +146,7 @@ def print_help(screen, max_cols, max_rows, env, custom_help=None):
             mode = "FILTER MANAGEMENT"
             actions = {
             "F1": "show this user help",
+            "F4": "aggregate by same tags file",
             "F8": "delete/remove all filters",
             "F10": "exit program",
             "ESC": "exit filter management",
@@ -396,7 +397,8 @@ def show_directory_content(env):
     max_cols = win.end_x - win.begin_x
     max_rows = win.end_y - win.begin_y - 1
 
-    cwd = Directory(env.filter.root, files=env.filter.files) if env.filter_not_empty() else env.cwd
+    # cwd = Directory(env.filter.root, files=env.filter.files) if env.filter_not_empty() else env.cwd
+    cwd = env.cwd
     dirs, files = cwd.get_shifted_dirs_and_files(win.row_shift)
 
 

@@ -15,7 +15,8 @@ from views.help import show_help
 from views.menu import brows_menu
 from views.input import get_user_input
 
-from modules.directory import Directory, Project
+from modules.directory import Directory
+from modules.project import Project
 from modules.bash import Bash_action
 
 from utils.loading import *
@@ -32,7 +33,9 @@ from testing.tst import *
 
 def get_directory_content(env):
     if env.filter_not_empty():
-        cwd = Directory(env.filter.root, files=env.filter.files)
+        files = env.filter.aggregate_files if env.filter.aggregate else env.filter.files
+        dirs = env.filter.aggregate_dirs if env.filter.aggregate else []
+        cwd = Directory(env.filter.root, dirs, files)
         cwd.get_proj_conf()
         return cwd
 
@@ -88,7 +91,6 @@ def directory_browsing(stdscr, env):
                             env.enable_line_numbers(buffer)
             # if its project directory, show project info and test results
             else:
-
                 if env.cwd.proj is not None: # current working directory is a project subdirectory (ex: "proj1/")
                     # env.cwd.proj
                     selected_dir =  os.path.join(env.cwd.path, dirs_and_files[idx])

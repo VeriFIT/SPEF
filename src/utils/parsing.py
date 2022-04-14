@@ -39,10 +39,15 @@ c) for predicate in predicates -- resp while predicate not matches
 """
 def parse_solution_info_predicate(predicate, solution_dir):
 
+    # defined colors
     red = curses.color_pair(HL_RED)
     green = curses.color_pair(HL_GREEN)
     blue = curses.color_pair(HL_BLUE)
     normal = curses.A_NORMAL
+    cyan = curses.color_pair(HL_CYAN)
+    yellow = curses.color_pair(HL_YELLOW)
+    orange = curses.color_pair(HL_ORANGE)
+    pink = curses.color_pair(HL_PINK)
 
     total_match = True
     color = normal
@@ -54,8 +59,6 @@ def parse_solution_info_predicate(predicate, solution_dir):
                 cond = str(cond).strip()
                 match = False
                 # check if predicate condition refers to param from tag
-                # matches: param2 FROM #tag_name(param1, param2, param3) > compare_with
-                # if re.match("^\w+ FROM #\w+\(\w+(,\s*\w+)*\)", cond):
                 # matches: tag_name.1 > 5
                 if re.match("^\w+.[0-9]+\s*[<>=]\s*\w+$", cond):
                     components = re.split(r'([<>=])', cond)
@@ -76,8 +79,8 @@ def parse_solution_info_predicate(predicate, solution_dir):
                                 elif op == '=': match = str(param) == str(value)
                                 else:
                                     log("invalid operand in info predicate (in proj conf)")
-                    else:
-                        log("invalid info predicate (in proj conf)")
+                    # else:
+                        # log(f"tag in predicate doesnt exist or has no param with given idx")
                 elif cond == '':
                     # condition is empty
                     match = True
@@ -104,6 +107,10 @@ def parse_solution_info_predicate(predicate, solution_dir):
         elif col == 'red': color = red
         elif col == 'green': color = green
         elif col == 'blue': color = blue
+        elif col == 'cyan': color = cyan
+        elif col == 'yellow': color = yellow
+        elif col == 'orange': color = orange
+        elif col == 'pink': color = pink
 
     return match, color
 
@@ -125,7 +132,7 @@ def parse_solution_info_visualization(info, solution_dir):
     visual, length = None, None
 
     # check if visualization refers to param from tag
-    # if re.match("^\w+ FROM #\w+\(\w+(,\s*\w+)*\)$", visualization):
+    # matches: tag_name.1
     if re.match("^\w+.[0-9]+$", visualization):
         visual = get_param_from_tag(visualization, solution_dir)
         length = info['length'] if 'length' in info else 1
@@ -146,8 +153,7 @@ def get_param_from_tag(txt, solution_dir):
     try:
         result = None
         txt.strip()
-        # matches: param2 FROM #tag_name(param1, param2, param3)
-        # if re.match("^\w+ FROM #\w+\(\w+(,\s*\w+)*\)$", txt):
+        # matches: tag_name.1
         if re.match("^\w+.[0-9]+$", txt):
             components = re.split(r'[.]', txt)
             if len(components) == 2:
@@ -157,11 +163,8 @@ def get_param_from_tag(txt, solution_dir):
                     return None
                 # check if tag has required param
                 tag_param = find_tag_param_for_solution(solution_dir, tag_name, int(param_num)-1)
-                log(tag_name)
-                log(int(param_num)-1)
-                log(tag_param)
                 if tag_param is None:
-                    log("get param from tag | tag not exist or has no param in required idx")
+                    # log("get param from tag | tag not exist or has no param in required idx")
                     return None
                 result = str(tag_param)
         return result
@@ -182,10 +185,8 @@ def find_tag_param_for_solution(solution_dir, tag_name, param_idx):
     # try to find required tag in tests tags
     solution_tests_dir = os.path.join(solution_dir, TESTS_DIR)
     tests_tags = load_tests_tags(solution_tests_dir)
-    log(f"tags: {tests_tags}")
     if tests_tags is not None and len(tests_tags)>0:
         param = tests_tags.get_param_by_idx(tag_name, param_idx)
-        log(f"param: {param}")
         if param is not None:
             return param
     return None

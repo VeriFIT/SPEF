@@ -83,6 +83,7 @@ notes_functions:
   exit_notes: 'ESC'
 # filter functions
 filter_functions:
+  aggregate: 'F4'
   remove_filter: 'F8'
   exit_filter: 'ESC'
   print_char: 'ASCII'

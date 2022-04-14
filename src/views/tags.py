@@ -10,7 +10,8 @@ from views.filtering import filter_management
 from views.help import show_help
 from views.input import get_user_input
 
-from modules.buffer import Tags, UserInput
+from modules.buffer import UserInput
+from modules.tags import Tags
 from modules.bash import Bash_action
 
 from utils.loading import load_tags_from_file, save_tags_to_file

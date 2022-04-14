@@ -26,9 +26,6 @@ from views.notes import notes_management
 from views.help import show_help
 
 from modules.environment import Environment
-from modules.buffer import Buffer, Report, UserInput
-from modules.directory import Directory
-from modules.window import Window, Cursor
 from modules.bash import Bash_action
 
 from utils.loading import *

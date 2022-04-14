@@ -10,7 +10,8 @@ from views.menu import brows_menu
 from views.input import get_user_input
 from views.help import show_help
 
-from modules.buffer import Tags, UserInput
+from modules.buffer import UserInput
+from modules.tags import Tags
 from modules.bash import Bash_action
 
 from utils.loading import save_report_to_file

@@ -61,6 +61,7 @@ DELETE_NOTE = 304
 EXIT_FILTER = 400
 SAVE_FILTER = 401
 REMOVE_FILTER = 402
+AGGREGATE_FILTER = 403
 
 """ menu control """
 EXIT_MENU = 500
@@ -235,6 +236,7 @@ def map_filter_function(str_fce):
         'exit_program': EXIT_PROGRAM,
         'bash_switch': BASH_SWITCH,
         'show_help': SHOW_HELP,
+        'aggregate': AGGREGATE_FILTER,
         'remove_filter': REMOVE_FILTER,
         'exit_filter': EXIT_FILTER,
         'cursor_up': CURSOR_UP,
