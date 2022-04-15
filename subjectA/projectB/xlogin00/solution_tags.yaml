@@ -1,0 +1,8 @@
+plagiat:
+- id5
+renamed_sut:
+- readme.md-->sut
+scoring:
+- '2'
+test1_ok:
+- '2'

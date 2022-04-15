@@ -1,0 +1,23 @@
+15:celkem bodu za projekt
+#-- automaticke hodnoceni -----------------------------
+1:ok: opis vstupniho souboru na vystup
+1:ok: opis vice vstupnich souboru na vystup
+1:ok: opis vice vstupnich souboru vcetne gz na vystup
+1:ok: opis stdin na stdout
+1:ok: prikaz graph-pos
+1:ok: prikaz hist-ord
+1:ok: prikaz last-price
+1:ok: prikaz list-tick
+1:ok: prikaz pos
+1:ok: prikaz profit
+1:ok: filtr -a
+1:ok: filtry -a i -b
+1:ok: filtr -b
+1:ok: filtr -t
+1:ok: filtr -t -t
+1:ok: filtr -t pos
+1:ok: filtr -t profit
+1:ok: docasne soubory:
+#------------------------------------------------------
+18:celkove score (max pro hodnoceni 15)
+15:celkem bodu za projekt

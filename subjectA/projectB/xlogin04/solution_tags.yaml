@@ -1,0 +1,4 @@
+test1_fail:
+- '0'
+testsuite:
+- '3'

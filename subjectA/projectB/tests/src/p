@@ -1,0 +1,30 @@
+#!/bin/bash
+FUT="tradelog"
+
+for f in `ls $FUT 2>/dev/null`; do
+    if ! [ -d original ]; then
+        mkdir original
+        cd original
+        unzip -o ../*zip
+        cd ..
+    fi
+    if ! cmp -s $f original/$f; then
+        diff -u original/$f $f >$f.vyucujici.patch
+    fi
+#    # patch pro jednotlive soubory
+#    if [ -f "$f.patch" ]; then
+#        echo Rozbaluji $f odevzdany do ISu
+#        unzip -o *zip $f
+#        echo Provadim patch
+#        patch $f $f.patch
+#    fi
+done
+
+if ls *.patch >/dev/null 2>&1; then
+    cp $FUT ${FUT}~
+    cp original/$FUT $FUT
+fi
+for patch in $(ls *.patch); do
+    echo Provadim patch $patch
+    patch -f <$patch
+done

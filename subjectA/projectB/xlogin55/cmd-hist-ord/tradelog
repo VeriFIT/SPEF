@@ -1,0 +1,404 @@
+#!/bin/bash
+
+set -u
+set -e
+# set -v
+# set -x
+
+usage()
+{
+    {
+    [ $# -gt 0 ] && echo "error: $1"
+    echo "syntax: tradelog [-h|--help] [FILTER] [COMMAND] [LOG [LOG2 [...]]]"
+    echo "COMMAND: one of"
+    echo "  list-tick     list tickers of traded companies"
+    echo "  profit        print the profit of the closed positions"
+    echo "  pos           list current positions"
+    echo "  last-price    list the unit price of the last sale"
+    echo "  hist-ord      draw histogram of orders"
+    echo "  graph-pos     draw graph of positions"
+    echo "FILTER: combination of below"
+    echo "  -a DATETIME   process logs after date (YYYY-MM-DD HH:MM:SS)"
+    echo "  -b DATETIME   process logs before date"
+		echo "  -t TICKER     process only for the given TICKER (can be used multiple times)"
+		echo "  -w WIDTH      width of graphs"
+		echo "LOG: plain text or gzip; if no LOG provided, standard input is used"
+		echo "  -h, --help    this help message"
+    } >&2
+}
+
+die()
+{
+    echo "error: $*" >&2
+    exit 1
+}
+
+# $* - datetime, e.g. YYYY-MM-DD HH:MM:SS, or "DD Feb YYYY HH:MM"
+since_epoch()
+{
+	date +%s --date="$*" || die "invalid format of timestamp: $*"
+}
+
+# $1 - unix_time
+filter_after()
+{
+	while read line; do
+		timestamp=$(echo ${line} | sed 's/;.*$//')
+		unixtime=$(since_epoch $timestamp)
+		[ $unixtime -gt $1 ] && echo "$line"
+	done
+}
+
+# $1 - unix_time
+filter_before()
+{
+	while read line; do
+		timestamp=$(echo ${line} | sed 's/;.*$//')
+		unixtime=$(since_epoch $timestamp)
+		[ $unixtime -lt $1 ] && echo "$line"
+	done
+}
+
+# $1 - tickers
+filter_tickers()
+{
+	awk -v TICKERS="$1" '\
+		BEGIN { \
+			FS=";"; \
+			split(TICKERS, a, "|"); \
+		} \
+		\
+		{ \
+			for (i in a) { \
+				if ($2 == a[i]) { \
+					print $0; \
+				} \
+			} \
+		} \
+		'
+}
+
+cmd_list_tick()
+{
+    awk 'BEGIN { FS=";" }  {print $2}' | sort -u
+}
+
+cmd_profit()
+{
+	# awk 'BEGIN { FS=";" } \
+	# 	$3 ~ /buy/  {printf(" %s %s %s\n", $4, $6, $5)} \
+	# 	$3 ~ /sell/ {printf("-%s %s %s\n", $4, $6, $5)} \
+	# 	'
+	awk 'BEGIN { FS=";" } \
+		$3 ~ /buy/  {printf("(-%s * %s) + ", $4, $6)} \
+		$3 ~ /sell/ {printf("(%s * %s) + ", $4, $6)} \
+		END { printf("0\n")} \
+		' | bc
+}
+
+cmd_last_price()
+{
+	awk '\
+		BEGIN { \
+			FS=";"; \
+			max_price_len = 0; \
+		} \
+		\
+		{\
+			ticker = $2; \
+			price = $4; \
+			last_price[ticker] = price;\
+			max_price_len = (max_price_len < length(price))? length(price) : max_price_len;\
+		} \
+		END { \
+			for (ticker in last_price) {\
+				printf("%-10s: ", ticker); \
+				price = last_price[ticker]; \
+				for (i=0; i < max_price_len - length(price); ++i) { \
+					printf(" "); \
+				} \
+				print price; \
+			} \
+		} \
+	' | sort -u
+}
+
+analyze_pos()
+{
+	awk '\
+		BEGIN { \
+			FS=";"; \
+			split("", positions); \
+		} \
+		\
+		{\
+			ticker = $2; \
+			order_type = $3; \
+			price = $4; \
+			volume = $6; \
+			if (!ticker in positions) { \
+				positions[ticker] = 0; \
+			} \
+			if (order_type == "buy") { \
+				positions[ticker] += volume; \
+			} else if (order_type == "sell") { \
+				positions[ticker] -= volume; \
+			} \
+			last_price[ticker] = price; \
+		} \
+		END { \
+			longest_pos = 0; \
+			longest_price = 0; \
+			for (ticker in positions) { \
+				longest_pos = (longest_pos < length(positions[ticker]))? length(positions[ticker]) : longest_pos; \
+				split(last_price[ticker], a, ","); \
+				longest_price = (longest_price < length(a[1]))? length(a[1]) : longest_price; \
+			} \
+			for (ticker in positions) { \
+				printf("%s", ticker); \
+				for (i=0; i < 10 - length(ticker) ; ++i) { \
+					printf(" "); \
+				} \
+				vol = positions[ticker]; \
+				for (i=0; i < longest_pos - length(vol); ++i) { \
+					printf(" "); \
+				} \
+				printf("%s  ", vol); \
+				price = last_price[ticker]; \
+				for (i=0; i < longest_price - length(price); ++i) { \
+					printf(" "); \
+				} \
+				printf("%s\n", price); \
+			} \
+		} \
+	'
+}
+
+cmd_pos()
+{
+	analyze_pos \
+		| while read ticker vol price currency ; do \
+			echo $ticker $(echo "$vol" "*" "$price" | bc) $currency ; \
+			done \
+		| awk '\
+			BEGIN { \
+				FS=" "; \
+			} \
+			\
+			{\
+				ticker = $1; \
+				cap = $2; \
+				arcap[ticker] = cap; \
+			} \
+			END { \
+				longest_cap = 0; \
+				for (ticker in arcap) { \
+					longest_cap = (longest_cap < length(arcap[ticker]))? length(arcap[ticker]) : longest_cap; \
+				} \
+				for (ticker in arcap) { \
+					printf("%-10s: ", ticker); \
+					cap = arcap[ticker]; \
+					for (i=0; i < longest_cap - length(cap); ++i) { \
+						printf(" "); \
+					} \
+					printf("%s\n", cap); \
+				} \
+			} \
+		' \
+		| sort -g -r -k3
+}
+
+# $1 - bar size
+getbar()
+{
+    awk -v SIZE=$1 'function bar(n) {
+        s=""
+        for(j=1;j<=n;j++) s=s"#"
+        return s
+    }BEGIN{print bar(SIZE)}'
+}
+
+histo_width()
+{
+	histogram
+}
+
+# $1 - shrinking factor (default = 1)
+histogram()
+{
+	if [ -z $* ] ; then
+		factor=1
+	else
+		factor=$*
+	fi
+
+	while read ticker count ; do
+		# echo $ticker $count >&2
+		NEGATIVE=0
+		if [ $(echo $count | sed 's/\.//') -lt 0 ] ; then
+			# echo NEGATIVE: $count >&2
+			NEGATIVE=1
+			count=$(echo $count | sed 's/-//')
+		fi
+		# echo "$count / $factor" >&2
+		newcount=$(echo "$count / $factor" | bc)
+		# echo count: $count >&2
+		# echo newcount: $newcount >&2
+		bar="$(getbar $newcount)"
+		if [ "$NEGATIVE" -eq 1 ] ; then
+			bar=$(echo $bar | sed 's/#/!/g')
+		fi
+		printf "%-10s: " $ticker
+		echo $bar
+		# echo $newcount
+	done
+}
+
+draw_histogram_pos()
+{
+	cmd_pos \
+	| cut -d':' -f1,2 --output-delimiter=" " \
+	| histogram 1000 \
+	| sort
+}
+
+compute_max()
+{
+	awk '\
+		BEGIN { \
+			FS=" "; \
+			max_count=0; \
+		} \
+		\
+		{\
+			count = $2; \
+			count = (count >= 0)? count : substr(count, 2, length(count)); \
+			max_count = (max_count < count)? count : max_count; \
+			print
+		} \
+		END { \
+			print "max " max_count; \
+		}'
+}
+
+draw_histogram_pos_width()
+{
+	cmd_pos \
+	| cut -d':' -f1,2 --output-delimiter=" " \
+	| compute_max \
+	| tac \
+	| blah \
+	| sort
+}
+
+blah()
+{
+	read ignore max
+	w=$(echo "$max / $WIDTH" | bc)
+	histogram $w
+}
+
+draw_histogram_ord()
+{
+	cut -d';' -f2 \
+		| sort \
+		| uniq -c \
+		| sed 's/^ *//' \
+		| while read num ticker ; do
+				echo $ticker $num
+			done \
+		| histogram
+}
+
+cmd_graph_pos()
+{
+	if [ -z ${WIDTH} ] ; then
+		draw_histogram_pos
+	else
+		draw_histogram_pos_width
+	fi
+}
+
+cmd_hist_ord()
+{
+    draw_histogram_ord
+}
+
+# $@ - log files (may be .gz)
+generator_files()
+{
+	if [ $# -eq 0 ]; then
+		cat
+	else
+		for log in $*; do
+			if [ "$log" != "${log%.gz}" ]; then
+				gunzip - <$log
+			else
+				cat $log
+			fi
+		done
+	fi
+}
+
+# argument setup
+command=
+filter=
+generator=
+tickers=
+WIDTH=
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-h|--help)
+			usage
+			exit 0;;
+		list-tick|profit|pos|last-price|graph-pos|hist-ord)
+			[ -n "$command" ] && die multiple commands specified
+			command=cmd_${1/-/_}
+			shift;;
+		-a)
+			[ $# -gt 1 ] || die DATETIME not specified
+			seconds=$(since_epoch "$2")
+			filter="$filter${filter:+|}filter_after $seconds"
+			shift 2;;
+		-b)
+			[ $# -gt 1 ] || die DATETIME not specified
+			seconds=$(since_epoch "$2")
+			filter="$filter${filter:+|}filter_before $seconds"
+			shift 2;;
+		-w)
+			[ $# -gt 1 ] || die WIDTH not specified
+			if ! [ -z $WIDTH ] ; then
+				die "WIDTH provided multiple times"
+			fi
+			WIDTH="$2"
+			re='^[1-9][0-9]*$'
+			if ! [[ $WIDTH =~ $re ]] ; then
+				die "$WIDTH is not a positive integer for WIDTH"
+			fi
+			shift 2;;
+		-t)
+			[ $# -gt 1 ] || die TICKER not specified
+			tick="$2"
+			tickers="$tickers${tickers:+|}$tick"
+			shift 2;;
+		*)
+			break;;
+	esac
+done
+if [ -z "$command" ]; then
+	command=cat
+fi
+
+generator_files "$@" \
+| if [ -z "$filter" ]; then
+		cat
+	else
+		eval "$filter"
+	fi \
+| if [ -z "$tickers" ]; then
+		cat
+	else
+		filter_tickers "$tickers"
+	fi \
+| $command

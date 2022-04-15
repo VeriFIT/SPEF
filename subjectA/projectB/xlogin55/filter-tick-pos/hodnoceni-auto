@@ -1,0 +1,10 @@
+0:filter-tick-pos: filtr -t pos
+# ./tradelog -t TSM pos test.log <stdin >>stdout 2>>stderr; echo $? >>errcode
+# ./tradelog -t TSM pos test.log <stdin >>stdout 2>>stderr; echo $? >>errcode
+# errcode=0,0; ocekavan errcode=0
+# diff -u stdout.ref stdout
+#   --- stdout.ref
+#   +++ stdout
+#   @@ -1 +1,2 @@
+#    TSM       : -466054.60
+#   +TSM       : -466054.60

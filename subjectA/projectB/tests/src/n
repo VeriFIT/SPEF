@@ -1,0 +1,106 @@
+#!/bin/bash
+
+# pridavani komentaru pro casti projektu
+# usage:
+#   n             - otevre soubor hodnoceni-user v editoru $EDITOR
+#   n zkratka     - prida komentar odpovidajici zkratce (viz dole)
+#       napr. n p3
+#   n komentar    - prida komentar do souboru $testgroup-test0
+#       napr. n "-2:nejaka chyba objevena v kodu neobjevena testy" 
+#             n "2:kompenzace za neco automaticky strzeneho"
+
+filename=hodnoceni-user
+komentar="$@"
+
+PROJDIR=$(dirname $(realpath $0))
+if ! [ -f "$PROJDIR/tests/scoring" ]; then
+    echo "chybi scoring soubor $PROJDIR/tests/scoring"
+    exit 1
+fi
+. $PROJDIR/tests/scoring
+
+case "$komentar" in
+    a)      komentar=`echo "-1:spatny obsah archivu";
+            unzip -l *.zip 2>&1|sed 's/^/#   /'`;;
+    a1)     komentar="-1:spatny archiv: `file proj* 2>&1`";;
+    a2)     komentar="-2:spatny archiv: `file proj* 2>&1`";;
+    crlf)   komentar="-2:neni unixovy skript (radky ukoncene CRLF)";;
+
+    k1)     komentar="+1:kompenzace: chovani ok";;
+    k2)     komentar="+2:kompenzace: chovani ok";;
+    k3)     komentar="+3:kompenzace: chovani ok";;
+    k4)     komentar="+5:kompenzace: chovani ok";;
+    k5)     komentar="+5:kompenzace: chovani ok";;
+    
+    u0)     komentar="-0:uprava kodu vyucujicim (viz *vyucujici.patch)";;
+    u|u1)     komentar="-1:uprava kodu vyucujicim (viz *vyucujici.patch)";;
+    u2)     komentar="-2:uprava kodu vyucujicim (viz *vyucujici.patch)";;
+    u3)     komentar="-3:uprava kodu vyucujicim (viz *vyucujici.patch)";;
+    u4)     komentar="-4:uprava kodu vyucujicim (viz *vyucujici.patch)";;
+
+    p0)     komentar="-0:aplikace patch";;
+    p05)    komentar="-0.5:aplikace patch";;
+    p1)     komentar="-1:aplikace patch";;
+    p2)     komentar="-2:aplikace patch";;
+    p3)     komentar="-3:aplikace patch";;
+    p4)     komentar="-4:aplikace patch";;
+    p5)     komentar="-5:aplikace patch";;
+
+    c)      komentar="-0:spatny coding-style";;
+    i)      komentar="-0:spatny coding-style (pro odsazeni min. 2 mezery)";;
+    fce|funkce|fun|f)
+            komentar="-1:necitelnost kodu (prilis dlouhe funkce)";;
+    cit0)   komentar="-0:necitelnost kodu";;
+    cit1)   komentar="-1:necitelnost kodu";;
+    cit2)   komentar="-2:necitelnost kodu";;
+    cit5)   komentar="-0.5:necitelnost kodu";;
+    kom0)   komentar="-0:malo komentovany kod";;
+    kom5)   komentar="-0.5:malo komentovany kod";;
+    kom1)   komentar="-1:malo komentovany kod";;
+    l)      komentar="-0:zbytecne dlouhe radky (vice nez 80 znaku)";;
+
+    kom05)  komentar="+0.5:komentare";;
+    nice)   komentar="+1:pochvala za pekny kod";;
+    ef1)    komentar="+1:efektivni kod";;
+    ef2)    komentar="+2:pochvala za efektivni kod";;
+
+# IOS 2012
+    pa)     komentar="0:doporucuji prijit s patch souborem";;
+
+# IOS 2011
+#    i5)     komentar="-1:chybi interpret na prvnim radku skriptu (shebang)";;
+#    nopar)  komentar="$a_nopar:skript nelze spustit soucasne (spatna volba v /tmp?)";;
+#notmp)      komentar="-1:nocheckrm:maze soubory jine nez v /tmp (pravdepodobne nepouziva /tmp)";;
+#    pa)     komentar="0:doporucuji patch na ardiff";;
+#    ph)     komentar="0:doporucuji patch na hltrace";;
+#    ua1)    komentar="-1:uprava kodu ardiff vyucujicim";;
+#    uh1)    komentar="-1:uprava kodu hltrace vyucujicim";;
+#    ua2)    komentar="-2:uprava kodu ardiff vyucujicim";;
+#    uh2)    komentar="-2:uprava kodu hltrace vyucujicim";;
+
+# kompenzace bodu
+    s5)     komentar="+5:kompenzace za -15 bodu za sleep";;
+    s10)    komentar="+10:kompenzace za -15 bodu za sleep";;
+    s15)    komentar="+15:kompenzace za -15 bodu za sleep";;
+    b)      komentar="+2:vystup ok (pravdepodobne nepouziti setbuf)";;
+
+    u64)    komentar="-1:uprava kodu vyucujicim, nefunguje na x86_64";;
+    uk)     komentar="-2:uprava kodu, nefunguje na x86_64, NEPOUZIVA ftok";;
+    um)     komentar="-1:uprava makefile vyucujicim";;
+
+
+esac
+
+if [ "$komentar" ]; then
+    echo "$komentar" >>$filename
+else
+    [ -z "$EDITOR" ] && EDITOR=$VISUAL
+    [ -z "$EDITOR" ] && EDITOR="mc -e"
+    [ -f "$filename" ] || touch "$filename"
+    $EDITOR $filename
+fi
+
+if [ -f $filename ]; then
+    pozn=`cat $filename`; uniq <<<"$pozn" >$filename
+    $PROJDIR/bin/tst sum >/dev/null
+fi

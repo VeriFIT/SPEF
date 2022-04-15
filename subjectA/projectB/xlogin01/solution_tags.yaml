@@ -1,0 +1,10 @@
+last_testing:
+- 17.02.-15:30
+renamed_sut:
+- documentation.txt --> sut
+scoring:
+- '5'
+test1_fail:
+- '0'
+test1_ok:
+- '2'

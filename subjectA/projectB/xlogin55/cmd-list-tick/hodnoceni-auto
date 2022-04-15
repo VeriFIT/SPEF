@@ -1,0 +1,60 @@
+0:cmd-list-tick: prikaz list-tick
+# ./tradelog list-tick test.log <stdin >>stdout 2>>stderr; echo $? >>errcode
+# ./tradelog list-tick test.log <stdin >>stdout 2>>stderr; echo $? >>errcode
+# errcode=0,0; ocekavan errcode=0
+# diff -u stdout.ref stdout
+#   --- stdout.ref
+#   +++ stdout
+#   @@ -47,3 +47,52 @@
+#    VZ
+#    WMT
+#    XOM
+#   +AAPL
+#   +ABBV
+#   +ABT
+#   +ACN
+#   +ADBE
+#   +AMZN
+#   +ASML
+#   +AVGO
+#   +BABA
+#   +BAC
+#   +BHP
+#   +CMCSA
+#   +CRM
+#   +CSCO
+#   +CVX
+#   +DIS
+#   +FB
+#   +GOOG
+#   +GOOGL
+#   +HD
+#   +INTC
+#   +JNJ
+#   +JPM
+#   +KO
+#   +LLY
+#   +MA
+#   +MRK
+#   +MSFT
+#   +NFLX
+#   +NKE
+#   +NVDA
+#   +NVO
+#   +NVS
+#   +ORCL
+#   +PDD
+#   +PEP
+#   +PFE
+#   +PG
+#   +PYPL
+#   +SHOP
+#   +TM
+#   +TMO
+#   +TSLA
+#   +TSM
+#   +UNH
+#   +V
+#   +VZ
+#   +WMT
+#   +XOM

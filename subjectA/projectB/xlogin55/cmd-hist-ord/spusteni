@@ -1,0 +1,2 @@
+./tradelog hist-ord test.log <stdin >>stdout 2>>stderr; echo $? >>errcode
+./tradelog hist-ord test.log <stdin >>stdout 2>>stderr; echo $? >>errcode
