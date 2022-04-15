@@ -242,18 +242,11 @@ if [[ "$1" == "get_fce" ]]; then
     get_fce_for_dotest; exit 0;
 fi
 
+
 ##############################################################################
 # PUBLIC funkce (pro dotest.sh)
 ##############################################################################
 
-
-# add_score tag_name
-# tag_name = scoring_{test_name}
-# param1 = body
-# param2 = poznamka
-# add_score(){
-
-# }
 
 
 
@@ -599,9 +592,13 @@ auto_report()
     fi
     if d=`diffall`; then
         echo "$success:ok: $@"
+        printf "scoring_$test:\n- $success\n- $@" > $TESTSDIR/$TAG_FILE
+        printf "$test\_ok: []" > $TESTSDIR/$TAG_FILE
     else
         echo "$failure:$test: $@"
         echo "$d"
+        printf "scoring_$test:\n- $failure\n- $@\n- $d" > $TESTSDIR/$TAG_FILE
+        printf "$test\_fail: []" > $TESTSDIR/$TAG_FILE
     fi
 }
 
@@ -941,9 +938,7 @@ $tname=$bodytest"
 # test, pokud jsme v adresari s nazvem nejakeho studentskeho loginu
 in_student_dir()
 {
-    [[ -n "$login" ]]
-    # login=$(basename `pwd`)
-    # [[ $login =~ ^x[a-z][a-z][a-z][a-z][a-z0-9][a-z0-9][a-z0-9]$ ]]
+    [[ "$login"=="$(basename `pwd`)" ]]
 }
 
 # chovani pri spusteni s parametrem: clean
@@ -975,6 +970,7 @@ get_processors()
         SunOS) psrinfo -p;;
     esac
 }
+
 get_maxtasks()
 {
     [ "$MAXTASKS" ] && { echo $MAXTASKS; return; }
@@ -996,7 +992,8 @@ export LC_ALL=C
 export LANG=C
 
 # prizpusob se prepinacum
-[[ -n "$DEBUG" ]] && DEBUG=-d # -d is used for recursive run of $0
+# -d is used for recursive run of $0
+[[ -n "$DEBUG" ]] && DEBUG=-d
 while getopts 't:l:d' c; do
     case $c in
         d) export DEBUG=-d;; # -d is used for recursive run of $0
@@ -1047,6 +1044,11 @@ fi
 
 if [[ -z "$login" ]]; then
     die "Neni nastavena promenna login"
+fi
+
+
+if [[ -z "$TAG_FILE" ]]; then
+    die "Neni nastavena promenna TAG_FILE"
 fi
 
 

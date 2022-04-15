@@ -50,7 +50,7 @@ filter-tick-pos
 filter-tick-profit
 EOF
 
-echo "testsuite done" > /opt/results/file
+echo "testsuite done"
 
 tst sanitize
 tst sum >/dev/null

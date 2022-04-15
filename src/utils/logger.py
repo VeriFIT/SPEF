@@ -6,16 +6,7 @@ from pathlib import Path
 
 HOME = str(Path(__file__).parents[1])
 LOG_FILE = os.path.join(HOME,"debug.log")
-
-
-# TODO: SRC_BASH_FILE rozdelit na dva subory: podpora pre "dotest.sh" a funkcie pre "testsuite.sh"
-# shell supported functions for testing
-SRC_BASH_FILE = os.path.join(HOME, 'testing', 'tst_orig.sh')
-
-DST_BASH_DIR = 'src'
-DST_BASH_FILE = os.path.join(DST_BASH_DIR, 'tst')
-# funkcie pre "testsuite.sh" a "dotest.sh" su v "tests/src/tst" (tst run, tst sum, tst clean,...)
-
+TMP_DIR = os.path.join(HOME,'tmp')
 
 
 REPORT_SUFFIX = "_report.yaml"
@@ -57,6 +48,34 @@ TESTS_TAGS = "tests"+TAGS_SUFFIX
 CODE_REVIEW_FILE = "code_review"
 USER_NOTES_FILE = "user_notes"
 TOTAL_REPORT_FILE = "total_report"
+
+
+# docker mapping
+IMAGE_NAME = 'test'
+RUN_FILE = 'run.sh'
+DOCKER_SUT_DIR = 'sut'
+
+
+CONTAINER_DIR = '/opt'
+CONTAINER_TESTS_DIR = os.path.join(CONTAINER_DIR, TESTS_DIR) # /opt/tests/
+CONTAINER_SUT_DIR = os.path.join(CONTAINER_DIR, DOCKER_SUT_DIR) # /opt/sut/
+CONTAINER_RUN_FILE = os.path.join(CONTAINER_TESTS_DIR, RUN_FILE) # /opt/tests/run.sh
+
+SHARED_DIR = os.path.join(TMP_DIR, 'docker_shared')
+SHARED_TESTS_DIR = os.path.join(SHARED_DIR, TESTS_DIR) # .../docker_shared/tests/
+SHARED_SUT_DIR = os.path.join(SHARED_DIR, DOCKER_SUT_DIR) # .../docker_shared/sut/
+SHARED_RUN_FILE = os.path.join(SHARED_TESTS_DIR, RUN_FILE) # .../docker_shared/tests/run.sh
+
+# shell functions
+TST_FCE_DIR = 'src' # .../src/
+TST_FCE_FILE = os.path.join(TESTS_DIR, TST_FCE_DIR, 'tst') # .../tests/src/tst
+SRC_BASH_FILE = os.path.join(HOME, 'testing', 'tst_orig.sh') # .../testing/tst_orig.sh
+
+
+# TODO: SRC_BASH_FILE rozdelit na dva subory: podpora pre "dotest.sh" a funkcie pre "testsuite.sh"
+
+# funkcie pre "testsuite.sh" a "dotest.sh" su v "tests/src/tst" (tst run, tst sum, tst clean,...)
+
 
 
 

@@ -8,6 +8,7 @@
 `cat test.tar.gz | docker load`
 * alebo vytvor image zo vzoroveho Dockerfilu (potrebujes pristup na net)
 `docker build -f Dockerfile -t test .`
+* alebo pridat moznost "create default image"
 
 
 Warning:

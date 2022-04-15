@@ -14,30 +14,32 @@ from utils.parsing import parse_sum_equation
 
 from modules.bash import Bash_action
 
-# SRC_BASH_FILE = 'testing/tst_orig.sh"
-# DST_BASH_FILE = 'src/tst"
-# bash_file = os.path.join(tests_dir, DST_BASH_FILE)
 
-# funkcie pre testsuite.sh a dotest.sh su v "tests/src/tst" (tst run, tst sum, tst clean,...)
+# TODO: export FUT from env.cwd.proj.sut_expected (nie z scoring)
+# TODO: copy solution_dir do /opt/sut vsetko okrem 'solution_tags.yaml'
+# TODO: copy solution_dir do /opt/sut predtym spravt tst clear
 
+# TODO: solution/testxx/ adresare by sa mali ukladat vsetky do solution/tests/testxx/
+# TODO: tests_tags.yaml sa vytvori v precinku s testsuite.sh a nie v solution_dir
 
-IMAGE_NAME = 'test'
-RUN_FILE = 'run.sh'
-
-SHARED_DIR = os.path.join(HOME, 'docker_shared')
-SHARED_TESTS_DIR = os.path.join(SHARED_DIR, 'tests')
-SHARED_RESULTS_DIR = os.path.join(SHARED_DIR, 'results')
-SHARED_SUT_DIR = os.path.join(SHARED_DIR, 'sut')
-SHARED_RUN_FILE = os.path.join(SHARED_TESTS_DIR, RUN_FILE)
-
-CONTAINER_DIR = '/opt'
-CONTAINER_TESTS_DIR = os.path.join(CONTAINER_DIR, 'tests')
-CONTAINER_RESULTS_DIR = os.path.join(CONTAINER_DIR, 'results')
-CONTAINER_SUT_DIR = os.path.join(CONTAINER_DIR, 'sut')
-CONTAINER_RUN_FILE = os.path.join(CONTAINER_TESTS_DIR, RUN_FILE)
+# TODO: automaticka suma tagov
+# TODO: automaticky report tagov
 
 
-SRC_BASH_FILE = os.path.join(HOME, 'testing', 'tst_orig.sh')
+# export FUT={fut}\n\
+
+def get_cmd_run_testsuite(tst_fce_dir, tests_dir, sut_dir_name, fut):
+    cmd = f"""\
+export PATH={tst_fce_dir}:$PATH\n\
+export TESTSDIR={tests_dir}\n\
+export TEST_FILE={TEST_FILE}\n\
+export LOGIN={sut_dir_name}\n\
+export SCORING={SCORING_FILE}
+export TAG_FILE={TESTS_TAGS}
+{tests_dir}/{TESTSUITE_FILE}\n\
+"""
+    return cmd
+
 
 
 # ocakavam ze je vytvoreny image s menom `test`
@@ -48,24 +50,28 @@ def run_testsuite_in_docker(env, solution_dir):
         log("run testsuite in docker | run from solution dir in some project dir")
         return env
 
-    # ci su nakopirovane bash funkcie v tests_dir (ak nie, nakopiruj ich do tests_dir/DST_BASH_FILE)
+    # check if tst fce file is in proj/tests/src/ dir
     bash_tests_ok = check_bash_functions_for_testing(env.cwd.proj.path)
     if not bash_tests_ok:
         log("run testsuite | problem with bash functions for tests")
         return env
 
 
-    # prepare shared dir and subdirs for testing data
-    if not os.path.exists(SHARED_DIR): os.mkdir(SHARED_DIR)
-    if not os.path.exists(SHARED_RESULTS_DIR): os.mkdir(SHARED_RESULTS_DIR)
-
-
     # copy data for testing to shared dir
     tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
+    os.makedirs(SHARED_DIR, exist_ok=True)
     file_to_run = os.path.join(HOME, 'testing', 'run_testsuite.sh')
     shutil.copytree(tests_dir, SHARED_TESTS_DIR)
     shutil.copytree(solution_dir, SHARED_SUT_DIR)
     shutil.copyfile(file_to_run, SHARED_RUN_FILE)
+
+    # create script to run testsuite.sh (in shared dir)
+    # tst_fce_dir = os.path.join(CONTAINER_TESTS_DIR, TST_FCE_DIR)   
+    # fut = env.cwd.proj.sut_required
+    # cmd = get_cmd_run_testsuite(tst_fce_dir, CONTAINER_TESTS_DIR, DOCKER_SUT_DIR, fut)
+    # os.makedirs(os.path.dirname(SHARED_RUN_FILE), exist_ok=True)
+    # with open(SHARED_RUN_FILE, 'w+') as f:
+    #     f.write(cmd)
 
 
     # get user id
@@ -76,21 +82,16 @@ def run_testsuite_in_docker(env, solution_dir):
     output = subprocess.run(f"id -u {USER}".split(' '), capture_output=True)
     user_id = output.stdout.decode('utf-8').strip()
 
-    # create container from image `test`
+    # create container from image `test` (IMAGE_NAME)
     container_cid_file = '/tmp/docker.cid'
-
     out = subprocess.run(f"docker run --cidfile {container_cid_file} --rm -d --workdir {CONTAINER_DIR} -v {SHARED_DIR}:{CONTAINER_DIR}:z {IMAGE_NAME} bash -c".split(' ')+["while true; do sleep 1; done"],  capture_output=True)
-    # return env
     with open(container_cid_file, 'r') as f:
         cid = f.read()
     if not is_root:
         output = subprocess.run(f"docker exec {cid} useradd -u {user_id} test".split(' '), capture_output=True)
 
-    """
-    cd sut
-    /opt/tests/run.sh
-    """
     # run test script
+    # cd sut; /opt/tests/run.sh
     output = subprocess.run(f"docker exec --user {user_id} --workdir {CONTAINER_SUT_DIR} {cid} bash {CONTAINER_RUN_FILE}".split(' '), capture_output=True)
     result = output.stdout.decode('utf-8')
     err = output.stderr.decode('utf-8')
@@ -103,10 +104,13 @@ def run_testsuite_in_docker(env, solution_dir):
     # remove container
     out = subprocess.run(f"docker rm -f {cid}".split(' '), capture_output=True)
 
-    # get results from test script
-    # with open(os.path.join(shared_results_dir, ... ), 'r') as f:
-    #    data = f.read()
 
+    # get results from test script
+    solution_results_dir = os.path.join(solution_dir, 'tests')
+    shutil.copytree(SHARED_SUT_DIR, solution_results_dir)
+
+    # with open(os.path.join(SHARED_SUT_DIR, ... ), 'r') as f:
+    #    data = f.read()
 
 
 
@@ -119,7 +123,7 @@ def run_testsuite_in_docker(env, solution_dir):
         os.remove(container_cid_file)
         shutil.rmtree(SHARED_DIR)
     except Exception as err:
-        log("remove | "+str(err))
+        log("remove shared dir | "+str(err))
         pass
 
 
@@ -162,8 +166,7 @@ def calculate_score(env, solution_dir):
 
 
 def check_bash_functions_for_testing(proj_dir):
-    tests_dir = os.path.join(proj_dir, TESTS_DIR)
-    bash_file = os.path.join(tests_dir, DST_BASH_FILE)
+    bash_file = os.path.join(proj_dir, TST_FCE_FILE)
     bash_file_exists = False
     if os.path.exists(bash_file):
         bash_file_exists = True
@@ -190,8 +193,8 @@ def run_testsuite(env, solution_dir):
 
         ############### 1. nastavenie premennych ###############
         command = ""
-        proj_dir = env.cwd.proj.path
-        tests_dir = os.path.join(proj_dir, TESTS_DIR)
+
+        tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
         scoring_file = os.path.join(tests_dir, SCORING_FILE)
         testsuite_file = os.path.join(tests_dir, TESTSUITE_FILE)
         if not os.path.exists(tests_dir) or not os.path.isdir(tests_dir):
@@ -211,20 +214,7 @@ def run_testsuite(env, solution_dir):
             return env
 
 
-        """
-        # if [ -f $PROJDIR/sandbox.config ]; then
-            # . $PROJDIR/sandbox.config
-        # fi
-        # export SANDBOXUSER
-        # export SANDBOXDIR
-        # export SANDBOXLOCK
-        """
-        ############### 2. nastavenie izolovaneho prostredia ###############
-        # TODO !!!!!!!
-        pass
-
-
-        ############### 3. kontrola bash funkcii v tests_dir ###############
+        ############### 2. kontrola bash funkcii v tests_dir ###############
         # ci su nakopirovane bash funkcie v tests_dir (ak nie, nakopiruj ich do tests_dir/DST_BASH_FILE)
         bash_tests_ok = check_bash_functions_for_testing(env.cwd.proj.path)
         if not bash_tests_ok:
@@ -238,13 +228,23 @@ def run_testsuite(env, solution_dir):
         # SRC_BASH_DIR = '/testing/tst.py'  --> SRC_BASH_DIR/tst.py run test_name
         # SRC_BASH_DIR = '/testing/tst'     --> SRC_BASH_DIR/tst run test_name
         # command += f"export PATH={SRC_BASH_DIR}:$PATH\n"  
-        bash_dir = os.path.join(tests_dir, DST_BASH_DIR)
+        bash_dir = os.path.join(tests_dir, TST_FCE_DIR)
         login = os.path.basename(solution_dir)
         command += f"export PATH={bash_dir}:$PATH\n"
         command += f"export TESTSDIR={tests_dir}\n"
         command += f"export TEST_FILE={TEST_FILE}\n"
+        command += f"export TAG_FILE={TESTS_TAGS}\n"
         command += f"export login={login}\n"
         # command += f"export SCORING={scoring_file}\n"
+
+
+        # ############### 3. spusti testsuite ###############
+        # sut_dir_name = os.path.basename(solution_dir)
+        # tst_fce_dir = os.path.join(tests_dir, TST_FCE_DIR)
+        # fut = env.cwd.proj.sut_required
+        # command = get_cmd_run_testsuite(tst_fce_dir, tests_dir, sut_dir_name, fut)
+        # command += f"cd {solution_dir}\n"
+        # command += f"{testsuite_file}\n"
 
 
         ############### 5. spusti testsuite ###############

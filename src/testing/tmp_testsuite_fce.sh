@@ -212,9 +212,9 @@ tst_sanitize()
         echo "nejsme v adresari studenta! nic nenahrazuji" >&2
         return 1
     fi
-    san_dir1="/asdf/"
-    san_dir2="/asdf/"
-    san_dir3="/asdf/"
+    san_dir1="/.sanitized."
+    san_dir2="/.sanitized."
+    san_dir3="/.sanitized."
     [[ -n "$PROJECT" ]] && san_dir1=$PROJECT
     [[ -n "$TESTSDIR" ]] && san_dir2=$(dirname $TESTSDIR)
     [[ -n "$SANDBOXDIR" ]] && san_dir3=$SANDBOXDIR
@@ -233,7 +233,7 @@ tst_sanitize()
 #        eval san_dir2=\$$PROJECT
 #        eval san_dir3=\$$TESTSDIR
 #    fi
-#    [[ -z "$san_dir3" ]] && san_dir3=^/asdf/
+#    [[ -z "$san_dir3" ]] && san_dir3=^/.sanitized.
     eretests="(`echo "$tests"|tr '\n' '|'|sed 's/|$//'`)"
     find . -type f -exec sed -i -r "
 s#$san_dir1#/.sanitized.#g
