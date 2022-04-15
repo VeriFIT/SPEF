@@ -251,10 +251,9 @@ fi
 # tag_name = scoring_{test_name}
 # param1 = body
 # param2 = poznamka
-add_score(){
+# add_score(){
 
-
-}
+# }
 
 
 
@@ -877,12 +876,13 @@ tst_sanitize()
     eretests="(`echo "$tests"|tr '\n' '|'|sed 's/|$//'`)"
     find . -type f -exec sed -i -r "
 s#$san_dir1#/.sanitized.#g
-s#$san_dir2/odevzdane#/.sanitized.#g
 s#$san_dir2#/.sanitized.#g
 s#$san_dir3#/.sanitized.#g
 s#/.sanitized./$eretests/$login#/.sanitized.#g
 s#/.sanitized./$eretests#/.sanitized.#g" {} \;
 }
+# s#$san_dir2/odevzdane#/.sanitized.#g
+
 
 # chovani pri spusteni s parametem: sum
 tst_sum()

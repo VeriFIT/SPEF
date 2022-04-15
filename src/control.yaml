@@ -93,6 +93,7 @@ menu_functions:
   exit_menu: 'ESC'
   save_option: 'ENTER'
   select_by_idx: ['1','2','3','4','5','6','7','8','9','A..Z']
+  select_option: 'F3'
   move_left: 'CTRL+LEFT'
   move_right: 'CTRL+RIGHT'
 # user input functions

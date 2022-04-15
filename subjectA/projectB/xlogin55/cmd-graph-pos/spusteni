@@ -1,2 +1,0 @@
-./tradelog graph-pos test.log <stdin >>stdout 2>>stderr; echo $? >>errcode
-./tradelog graph-pos test.log <stdin >>stdout 2>>stderr; echo $? >>errcode

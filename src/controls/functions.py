@@ -70,6 +70,7 @@ SAVE_OPTION = 501
 MOVE_LEFT = 502
 MOVE_RIGHT = 503
 SELECT_BY_IDX = 504
+SELECT_OPTION = 505
 
 """ user input control """
 EXIT_USER_INPUT = 600
@@ -266,6 +267,7 @@ def map_menu_function(str_fce):
         'cursor_down': CURSOR_DOWN,
         'save_option': SAVE_OPTION,
         'select_by_idx': SELECT_BY_IDX,
+        'select_option': SELECT_OPTION,
         'move_left': MOVE_LEFT,
         'move_right': MOVE_RIGHT}
     if str_fce in functions:
@@ -308,47 +310,13 @@ def global_menu_functions():
     }
 
 
-def brows_menu_functions():
-    return {
-        'project - create new': ADD_PROJECT,
-        'project - edit configuration': EDIT_PROJ_CONF,
-        'project - show/hide project info': SHOW_OR_HIDE_PROJ_INFO, #       TODO zobrazit info o projekte
-        'archive - expand all student solutions': EXPAND_ALL_SOLUTIONS, #   TODO rozbali vsetkych studentov
-        'solution - name solution files correctly': RENAME_ALL_SOLUTIONS, # TODO premenuje vsetkych studentov
-        'test - test all students': TEST_ALL_STUDENTS, #                    TODO testovat vsetkych studentov v proj root dir (alebo len filtrovanych studentov)
-        'show statistics': SHOW_STATS, #                                    TODO zobrazit statistiky z testov
-        'show histogram': SHOW_HISTOGRAM, #                                 TODO zobrazit histogram z testov
-        'archive - expand solution and name it correctly': EXPAND_AND_RENAME_SOLUTION, #    TODO rozbali archiv a pomenuje ho spravne
-        'test - test the student': TEST_STUDENT, #                                          TODO spusti testsuite
-        'test - clean from test results': TEST_CLEAN, #                                     TODO vycisti archiv od bordelu z testov
-        'show test results': SHOW_TEST_RESULTS, #                               TODO ukaze vysledky testov (zoznam testov medzi ktorymi sa da prechadzat) 
-        'show auto report': SHOW_AUTO_REPORT, #                                 TODO ukaze subor s hodnotenim z auto testov
-        'show code review notes': SHOW_CODE_REVIEW, #                           TODO ukaze subor s poznamkami z code review
-        'show total report with score': SHOW_TOTAL_REPORT, #                    TODO ukaze celkove hodnotenie
-        'report - generate code review from notes': GEN_CODE_REVIEW,
-        'create new test': ADD_TEST, #                  TODO vytvori novy adresar testxx (adresar ktory este neexistuje) v nom bude subor runtest.sh
-        'create or edit testsuite': EDIT_TESTSUITE, #   TODO otvori tests/testsuite.sh
-        'define test failure': DEFINE_TEST_FAILURE, #   TODO definicia sposobu zlyhania testu
-        'remove test': REMOVE_TEST, #   TODO odstrani cely adresar s testom a skontroluje testsuite ci tam nie je pouzity
-        'edit test': EDIT_TEST, #       TODO otvori subor runtest.sh
-        'expand archive here': EXPAND_HERE,
-        'expand archive to ...': EXPAND_TO,
-        'create directory': CREATE_DIR,
-        'create file': CREATE_FILE,
-        'remove file': REMOVE_FILE,
-        'rename file': RENAME_FILE,
-        'copy file': COPY_FILE,
-        'move file': MOVE_FILE
-    }
-
-
 # def get_menu_functions(dir_stack, in_proj_dir=False, in_solution_dir=False, is_test_dir=False):
 def get_menu_functions(in_proj_dir=False, in_solution_dir=False, is_test_dir=False):
 
     basic = {
         'create new project here': ADD_PROJECT,
-        'expand archive here': EXPAND_HERE,
-        'expand archive to ...': EXPAND_TO,
+        # 'expand archive here': EXPAND_HERE,
+        # 'expand archive to ...': EXPAND_TO,
         'create new directory': CREATE_DIR,
         'create new file': CREATE_FILE,
         'remove file': REMOVE_FILE,

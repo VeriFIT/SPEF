@@ -324,3 +324,21 @@ def save_buffer(file_name, buffer, report=None):
     if report:
         save_report_to_file(report)
 
+
+""" **************** SUM FILE **************** """
+def load_sum_equation_from_file(env, path):
+    if env.cwd.proj:
+        if os.path.exists(path):
+            try:
+                lines, res = [], []
+                with open(path, 'r') as f:
+                    lines = f.read().splitlines()
+                for line in lines:
+                    line.strip()
+                    if not line.startswith('#') and line!="":
+                        res.append(line)
+                return ''.join(res)
+            except Exception as err:
+                log("load sum from file | "+str(err))
+                return None
+    return None

@@ -6,7 +6,103 @@ import curses
 from utils.coloring import *
 from utils.logger import *
 from utils.loading import load_solution_tags, load_tests_tags
+from utils.match import get_valid_tests_names
 
+
+def parse_sum_equation(env, solution, sum_equation_str):
+    equation = []
+    ignored_tags = []
+    first_term_is_none = False
+    sum_equation_str.strip()
+    if sum_equation_str.startswith("SUM="):
+        sum_equation_str = sum_equation_str[4:]
+        sum_equation_str.strip()
+        if re.match(r'^\w+(\s*[\+\-\*]\s*\w+)*$', sum_equation_str):
+            components = re.split(r'([\+\-\*])', sum_equation_str)
+
+            if len(components)>0:
+                term = components.pop(0)
+                term, ignored = parse_equation_term(env, solution, term)
+                ignored_tags.extend(ignored)
+                if term is not None:
+                    equation.append(str(term))
+                else:
+                    first_term_is_none = True
+            else:
+                log("empty SUM equation")
+                return equation
+
+            while len(components)>=2:
+                op = components.pop(0)
+                term = components.pop(0)
+
+                op = parse_equation_operand(op)
+                term, ignored = parse_equation_term(env, solution, term)
+                ignored_tags.extend(ignored)
+                if op is not None and term is not None:
+                    equation.append(op)
+                    equation.append(str(term))
+                else:
+                    equation.append('')
+                    equation.append('')
+        else:
+            log("invalid SUM equation - doesnt match regex for equation")
+    else:
+        log("invalid SUM equation - doesnt start with 'SUM=' prefix ")
+    if first_term_is_none and len(equation)>0:
+        equation = equation[1:]
+    return equation, ignored_tags
+
+
+def parse_equation_term(env, solution, term):
+    term = term.strip()
+    if term == "SUM_ALL_TESTS":
+        # get all valid tests
+        tests = get_valid_tests_names(env)
+
+        # for all test try to find its scoring tag in solution tags and tests tags 
+        result = 0
+        skipped_tags = []
+        for test in tests:
+            tag_name = f'scoring_{test}'
+            tag_args = find_tag_for_solution(solution, tag_name)
+            if tag_args is not None and len(tag_args)>0:
+                # for valid tests with scoring tag add its scoring value to equation with '+'
+                value = tag_args[0].strip()
+                try:
+                    result = result + int(value)
+                except ValueError:
+                    log(f"firs param of tag '{tag_name}' is not a number")
+                    skipped_tags.append(tag_name)
+            else:
+                log(f"tag '{tag_name}' not found in solution or tests tags")
+                skipped_tags.append(tag_name)
+        return result, skipped_tags
+    else:
+        tag_name = term
+        if not term.startswith('scoring_'):
+            # add default 'scoring_' prefix
+            tag_name = f'scoring_{tag_name}'
+
+        # try to find tag with scoring_ prefix in solution tags and tests tags
+        tag_args = find_tag_for_solution(solution, tag_name)
+        if tag_args is not None and len(tag_args)>0:
+            value = tag_args[0].strip()
+            try:
+                result = int(value)
+                return result, []
+            except ValueError:
+                log(f"firs param of tag '{tag_name}' is not a number")
+                return None, [tag_name]
+        else:
+            return None, [tag_name]
+
+def parse_equation_operand(op):
+    op = op.strip()
+    if op in "+-*":
+        return op
+    else:
+        return None
 
 
 def parse_tag(tag):
@@ -152,7 +248,7 @@ def parse_solution_info_visualization(info, solution_dir):
 def get_param_from_tag(txt, solution_dir):
     try:
         result = None
-        txt.strip()
+        txt = txt.strip()
         # matches: tag_name.1
         if re.match("^\w+.[0-9]+$", txt):
             components = re.split(r'[.]', txt)

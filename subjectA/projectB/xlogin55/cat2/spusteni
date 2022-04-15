@@ -1,2 +1,0 @@
-./tradelog test1.log test2.log test3.log <stdin >>stdout 2>>stderr; echo $? >>errcode
-./tradelog test1.log test2.log test3.log <stdin >>stdout 2>>stderr; echo $? >>errcode

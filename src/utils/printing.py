@@ -98,7 +98,7 @@ def print_hint(env):
     N_HELP = {"F1":"help", "F2":"edit", "F3":"create new", "F4":"insert from menu", 
                 "F5":"go to", "F6":f"{typical_note} typical", "F8":"delete", "F10":"exit"}
 
-    B_HELP = {"F1":"help", "F2":"menu", "F3":f"view {view_switch}","F4":"edit",
+    B_HELP = {"F1":"help", "F2":"menu", "F3":f"view {view_switch}","F4":"edit", "F5": "go to tags",
                 "F6":f"{cached_files} cached files", "F8":"delete", "F9":"filter", "F10":"exit"}
 
     E_HELP = {"F1":"help", "F2":"save", "F3":f"{tags_switch} tags", "F4":"edit file", "F5":f"{line_nums_switch} lines",
@@ -601,7 +601,8 @@ def show_file_content(env):
     try:
         """ show file content """
         if buffer:
-            if tokens is not None:
+            # if tokens is not None:
+            if False:
                 # =============== print with syntax highlight ===============
                 screen.move(1,1+shift)
                 skip = False
@@ -710,6 +711,7 @@ def show_file_content(env):
                     """ replace tab with spaces in line """
                     line = line.replace("\t", " "*env.tab_size)
 
+                    # if cursor is on this line and col shift > 0 then start from col shift
                     if (row + win.begin_y == win.cursor.row - win.row_shift) and (win.col_shift > 0):
                         line = line[win.col_shift + 1:]
                     if len(line) > max_cols - 1:
@@ -947,15 +949,20 @@ def show_notes(env):
         screen.refresh()
 
 
-def show_menu(screen, win, menu_options, max_rows, max_cols, env, keys=None, color=None, title=None):
+def show_menu(screen, win, menu_options, env, keys=None, selected=None, color=None, title=None):
     screen.erase()
     screen.border(0)
+
+    max_cols = win.end_x - win.begin_x - 1
+    max_rows = win.end_y - win.begin_y - 1
 
     row = 0
     if title:
         screen.addstr(row+1, 1, title[:max_cols], color if color else curses.A_NORMAL)
         row += 1
 
+    if selected is None:
+        selected = []
     # shift = len(str(min(max_rows,len(menu_options))))+1
 
     try:
@@ -967,6 +974,8 @@ def show_menu(screen, win, menu_options, max_rows, max_cols, env, keys=None, col
 
                 """ set color """
                 if row+win.row_shift == win.cursor.row+1: # +1
+                    coloring = curses.color_pair(COL_SELECT)
+                elif row+win.row_shift-1 in selected:
                     coloring = curses.color_pair(COL_SELECT)
                 else:
                     coloring = curses.A_NORMAL

@@ -8,7 +8,7 @@ import tarfile
 import zipfile
 
 from controls.control import *
-from controls.functions import brows_menu_functions
+from controls.functions import *
 
 from views.filtering import filter_management
 from views.help import show_help
@@ -193,12 +193,10 @@ def run_function(stdscr, env, fce, key):
         in_solution_dir = is_in_solution_dir(env.cwd.proj.solution_id, selected_item) if env.cwd.proj is not None else False
         is_test_dir = is_testcase_dir(env.cwd.path) or is_testcase_dir(selected_item)
         menu_functions = get_menu_functions(in_proj_dir, in_solution_dir, is_test_dir)
-        # menu_functions = brows_menu_functions()
 
         title = "Select function from menu: "
-        color = curses.color_pair(COL_TITLE)
         menu_options = [key for key in menu_functions]
-        env, option_idx = brows_menu(stdscr, env, menu_options, keys=True, color=color, title=title)
+        env, option_idx = brows_menu(stdscr, env, menu_options, keys=True, title=title)
         if env.is_exit_mode():
             return env, True
         screen, win = env.get_screen_for_current_mode()
@@ -351,18 +349,9 @@ def run_menu_function(stdscr, env, fce, key):
                 solution = selected_item
 
             if solution is not None:
-                env = run_testsuite(stdscr, env, solution)
+                env = run_testsuite_in_docker(env, solution)
+                # env = run_testsuite(env, solution)
                 return env, True
-
-                # tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
-                # t_script = os.path.join(tests_dir, 'src', 't')
-                # command = f"cd {solution}\n{t_script}\n"
-
-                # env.bash_action = Bash_action()
-                # env.bash_action.dont_jump_to_cwd()
-                # env.bash_action.add_command(command)
-                # env.bash_active = True
-                # return env, True
     elif fce == RUN_TEST: # on solution dir
         """ select one or more tests and run this tests on student solution directory """
         if env.cwd.proj is not None:
@@ -376,28 +365,23 @@ def run_menu_function(stdscr, env, fce, key):
                 solution = selected_item
 
             """ show menu with tests for selection """
-            title = "Press 'enter' to select test, press 'esc' to run selected tests..."
-            # selected_tests = []
-            # run_selection = True
-            # while run_selection:
-            #     # show menu
-            #     key = stdscr.getch()
-            #     if key == '\n':
-            #         run_selection = False
-            #     elif key == 's':
-
+            title = "Select one or more tests and press 'enter' to run them sequentially..."
             test_names = get_valid_tests_names(env)
-            env, option_idx = brows_menu(stdscr, env, test_names, title=title)
+            test_names.sort()
+            env, option_list = brows_menu(stdscr, env, test_names, keys=True, select_multiple=True, title=title)
             if env.is_exit_mode():
                 return env, True
             screen, win = env.get_screen_for_current_mode()
             curses.curs_set(0)
 
-            # run selected test
-            if option_idx is not None and len(test_names) > option_idx:
-                test_name = test_names[option_idx]
-                log("test name:" + str(test_name))
-                env = run_test(stdscr, env, solution, test_name)
+            if option_list is not None:
+                tests = []
+                for option_idx in option_list:
+                    if len(test_names) > option_idx:
+                        test_name = test_names[option_idx]
+                        tests.append(test_name)
+                # run selected tests
+                env = run_tests(env, solution, tests)
                 return env, True
 
 
@@ -410,7 +394,20 @@ def run_menu_function(stdscr, env, fce, key):
         generate_code_review(env, os.path.join(env.cwd.path, dirs_and_files[idx]))
         env.cwd = get_directory_content(env)
     elif fce == GEN_AUTO_REPORT: # on solution dir
-        pass
+        if env.cwd.proj is not None:
+            idx = win.cursor.row
+            dirs_and_files = env.cwd.get_all_items()
+            selected_item = os.path.join(env.cwd.path, dirs_and_files[idx]) # selected item
+            solution = None
+            if is_root_solution_dir(env.cwd.proj.solution_id, env.cwd.path):
+                solution = env.cwd.path
+            elif is_root_solution_dir(env.cwd.proj.solution_id, selected_item):
+                solution = selected_item
+
+
+            # calculate sum
+            score_sum = calculate_score(env, solution)
+        
     # ======================= ADD NOTES TO REPORT =======================
     elif fce == ADD_AUTO_NOTE:
         pass

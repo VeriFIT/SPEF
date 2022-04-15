@@ -143,9 +143,8 @@ def run_function(stdscr, env, fce, key):
         env.specific_line_highlight = (note_row, curses.color_pair(COL_NOTE_LIGHT))
 
         title = "Select from typical notes: "
-        color = curses.color_pair(COL_TITLE)
         menu_options = [note.text for note in env.typical_notes]
-        env, option_idx = brows_menu(stdscr, env, menu_options, color=color, title=title)
+        env, option_idx = brows_menu(stdscr, env, menu_options, title=title)
         if env.is_exit_mode():
             return env, True
         screen, win = env.get_screen_for_current_mode()

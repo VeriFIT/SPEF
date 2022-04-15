@@ -1,2 +1,0 @@
-./tradelog -b '2021-01-12 15:43:10' test.log <stdin >>stdout 2>>stderr; echo $? >>errcode
-./tradelog -b '2021-01-12 15:43:10' test.log <stdin >>stdout 2>>stderr; echo $? >>errcode

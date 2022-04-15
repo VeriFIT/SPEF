@@ -7,11 +7,4 @@ FUT="tradelog"
 #desc1_file_ok=2; desc1_file_fail=0
 #desc2a_lastfile_ok=4; desc2a_lastfile_fail=0
 tmp_ok=0; tmp_fail=-4
-test_4_ok=1; test_4_fail=0
-test_5_ok=1; test_5_fail=0
-test_6_ok=1; test_6_fail=0
-test_7_ok=1; test_7_fail=0
-test_8_ok=1; test_8_fail=0
-test_9_ok=1; test_9_fail=0
-test_10_ok=1; test_10_fail=0
-test_11_ok=1; test_11_fail=0
+test_2_ok=1; test_2_fail=0

@@ -127,6 +127,7 @@ class Window:
         """ cursor """
         self.cursor = Cursor(self.begin_y, self.begin_x) # for working with buffer
         self.tab_shift = 0 # used only in file view/edit
+        self.shifted_col = self.cursor.col
 
         """ edges - default values """
         self.left_edge = 2
@@ -235,6 +236,13 @@ class Window:
         shift = width - self.right_edge - self.left_edge
         pages = (self.cursor.col - self.begin_x) // (width - self.right_edge)
         self.col_shift = pages * shift
+        # log("---------------------------")
+        # log(f"cursor col: {self.cursor.col}")
+        # log(f"begin_x: {self.begin_x}")
+        # log(f"width: {width}")
+        # log(f"shift: {shift}")
+        # log(f"pages: {pages}")
+
 
     def vertical_shift(self):
         shift = self.end_y - self.begin_y
@@ -253,6 +261,7 @@ class Window:
 
 
     def get_cursor_position(self):
+        # new_col = self.cursor.col - self.col_shift - (pages*(self.right_edge+self.left_edge)) - (1 if self.col_shift > 0 else 0)
         new_col = self.cursor.col - self.col_shift - (1 if self.col_shift > 0 else 0)
         new_row = self.cursor.row - self.row_shift
         return new_row, new_col + self.tab_shift

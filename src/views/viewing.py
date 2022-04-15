@@ -99,6 +99,7 @@ def file_viewing(stdscr, env):
         screen, win = env.get_screen_for_current_mode()
         if rewrite:
             rewrite_file(env)
+        rewrite_file(env)
 
         try:
             """ move cursor to correct position """
@@ -311,6 +312,16 @@ def run_function(stdscr, env, fce, key):
                 old_len = len(env.buffer)
                 # print char
                 if key is not None:
+                    # log("-----------------------------")
+                    # log(f"row_shift: {win.row_shift}")
+                    # log(f"col_shift: {win.col_shift}")
+                    # log(f"cursor row: {win.cursor.row}")
+                    # log(f"cursor col: {win.cursor.col}")
+                    # r, c = win.get_cursor_position()
+                    # log(f"row: {r}")
+                    # log(f"col: {c}")
+                    # log(f"begin x: {win.begin_x}")
+
                     env.buffer.insert(win, chr(key))
                     win.right(env.buffer, filter_on=env.content_filter_on())
                     win.calculate_tab_shift(env.buffer, env.tab_size)
