@@ -1,0 +1,1 @@
+./tradelog list-tick test.log <stdin >>stdout 2>>stderr; echo $? >>errcode

@@ -1,0 +1,1 @@
+./tradelog test1.log test2.log.gz test3.log.gz <stdin >>stdout 2>>stderr; echo $? >>errcode

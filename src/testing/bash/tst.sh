@@ -262,16 +262,16 @@ fi
 #   add_test_tag "test1_fail" "pricina zlyhania"
 # SKOC_SEM
 add_test_tag(){
-    printf "${1}:" >> $TAGS
+    res="${1}:"
     shift
     if [[ -z "$@" ]]; then
-        printf " []" >> $TAGS
+        res="${res} []" >> $TAGS
     else
         for arg in "$@"; do
-            printf "\n- ${arg}" >> $TAGS
+            res="${res}\n- ${arg}" >> $TAGS
         done
     fi
-    printf "\n" >> $TAGS
+    printf "${res}\n" >> $TAGS
 }
 
 

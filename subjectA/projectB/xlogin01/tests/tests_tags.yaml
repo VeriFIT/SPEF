@@ -1,28 +1,15 @@
-scoring_cat1:
-- 1
-- opis vstupniho souboru na vystup
-cat1_ok: []
 scoring_cat4:
 - 1
 - opis stdin na stdout
 cat4_ok: []
-scoring_cmd-last-price:
-- 1
-- prikaz last-price
-cmd-last-price_ok: []
 scoring_cat2:
 - 1
 - opis vice vstupnich souboru na vystup
 cat2_ok: []
-scoring_notmpfiles:scoring_cmd-profit:
+scoring_cat1:
 - 1
-- 1
-
-- prikaz profit- docasne soubory
-
-cmd-profit_ok:-  []
-
-notmpfiles_ok: []
+- opis vstupniho souboru na vystup
+cat1_ok: []
 scoring_cmd-list-tick:
 - 1
 - prikaz list-tick
@@ -31,6 +18,23 @@ scoring_cat3:
 - 1
 - opis vice vstupnich souboru vcetne gz na vystup
 cat3_ok: []
+scoring_cmd-last-price:
+- 1
+- prikaz last-price
+cmd-last-price_ok: []
+scoring_cmd-profit:
+- 1
+- prikaz profit
+cmd-profit_ok: []
+scoring_notmpfiles:
+- 1
+- docasne soubory
+- 
+notmpfiles_ok: []
+scoring_filter-tick-pos:
+- 1
+- filtr -t pos
+filter-tick-pos_ok: []
 scoring_filter-tick-cat2:
 - 1
 - filtr -t -t
@@ -43,18 +47,14 @@ scoring_cmd-pos:
 - 1
 - prikaz pos
 cmd-pos_ok: []
-scoring_filter-tick-pos:
-- 1
-- filtr -t pos
-filter-tick-pos_ok: []
-scoring_cmd-graph-pos:
-- 1
-- prikaz graph-pos
-cmd-graph-pos_ok: []
 scoring_filter-tick-profit:
 - 1
 - filtr -t profit
 filter-tick-profit_ok: []
+scoring_cmd-graph-pos:
+- 1
+- prikaz graph-pos
+cmd-graph-pos_ok: []
 scoring_cmd-hist-ord:
 - 1
 - prikaz hist-ord
@@ -63,11 +63,11 @@ scoring_filter-b:
 - 1
 - filtr -b
 filter-b_ok: []
-scoring_filter-ab:
-- 1
-- filtry -a i -b
-filter-ab_ok: []
 scoring_filter-a:
 - 1
 - filtr -a
 filter-a_ok: []
+scoring_filter-ab:
+- 1
+- filtry -a i -b
+filter-ab_ok: []

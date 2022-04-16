@@ -41,10 +41,11 @@ class Tags:
         return None, None
 
     def get_param_by_idx(self, tag_name, idx):
-        if tag_name in self.data:
-            tag_args = self.data[tag_name]
-            if idx < len(tag_args):
-                return tag_args[idx]
+        for key in self.data:
+            if re.search(tag_name, key):
+                tag_args = self.data[key]
+                if idx < len(tag_args):
+                    return tag_args[idx]
         return None
 
     def set_tag(self, tag_name, args):

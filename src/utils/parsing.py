@@ -125,18 +125,8 @@ def parse_tag(tag):
     return tag_parsing_ok, tag_name, compare_args
 
 
-"""
-c) for predicate in predicates -- resp while predicate not matches
-        1. spracuj predicate
-        2. vyhodnot predicate
-        3. ak matchol, konci a vrat farbu ak je definovana, inak vrat Normal farbu
-        4. ak nematchol pokracuj v cykle
-        5. ak uz nie su dalsie predicates --> nezobrazuj info a chod dalej
-    d) ak mas co zobrazit, pridaj zlava hodnotu v danej farbe + 1 medzeru
-    e) ak nemas co zobrazit, pridaj zlava medzeru*length + 1 medzeru
-"""
-def parse_solution_info_predicate(predicate, solution_dir):
 
+def parse_solution_info_predicate(predicate, solution_dir, info_for_tests=False, test_name=None):
     # defined colors
     red = curses.color_pair(HL_RED)
     green = curses.color_pair(HL_GREEN)
@@ -149,66 +139,71 @@ def parse_solution_info_predicate(predicate, solution_dir):
 
     total_match = True
     color = normal
-
-    if 'predicate' in predicate:
-        conditions = predicate['predicate']
-        if len(conditions) > 0:
-            for cond in conditions:
-                cond = str(cond).strip()
-                match = False
-                # check if predicate condition refers to param from tag
-                # matches: tag_name.1 > 5
-                if re.match("^\w+.[0-9]+\s*[<>=]\s*\w+$", cond):
-                    components = re.split(r'([<>=])', cond)
-                    tag = str(components[0]).strip()
-                    param = get_param_from_tag(tag, solution_dir)
-                    if param is not None:
-                        if len(components)==1:
-                            # there is no comparison so predicate refers to existance of tag parameter
-                            match = True
-                        elif len(components)==3:
-                            # compare given parameter from tag
-                            op, value = str(components[1]).strip(), str(components[2]).strip()
-                            if op in ['<','>'] and (not re.match(r'[0-9]+',value) or not re.match(r'[0-9]+',param)):
-                                log("cannot compare string (must be number when using < > operand in predicate)")
-                            else:
-                                if op == '<': match = int(param) < int(value)
-                                elif op == '>': match = int(param) > int(value)
-                                elif op == '=': match = str(param) == str(value)
+    try:
+        if 'predicate' in predicate:
+            conditions = predicate['predicate']
+            if len(conditions) > 0:
+                for cond in conditions:
+                    cond = str(cond).strip()
+                    match = False
+                    # check if predicate condition refers to param from tag
+                    # matches: tag_name.1 > 5
+                    if re.match("^\w+.[0-9]+\s*[<>=]\s*\w+$", cond):
+                        components = re.split(r'([<>=])', cond)
+                        tag = str(components[0]).strip()
+                        param = get_param_from_tag(tag, solution_dir, info_for_tests=info_for_tests, test_name=test_name)
+                        if param is not None:
+                            if len(components)==1:
+                                # there is no comparison so predicate refers to existance of tag parameter
+                                match = True
+                            elif len(components)==3:
+                                # compare given parameter from tag
+                                op, value = str(components[1]).strip(), str(components[2]).strip()
+                                if op in ['<','>'] and (not re.match(r'[0-9]+',value) or not re.match(r'[0-9]+',param)):
+                                    log("cannot compare string (must be number when using < > operand in predicate)")
                                 else:
-                                    log("invalid operand in info predicate (in proj conf)")
-                    # else:
-                        # log(f"tag in predicate doesnt exist or has no param with given idx")
-                elif cond == '':
-                    # condition is empty
-                    match = True
-                else:
-                    # predicate condition refers to existance of tag
-                    # try to find given tag in solution tags
-                    solution_tags = load_solution_tags(solution_dir)
-                    if solution_tags is not None and len(solution_tags)>0:
-                        match = solution_tags.find(cond)
+                                    if op == '<': match = int(param) < int(value)
+                                    elif op == '>': match = int(param) > int(value)
+                                    elif op == '=': match = str(param) == str(value)
+                                    else:
+                                        log("invalid operand in info predicate (in proj conf)")
+                        # else:
+                            # log(f"tag in predicate doesnt exist or has no param with given idx")
+                    elif cond == '':
+                        # condition is empty
+                        match = True
+                    else:
+                        # predicate condition refers to existance of tag
+                        # try to find given tag in solution tags
+                        if not info_for_tests:
+                            solution_tags = load_solution_tags(solution_dir)
+                            if solution_tags is not None and len(solution_tags)>0:
+                                match = solution_tags.find(cond)
 
-                    # try to find given tag in tests tags
+                        # try to find given tag in tests tags
+                        if not match:
+                            solution_tests_dir = os.path.join(solution_dir, TESTS_DIR)
+                            tests_tags = load_tests_tags(solution_tests_dir)
+                            if tests_tags is not None and len(tests_tags)>0:
+                                if info_for_tests and test_name is not None:
+                                    cond = cond.replace("XTEST", test_name)
+                                match = tests_tags.find(cond)
                     if not match:
-                        solution_tests_dir = os.path.join(solution_dir, TESTS_DIR)
-                        tests_tags = load_tests_tags(solution_tests_dir)
-                        if tests_tags is not None and len(tests_tags)>0:
-                            match = tests_tags.find(cond)
-                if not match:
-                    total_match = False
-                    break
+                        total_match = False
+                        break
 
-    if 'color' in predicate:
-        col = str(predicate['color']).lower()
-        if col == '': color = normal
-        elif col == 'red': color = red
-        elif col == 'green': color = green
-        elif col == 'blue': color = blue
-        elif col == 'cyan': color = cyan
-        elif col == 'yellow': color = yellow
-        elif col == 'orange': color = orange
-        elif col == 'pink': color = pink
+        if 'color' in predicate:
+            col = str(predicate['color']).lower()
+            if col == '': color = normal
+            elif col == 'red': color = red
+            elif col == 'green': color = green
+            elif col == 'blue': color = blue
+            elif col == 'cyan': color = cyan
+            elif col == 'yellow': color = yellow
+            elif col == 'orange': color = orange
+            elif col == 'pink': color = pink
+    except Exception as err:
+        log("parse solution info predicate | "+str(err))
 
     return match, color
 
@@ -247,7 +242,7 @@ def parse_solution_info_visualization(info, solution_dir):
     return visual, length
 
 
-def get_param_from_tag(txt, solution_dir):
+def get_param_from_tag(txt, solution_dir, info_for_tests=False, test_name=None):
     try:
         result = None
         txt = str(txt).strip()
@@ -256,11 +251,13 @@ def get_param_from_tag(txt, solution_dir):
             components = re.split(r'[.]', txt)
             if len(components) == 2:
                 tag_name, param_num = components
+                if info_for_tests and test_name is not None:
+                    tag_name = tag_name.replace("XTEST", test_name)
                 if int(param_num) < 1:
                     log("get param from tag | param idx cant be less then 1 (parameter counting starts from 1)")
                     return None
                 # check if tag has required param
-                tag_param = find_tag_param_for_solution(solution_dir, tag_name, int(param_num)-1)
+                tag_param = find_tag_param_for_solution(solution_dir, tag_name, int(param_num)-1, info_for_tests=info_for_tests)
                 if tag_param is None:
                     # log("get param from tag | tag not exist or has no param in required idx")
                     return None
@@ -271,14 +268,15 @@ def get_param_from_tag(txt, solution_dir):
         return None
 
 
-def find_tag_param_for_solution(solution_dir, tag_name, param_idx):
+def find_tag_param_for_solution(solution_dir, tag_name, param_idx, info_for_tests=False):
     param = None
-    # try to find required tag in solution tags
-    solution_tags = load_solution_tags(solution_dir)
-    if solution_tags is not None and len(solution_tags)>0:
-        param = solution_tags.get_param_by_idx(tag_name, param_idx)
-        if param is not None:
-            return param
+    if not info_for_tests:
+        # try to find required tag in solution tags
+        solution_tags = load_solution_tags(solution_dir)
+        if solution_tags is not None and len(solution_tags)>0:
+            param = solution_tags.get_param_by_idx(tag_name, param_idx)
+            if param is not None:
+                return param
 
     # try to find required tag in tests tags
     solution_tests_dir = os.path.join(solution_dir, TESTS_DIR)

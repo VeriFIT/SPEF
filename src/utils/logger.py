@@ -49,11 +49,11 @@ CODE_REVIEW_FILE = "code_review"
 USER_NOTES_FILE = "user_notes"
 TOTAL_REPORT_FILE = "total_report"
 
-
 # docker mapping
 IMAGE_NAME = 'test'
 RUN_FILE = 'run.sh'
 DOCKER_SUT_DIR = 'sut'
+RESULTS_SUB_DIR = 'tests'
 
 
 def log(message):

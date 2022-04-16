@@ -54,6 +54,7 @@ def get_directory_content(env):
     files.sort()
     cwd = Directory(path, dirs, files)
     cwd.get_proj_conf()
+    cwd.get_dirs_info(env)
     return cwd
 
 

@@ -11,7 +11,7 @@ from utils.loading import save_buffer, load_solution_tags, load_tests_tags
 from utils.coloring import *
 from utils.logger import *
 from utils.parsing import parse_solution_info_visualization, parse_solution_info_predicate
-from utils.match import match_regex, is_root_project_dir
+from utils.match import match_regex, is_root_project_dir, is_testcase_result_dir
 
 ESC = 27
 
@@ -412,9 +412,6 @@ def show_directory_content(env):
         screen.border(0)
 
 
-    solution_id = None
-    if is_root_project_dir(cwd.path) and cwd.proj is not None:
-        solution_id = cwd.proj.solution_id
 
     try:
         """ show dir name """
@@ -435,23 +432,24 @@ def show_directory_content(env):
                 txt = str(dir_name[:max_cols-2])+"/"
                 screen.addstr(i, 1, txt, coloring | curses.A_BOLD)
 
-                if env.show_solution_info and solution_id is not None:
-                    if match_regex(solution_id, dir_name):
-                        solution_dir = os.path.join(cwd.path, dir_name)
-                        infos = get_info_for_solution(env, cwd.proj, solution_dir) # !! vykreslovat zprava
-                        if infos:
-                            space = 2 # refers to visual space between dir name and its info
-                            stop = len(txt)+space
-                            x = max_cols
-                            for item in infos:
-                                info, col = item
-                                if x-len(info)-1 <= stop:
-                                    break
-                                x = x-len(info)-1
-                                color = (curses.color_pair(COL_SELECT) if i+win.row_shift == win.cursor.row+1 else col)
-                                screen.addstr(i, x, str(info)+' ', color)
-                            if x > stop: # empty space between dir name and its info
-                                screen.addstr(i, len(txt)+1, ' '*(x-stop-1+space), coloring)
+                if env.show_solution_info and cwd.dirs_info:
+                    infos = None
+                    if dir_name in cwd.dirs_info:
+                        infos = cwd.dirs_info[dir_name]
+
+                    if infos:
+                        space = 2 # refers to visual space between dir name and its info
+                        stop = len(txt)+space
+                        x = max_cols
+                        for item in infos:
+                            info, col = item
+                            if x-len(info)-1 <= stop:
+                                break
+                            x = x-len(info)-1
+                            color = (curses.color_pair(COL_SELECT) if i+win.row_shift == win.cursor.row+1 else col)
+                            screen.addstr(i, x, str(info)+' ', color)
+                        if x > stop: # empty space between dir name and its info
+                            screen.addstr(i, len(txt)+1, ' '*(x-stop-1+space), coloring)                          
 
                 i+=1
             for file_name in files:
@@ -996,68 +994,4 @@ def show_menu(screen, win, menu_options, env, keys=None, selected=None, color=No
     finally:
         screen.refresh()
 
-
-"""
-    3. for info in solution_info -- citam zprava a pridavam zlava
-    
-    c) for predicate in predicates -- resp while predicate not matches
-        1. spracuj predicate
-        2. vyhodnot predicate
-        3. ak matchol, konci a vrat farbu ak je definovana, inak vrat Normal farbu
-        4. ak nematchol pokracuj v cykle
-        5. ak uz nie su dalsie predicates --> nezobrazuj info a chod dalej
-    d) ak mas co zobrazit, pridaj zlava hodnotu v danej farbe + 1 medzeru
-    e) ak nemas co zobrazit, pridaj zlava medzeru*length + 1 medzeru
-"""
-
-def get_info_for_solution(env, proj, solution_dir):
-    try:
-        # get required solution info for project
-        solution_info = proj.get_only_valid_solution_info()
-        if not solution_info:
-            return []
-
-        result = []
-        infos_dict = {} # 'identifier' = (match, visualization, color)
-        solution_info = sorted(solution_info, key=lambda d: d['identifier'])
-
-        for info in solution_info:
-            identifier = info['identifier']
-            predicates = info['predicates']
-
-            # parse visualization and length
-            visualization, length = parse_solution_info_visualization(info, solution_dir)
-
-            # check predicates and get color
-            if length is not None:
-                color = curses.A_NORMAL
-                if visualization is None:
-                    match, visual = False, ' '*length
-                else:
-                    predicate_matches = False if len(predicates)>0 else True
-                    for predicate in predicates:
-                        # match first predicate and get its color
-                        predicate_matches, col = parse_solution_info_predicate(predicate, solution_dir)
-                        if predicate_matches:
-                            color = col
-                            break
-                    match = predicate_matches
-                    visual = visualization if match else ' '*length
-
-                if identifier not in infos_dict:
-                    infos_dict[identifier] = (match, visual, color)
-                else:
-                    # if there is more than one info with this identifier
-                    last_match, _, _ = infos_dict[identifier]
-                    if not last_match: # if the last one failed to match, add second one
-                        infos_dict[identifier] = (match, visual, color)
-
-        for info in infos_dict:
-            _, visual, color = infos_dict[info]
-            result.append((visual, color))
-
-        return result
-    except Exception as err:
-        log("get info for solution | "+str(err))
-        return []
 

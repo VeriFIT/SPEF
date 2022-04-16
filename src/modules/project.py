@@ -24,6 +24,7 @@ class Project:
         self.sut_required = ""
         self.sut_ext_variants = []
         self.solution_info = []
+        self.tests_info = []
 
         self.description = ""
         self.test_timeout = 0
@@ -36,6 +37,7 @@ class Project:
             self.sut_required = data['sut_required']
             self.sut_ext_variants = data['sut_ext_variants']
             self.solution_info = data['solution_info']
+            self.tests_info = data['tests_info']
             return True
         except:
             log("wrong data for proj")
@@ -50,6 +52,7 @@ class Project:
         self.sut_required = "sut" # default file name of project solution is "sut" (system under test)
         self.sut_ext_variants = ["*sut*", "sut.sh", "sut.bash"]
         self.solution_info = self.get_solution_info()
+        self.tests_info = self.get_tests_info()
 
         self.test_timeout = 5
 
@@ -136,7 +139,6 @@ class Project:
 
     def get_only_valid_solution_info(self):
         result = []
-
         required_keys = ["identifier", "visualization", "predicates"]
         supported_keys = required_keys.copy()
         supported_keys.extend(["length", "description"])
@@ -147,6 +149,35 @@ class Project:
             if all_required_in and all_keys_supported:
                 result.append(info)
         return result
+
+    def get_only_valid_tests_info(self):
+        result = []
+        required_keys = ["identifier", "visualization", "predicates"]
+        supported_keys = required_keys.copy()
+        supported_keys.extend(["length", "description"])
+        for info in self.tests_info:
+            info_keys = list(info.keys())
+            all_required_in = all(required in info_keys for required in required_keys)
+            all_keys_supported = all(info in supported_keys for info in info_keys)
+            if all_required_in and all_keys_supported:
+                result.append(info)
+        return result
+
+    """
+    -u predicate podmienky je mozne pouzit konstantu "XTEST" ktora nahradza akykolvek test name
+    -"XTEST" sa moze pouzit ako sucast tag_name, napr: "XTEST_ok" alebo "scoring_XTEST"
+    """
+    def get_tests_info(self):
+        # tests_info
+
+        success = {
+            'identifier': 1,
+            'visualization': "ok",
+            'description': "test passsed",
+            'predicates': [{'predicate': ["XTEST_ok"], 'color': 'green'}]
+        }
+        tests_info = [success]
+        return tests_info
 
 
     def get_solution_info(self):
@@ -218,7 +249,8 @@ class Project:
             'max_score' : self.max_score,
             'sut_required': self.sut_required,
             'sut_ext_variants': self.sut_ext_variants,
-            'solution_info': self.solution_info
+            'solution_info': self.solution_info,
+            'tests_info': self.tests_info
         }
         #     'test_timeout': self.test_timeout
 

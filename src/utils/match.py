@@ -214,6 +214,16 @@ def is_testcase_dir(path, with_check=True):
         return False
 
 
+def is_testcase_result_dir(solution_id, path):
+    try:
+        if path is None or solution_id is None:
+            return False
+
+        if is_in_solution_dir(solution_id, path) and os.path.isdir(path):
+            return os.path.basename(os.path.dirname(path)) == RESULTS_SUB_DIR
+    except:
+        return False
+
 ########################## GET DIRS/FILES ##########################
 
 # dst: regex for match

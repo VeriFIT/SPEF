@@ -262,16 +262,16 @@ fi
 #   add_test_tag "test1_fail" "pricina zlyhania"
 # SKOC_SEM
 add_test_tag(){
-    printf "${1}:" >> $TAGS
+    res="${1}:"
     shift
     if [[ -z "$@" ]]; then
-        printf " []" >> $TAGS
+        res="${res} []" >> $TAGS
     else
         for arg in "$@"; do
-            printf "\n- ${arg}" >> $TAGS
+            res="${res}\n- ${arg}" >> $TAGS
         done
     fi
-    printf "\n" >> $TAGS
+    printf "${res}\n" >> $TAGS
 }
 
 
@@ -875,20 +875,20 @@ tst_run()
 # mohou dat hodnoceni v souctu vetsi nez MAXPOINTS (toto je detekovano definici
 # promenne MAXSCORE), potom se pouzije tato funkce: prepocitava score na stdin
 # na body na stdout.
-score_to_points()
-{
-    awk -v MAXSCORE=$MAXSCORE -v MAXPOINTS=$MAXPOINTS '{
-        score=$1
-        if (score < 0)
-            score = 0
-        if (score > MAXSCORE)
-            score = MAXSCORE
-        body = score*1.0 / MAXSCORE * MAXPOINTS
-        if (body > 0 && body < 1)
-            body = 1
-        print int(body+0.5)
-    }'
-}
+# score_to_points()
+# {
+#     awk -v MAXSCORE=$MAXSCORE -v MAXPOINTS=$MAXPOINTS '{
+#         score=$1
+#         if (score < 0)
+#             score = 0
+#         if (score > MAXSCORE)
+#             score = MAXSCORE
+#         body = score*1.0 / MAXSCORE * MAXPOINTS
+#         if (body > 0 && body < 1)
+#             body = 1
+#         print int(body+0.5)
+#     }'
+# }
 
 # ve vsech souborech rekurzivne nahradi kazdy vyskyt retezce z promenne
 # $IOS_.._. (jmeno promenne zjisti z $PROJECT) a retezce "$IOS.._./odevzdane" a
@@ -932,59 +932,60 @@ s#/.sanitized./$eretests#/.sanitized.#g" {} \;
 # s#$san_dir2/odevzdane#/.sanitized.#g
 
 
-# chovani pri spusteni s parametem: sum
-tst_sum()
-{
-    # srandicky s barvickama
-    if [[ -t 1 ]]; then
-        c_red=`tput setaf 1`
-        c_normal=`tput sgr0`
-    fi 
-    # uzivatelem definovane hodnoceni uplne nahoru
-    if [[ -f $UHODNOCENI ]]; then
-        echo "#-- rucni uprava hodnoceni ----------------------------"
-        cat $UHODNOCENI
-    fi >$HODNOCENI
-    # pod to hodnoceni z testovani
-    echo "#-- automaticke hodnoceni -----------------------------" >>$HODNOCENI
-    hodnoceni=
-    for tname in $tests; do
-        if [[ -f "$tname/$HODNOCENI" ]]; then
-            if [[ `wc -l <$tname/$HODNOCENI` -gt $HODNFIRSTNLINES ]]; then
-                cat $tname/$HODNOCENI | head -n $HODNFIRSTNLINES
-                echo "# Vypis byl zkracen, cely text viz $tname/$HODNOCENI"
-            else
-                cat $tname/$HODNOCENI
-            fi
-            bodytest=`grep -v ^# $tname/$HODNOCENI |
-                awk -F: '{sum+=$1}END{print sum}'`
-                #awk -F: '{sum+=$1}END{print int(sum+.5)}'`
-            if [[ "$bodytest" -le 0 ]]; then
-                hodnoceni="$hodnoceni
-$c_red$tname=$bodytest$c_normal"
-            else
-                hodnoceni="$hodnoceni
-$tname=$bodytest"
-            fi
-        fi
-    done >>$HODNOCENI
-    echo "#------------------------------------------------------" >>$HODNOCENI
-#    sum=`grep -v ^# $HODNOCENI | awk -F: '{sum+=$1}
-#        END{if (int(sum)!=sum) print int(sum+.5); else print sum}'`
-#    sum=`grep -v ^# $HODNOCENI|awk -F: '{sum+=$1}END{print int(sum+.5)}'`
-    score=`grep -v ^# $HODNOCENI|awk -F: '{sum+=$1}END{print sum}'`
-    if [[ -z "$MAXSCORE" ]]; then
-        echo "$score:celkem bodu za projekt" >>$HODNOCENI
-        sed -i "1i$score:celkem bodu za projekt" $HODNOCENI
-    else
-        echo "$score:celkove score (max pro hodnoceni $MAXSCORE)" >>$HODNOCENI
-        bodu=`score_to_points <<<$score`
-#        [[ $sum -gt $MAXPOINTS ]] && sum=$MAXPOINTS
-        echo "$bodu:celkem bodu za projekt" >>$HODNOCENI
-        sed -i "1i$bodu:celkem bodu za projekt" $HODNOCENI
-    fi
-    echo "$hodnoceni" | sed -n '2,$p'
-}
+# # chovani pri spusteni s parametem: sum
+# tst_sum()
+# {
+#     # srandicky s barvickama
+#     if [[ -t 1 ]]; then
+#         c_red=`tput setaf 1`
+#         c_normal=`tput sgr0`
+#     fi 
+#     # uzivatelem definovane hodnoceni uplne nahoru
+#     if [[ -f $UHODNOCENI ]]; then
+#         echo "#-- rucni uprava hodnoceni ----------------------------"
+#         cat $UHODNOCENI
+#     fi >$HODNOCENI
+#     # pod to hodnoceni z testovani
+#     echo "#-- automaticke hodnoceni -----------------------------" >>$HODNOCENI
+#     hodnoceni=
+#     for tname in $tests; do
+#         if [[ -f "$tname/$HODNOCENI" ]]; then
+#             if [[ `wc -l <$tname/$HODNOCENI` -gt $HODNFIRSTNLINES ]]; then
+#                 cat $tname/$HODNOCENI | head -n $HODNFIRSTNLINES
+#                 echo "# Vypis byl zkracen, cely text viz $tname/$HODNOCENI"
+#             else
+#                 cat $tname/$HODNOCENI
+#             fi
+#             bodytest=`grep -v ^# $tname/$HODNOCENI |
+#                 awk -F: '{sum+=$1}END{print sum}'`
+#                 #awk -F: '{sum+=$1}END{print int(sum+.5)}'`
+#             if [[ "$bodytest" -le 0 ]]; then
+#                 hodnoceni="$hodnoceni
+# $c_red$tname=$bodytest$c_normal"
+#             else
+#                 hodnoceni="$hodnoceni
+# $tname=$bodytest"
+#             fi
+#         fi
+#     done >>$HODNOCENI
+#     echo "#------------------------------------------------------" >>$HODNOCENI
+# #    sum=`grep -v ^# $HODNOCENI | awk -F: '{sum+=$1}
+# #        END{if (int(sum)!=sum) print int(sum+.5); else print sum}'`
+# #    sum=`grep -v ^# $HODNOCENI|awk -F: '{sum+=$1}END{print int(sum+.5)}'`
+#     score=`grep -v ^# $HODNOCENI|awk -F: '{sum+=$1}END{print sum}'`
+#     if [[ -z "$MAXSCORE" ]]; then
+#         echo "$score:celkem bodu za projekt" >>$HODNOCENI
+#         sed -i "1i$score:celkem bodu za projekt" $HODNOCENI
+#     else
+#         echo "$score:celkove score (max pro hodnoceni $MAXSCORE)" >>$HODNOCENI
+#         bodu=`score_to_points <<<$score`
+# #        [[ $sum -gt $MAXPOINTS ]] && sum=$MAXPOINTS
+#         echo "$bodu:celkem bodu za projekt" >>$HODNOCENI
+#         sed -i "1i$bodu:celkem bodu za projekt" $HODNOCENI
+#     fi
+#     echo "$hodnoceni" | sed -n '2,$p'
+# }
+
 
 # test, pokud jsme v adresari s nazvem nejakeho studentskeho loginu
 in_student_dir()
@@ -1169,7 +1170,7 @@ case "$cmd" in
         fi
         ;;
     sanitize) tst_sanitize;;
-    sum) tst_sum;;
+    # sum) tst_sum;;
     clean) tst_clean;;
     student) in_student_dir;;
     *) help;;

@@ -30,7 +30,6 @@ CONTAINER_TESTS_DIR = '/opt/tests'
 CONTAINER_SUT_DIR = '/opt/sut/'
 CONTAINER_RUN_FILE = '/opt/tests/run.sh'
 
-RESULTS_SUB_DIR = 'tests'
 
 SHARED_DIR = os.path.join(TMP_DIR, 'docker_shared')
 SHARED_TESTS_DIR = os.path.join(TMP_DIR, 'docker_shared/tests')

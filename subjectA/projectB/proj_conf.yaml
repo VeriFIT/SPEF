@@ -68,3 +68,18 @@ solution_info:
   - predicate:
     - cat1_fail
     color: red
+tests_info:
+- identifier: 1
+  visualization: ok
+  description: test passed
+  predicates:
+  - predicate:
+    - XTEST_ok
+    color: green
+- identifier: 1
+  visualization: fail
+  description: test failed
+  predicates:
+  - predicate:
+    - XTEST_fail
+    color: red
