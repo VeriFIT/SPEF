@@ -130,9 +130,6 @@
 # Ocekava se, ze test bude provaden z adresare, ve kterem chceme zaznamenat
 # jeho testovaci vysledky.
 TESTSDIR=
-# TEST_FILE=dotest.sh
-# [[ -n "$TEST_FILE" ]] || TEST_FILE=dotest.sh
-
 
 # Bodovani jednotlivych casti testu je ulozeno v souboru SCORING_FILE. Tento
 # soubor obsahuje prirazeni float cisel do promennych. Tyto promenne by mel
@@ -248,6 +245,34 @@ fi
 ##############################################################################
 
 
+# add_test_tag "scoring_${test}" ${success} $@
+# add_test_tag "scoring_${test}" ${failure} $@ ${d}
+# add_test_tag "${test}_ok"
+
+# Prida tag k vysledkom testov
+# add_test_tag tag_name [args]
+#  $RESULTS_DIR/$TAG_FILE = subor s tagmi
+#  $success = scoring passed
+#  $failure = scoring failure
+#  $test = meno testu
+#  $1 = meno tagu
+#  $2, $3, ... = argumenty tagu
+# typicke pouzitie:
+#   add_test_tag "scoring_test1" "body" "popis testu" "doplnujuce info"
+#   add_test_tag "test1_fail" "pricina zlyhania"
+# SKOC_SEM
+add_test_tag(){
+    printf "${1}:" >> $TAGS
+    shift
+    if [[ -z "$@" ]]; then
+        printf " []" >> $TAGS
+    else
+        for arg in "$@"; do
+            printf "\n- ${arg}" >> $TAGS
+        done
+    fi
+    printf "\n" >> $TAGS
+}
 
 
 # wrappers_on/off zapne/vypne wrappery pro shell utility.
@@ -325,6 +350,9 @@ run_test()
         {
         echo "$failure:$test: chyba pri spusteni, mozne priciny:"
         echo ":chybny soubor, timeout $timeout nebo limit velikosti souboru"
+
+        add_test_tag "scoring_${test}" ${failure} "chyba pri spusteni"
+        add_test_tag "${test}_fail" "chybny soubor, timeout ${timeout} nebo limit velikosti souboru"
         } >&60
         echo timeout $timeout >$T/timeout
     else
@@ -581,6 +609,7 @@ $report"
 #  $test = jmeno testu
 #  $stdoutfilter (volitelne) = filter na stdout (napr. "sort -u")
 #  $@ = zprava
+# SKOC_SEM
 auto_report()
 {
     [[ -f $TD/stdout.ref ]] && cp $TD/stdout.ref $T/
@@ -592,13 +621,13 @@ auto_report()
     fi
     if d=`diffall`; then
         echo "$success:ok: $@"
-        printf "scoring_$test:\n- $success\n- $@" > $TESTSDIR/$TAG_FILE
-        printf "$test\_ok: []" > $TESTSDIR/$TAG_FILE
+        add_test_tag "scoring_${test}" ${success} "$@"
+        add_test_tag "${test}_ok"
     else
         echo "$failure:$test: $@"
         echo "$d"
-        printf "scoring_$test:\n- $failure\n- $@\n- $d" > $TESTSDIR/$TAG_FILE
-        printf "$test\_fail: []" > $TESTSDIR/$TAG_FILE
+        add_test_tag "scoring_${test}" ${failure} "$@" "${d}"
+        add_test_tag "${test}_fail"
     fi
 }
 
@@ -617,10 +646,22 @@ asserterror()
     [[ -s $T/stderr ]] && stderrok=e
     [[ `cat $T/errcode` -gt 0 ]] && ecodeok=c
     case $stderrok$ecodeok in
-        ec) echo "$success:ok: $@";;
-        c) echo "$failure:$test: $@ (chybi zprava na stderr)";;
-        e) echo "$failure:$test: $@ (neni chybny navratovy kod)";;
-        *) echo "$failure:$test: $@ (neni stderr a chybovy kod)";;
+        ec) echo "$success:ok: $@"
+            add_test_tag "scoring_${test}" ${success} "$@"
+            add_test_tag "${test}_ok"
+            ;;
+        c)  echo "$failure:$test: $@ (chybi zprava na stderr)"
+            add_test_tag "scoring_${test}" ${failure} "$@"
+            add_test_tag "${test}_fail" "chybi zprava na stderr"
+            ;;
+        e)  echo "$failure:$test: $@ (neni chybny navratovy kod)"
+            add_test_tag "scoring_${test}" ${failure} "$@"
+            add_test_tag "${test}_fail" "chybi zprava na stderr"
+            ;;
+        *)  echo "$failure:$test: $@ (neni stderr a chybovy kod)"
+            add_test_tag "scoring_${test}" ${failure} "$@"
+            add_test_tag "${test}_fail" "neni stderr a chybovy kod"
+            ;;
     esac
 }
 
@@ -644,10 +685,11 @@ prepare_test()
     if [[ -d "$SANDBOXDIR" ]]; then
         T=$(realpath $SANDBOXDIR)/$test/$login
     else
-        T=$(realpath .)/$test
+        T=$(realpath .)/$RESULTS_DIR/$test
         [[ -n "$SANDBOXUSER" ]] &&
             die "Neco je spatne. Je nastaven SANDBOXUSER=$SANDBOXUSER, ale $SANDBOXDIR pry neni dostupy..."
     fi
+    TAGS=$(realpath .)/$RESULTS_DIR/$TAG_FILE
     TD=$TESTSDIR/$test
     mkdir -p $T || die "nepovedlo se vytvorit adresar pro test '$T'"
 
@@ -657,7 +699,7 @@ prepare_test()
     fi
 
     if [[ -z "$SANDBOXDIR" ]]; then
-        [[ -n "$FUT" ]] || die "neni nastavena promenna FUT (ve scoring)"
+        [[ -n "$FUT" ]] || die "neni nastavena promenna FUT"
         cp $FUT $T || die "nepodarilo se zkopirovat '$FUT' do '$T'"
     fi
     set +x
@@ -686,8 +728,11 @@ get_results()
 {
     if [[ -n "$SANDBOXDIR" ]]; then
         mkdir $test/ 2>/dev/null
-        cp -a $T/* $test/ 2>/dev/null ||
-            echo "$failure:$test: skript smazal test" >$test/$HODNOCENI
+        cp -a $T/* $test/ 2>/dev/null || {   
+            echo "$failure:$test: skript smazal test" >$test/$HODNOCENI;
+            add_test_tag "scoring_${test}" ${failure};
+            add_test_tag "${test}_fail" "skript smazal test";
+        }
         cd $test
         rm $FUT 2>/dev/null
         cd ..
@@ -769,12 +814,18 @@ tst_run_txt_filter()
     local d
     if d=`diffall`; then
         echo "$success:ok:$msg"
+        add_test_tag "scoring_${test}" ${success} ${msg}
+        add_test_tag "${test}_ok"
     else
         if [[ "$diff" = y ]]; then
             echo "$failure:chyba:$msg"
             echo "$d"
+            add_test_tag "scoring_${test}" ${failure} ${msg} "${d}";
+            add_test_tag "${test}_fail";
         else
             echo "$failure:chyba:$msg viz $test/stdouterr.diff"
+            add_test_tag "scoring_${test}" ${failure} "${msg} viz ${test}/stdouterr.diff";
+            add_test_tag "${test}_fail";
             echo "$d" >stdouterr.diff
         fi
     fi
@@ -1038,20 +1089,20 @@ else
 fi
 
 
-if [[ -z "$TEST_FILE" ]]; then
-    die "Neni nastavena promenna TEST_FILE"
-fi
+[[ -n "$TEST_FILE" ]] || TEST_FILE=dotest.sh
+[[ -n "$RESULTS_DIR" ]] || RESULTS_DIR=tests
 
 if [[ -z "$login" ]]; then
     die "Neni nastavena promenna login"
 fi
 
-
 if [[ -z "$TAG_FILE" ]]; then
     die "Neni nastavena promenna TAG_FILE"
 fi
 
-
+if [[ -z "$FUT" ]]; then
+    die "Neni nastavena promenna FUT"
+fi
 
 # ziskani jmen vsech testu
 tests=`ls $TESTSDIR | 

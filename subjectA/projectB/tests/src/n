@@ -12,7 +12,7 @@
 filename=hodnoceni-user
 komentar="$@"
 
-PROJDIR=$(dirname $(realpath $0))
+PROJDIR=$(dirname $(dirname $(realpath $0)))
 if ! [ -f "$PROJDIR/tests/scoring" ]; then
     echo "chybi scoring soubor $PROJDIR/tests/scoring"
     exit 1

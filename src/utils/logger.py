@@ -56,30 +56,6 @@ RUN_FILE = 'run.sh'
 DOCKER_SUT_DIR = 'sut'
 
 
-CONTAINER_DIR = '/opt'
-CONTAINER_TESTS_DIR = os.path.join(CONTAINER_DIR, TESTS_DIR) # /opt/tests/
-CONTAINER_SUT_DIR = os.path.join(CONTAINER_DIR, DOCKER_SUT_DIR) # /opt/sut/
-CONTAINER_RUN_FILE = os.path.join(CONTAINER_TESTS_DIR, RUN_FILE) # /opt/tests/run.sh
-
-SHARED_DIR = os.path.join(TMP_DIR, 'docker_shared')
-SHARED_TESTS_DIR = os.path.join(SHARED_DIR, TESTS_DIR) # .../docker_shared/tests/
-SHARED_SUT_DIR = os.path.join(SHARED_DIR, DOCKER_SUT_DIR) # .../docker_shared/sut/
-SHARED_RUN_FILE = os.path.join(SHARED_TESTS_DIR, RUN_FILE) # .../docker_shared/tests/run.sh
-
-# shell functions
-TST_FCE_DIR = 'src' # .../src/
-TST_FCE_FILE = os.path.join(TESTS_DIR, TST_FCE_DIR, 'tst') # .../tests/src/tst
-SRC_BASH_FILE = os.path.join(HOME, 'testing', 'tst_orig.sh') # .../testing/tst_orig.sh
-
-
-# TODO: SRC_BASH_FILE rozdelit na dva subory: podpora pre "dotest.sh" a funkcie pre "testsuite.sh"
-
-# funkcie pre "testsuite.sh" a "dotest.sh" su v "tests/src/tst" (tst run, tst sum, tst clean,...)
-
-
-
-
-
 def log(message):
     day = datetime.date.today()
     time = datetime.datetime.now().strftime("%X")

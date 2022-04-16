@@ -11,5 +11,9 @@
 * alebo pridat moznost "create default image"
 
 
+sudo mkdir /sys/fs/cgroup/systemd
+sudo mount -t cgroup -o none,name=systemd cgroup /sys/fs/cgroup/systemd
+
+
 Warning:
 * The curses package is part of the Python standard library, however, the Windows version of Python doesn't include the curses module. If you're using Windows, you have to run: `pip install windows-curses`

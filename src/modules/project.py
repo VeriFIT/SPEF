@@ -19,18 +19,20 @@ class Project:
         self.path = path
         self.created = None
         self.solution_id = None
+        self.max_score = 0
 
         self.sut_required = ""
         self.sut_ext_variants = []
+        self.solution_info = []
 
         self.description = ""
         self.test_timeout = 0
-        self.solution_info = []
 
     def set_values_from_conf(self, data):
         try:
             self.created = data['created']
             self.solution_id = data['solution_id']
+            self.max_score = data['max_score']
             self.sut_required = data['sut_required']
             self.sut_ext_variants = data['sut_ext_variants']
             self.solution_info = data['solution_info']
@@ -43,11 +45,13 @@ class Project:
     def set_default_values(self):
         self.created = datetime.date.today() # date of creation
         self.solution_id =  "x[a-z]{5}[0-9]{2}" # default solution identifier: xlogin00
+        self.max_score = 10
+
         self.sut_required = "sut" # default file name of project solution is "sut" (system under test)
         self.sut_ext_variants = ["*sut*", "sut.sh", "sut.bash"]
+        self.solution_info = self.get_solution_info()
 
         self.test_timeout = 5
-        self.solution_info = self.get_solution_info()
 
 
     """
@@ -211,6 +215,7 @@ class Project:
         return {
             'created': self.created,
             'solution_id': self.solution_id,
+            'max_score' : self.max_score,
             'sut_required': self.sut_required,
             'sut_ext_variants': self.sut_ext_variants,
             'solution_info': self.solution_info

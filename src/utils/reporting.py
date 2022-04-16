@@ -21,6 +21,7 @@ def add_tag_to_solution(solution_dir, tag_name, tag_args):
         log("add tag to file | cannot load tags file")
 
 
+
 """ from subjA/proj1/xlogin00/dir/file_name to xlogin00/dir/file_name """
 def get_path_relative_to_solution_dir(dest_path):
     # check if its project subdir
@@ -106,3 +107,5 @@ def generate_code_review(env, dir_path=None):
         f.write('\n'.join(code_review))
 
 
+def generate_report(env, solution_dir):
+    pass

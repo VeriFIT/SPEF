@@ -10,6 +10,12 @@ egrep -v '(\+\+\+|---|NOENT)' trace |
 [ -z "$DEBUG" ] && rm trace
 if [ `wc -l <temp_files` -lt 1 ]; then
     echo $success:ok: docasne soubory: `cat temp_files`
+    arg=`cat temp_files`
+    add_test_tag "scoring_${test}" ${success} "docasne soubory" "$arg"
+    add_test_tag "${test}_ok"
 else
     echo $failure:$test: docasne soubory: `cat temp_files`
+    arg=`cat temp_files`
+    add_test_tag "scoring_${test}" ${failure} "docasne soubory" "$arg"
+    add_test_tag "${test}_fail"
 fi

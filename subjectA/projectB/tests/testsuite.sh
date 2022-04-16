@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# ***** write test strategy here *****
-
+# testsuite pro 1. ulohu IOS 2020/21
 
 # je tst v ceste?
 type tst &>/dev/null || { echo "chyba: prikaz tst neni v ceste"; exit 1; }
 type n &>/dev/null || { echo "chyba: prikaz n neni v ceste"; exit 1; }
 
+# main
 
 # jsme v adresari nejakeho studenta?
 [ "$nostud" ] || tst student || 
@@ -16,8 +16,6 @@ if file tradelog | grep -q CRLF; then
     dos2unix tradelog
     n crlf
 fi
-
-
 
 # a provedeme jednotlive testy
 tst clean
@@ -52,8 +50,6 @@ EOF
 
 echo "testsuite done"
 
-tst sanitize
-tst sum >/dev/null
 
 # at vysledky mohou cist vsichni ve skupine (napr. netestovaci uzivatel)
 chmod -R g+rX . 2>/dev/null

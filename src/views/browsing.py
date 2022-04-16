@@ -349,8 +349,7 @@ def run_menu_function(stdscr, env, fce, key):
                 solution = selected_item
 
             if solution is not None:
-                env = run_testsuite_in_docker(env, solution)
-                # env = run_testsuite(env, solution)
+                env = run_testsuite(env, solution) # run testsuite in docker
                 return env, True
     elif fce == RUN_TEST: # on solution dir
         """ select one or more tests and run this tests on student solution directory """
@@ -384,7 +383,6 @@ def run_menu_function(stdscr, env, fce, key):
                 env = run_tests(env, solution, tests)
                 return env, True
 
-
     elif fce == TEST_CLEAN: # on solution dir
         pass
     # =================== GENERATE REPORT ===================
@@ -404,10 +402,9 @@ def run_menu_function(stdscr, env, fce, key):
             elif is_root_solution_dir(env.cwd.proj.solution_id, selected_item):
                 solution = selected_item
 
-
             # calculate sum
             score_sum = calculate_score(env, solution)
-        
+            log(score_sum)
     # ======================= ADD NOTES TO REPORT =======================
     elif fce == ADD_AUTO_NOTE:
         pass

@@ -13,49 +13,51 @@ def parse_sum_equation(env, solution, sum_equation_str):
     equation = []
     ignored_tags = []
     first_term_is_none = False
-    sum_equation_str.strip()
-    if sum_equation_str.startswith("SUM="):
-        sum_equation_str = sum_equation_str[4:]
-        sum_equation_str.strip()
-        if re.match(r'^\w+(\s*[\+\-\*]\s*\w+)*$', sum_equation_str):
-            components = re.split(r'([\+\-\*])', sum_equation_str)
+    if sum_equation_str is not None:
+        # sum_equation_str = ''.join(sum_equation_str)
+        sum_equation_str = sum_equation_str.strip()
+        if sum_equation_str.startswith("SUM="):
+            sum_equation_str = sum_equation_str[4:]
+            sum_equation_str = sum_equation_str.strip()
+            if re.match(r'^\w+(\s*[\+\-\*]\s*\w+)*$', sum_equation_str):
+                components = re.split(r'([\+\-\*])', sum_equation_str)
 
-            if len(components)>0:
-                term = components.pop(0)
-                term, ignored = parse_equation_term(env, solution, term)
-                ignored_tags.extend(ignored)
-                if term is not None:
-                    equation.append(str(term))
+                if len(components)>0:
+                    term = components.pop(0)
+                    term, ignored = parse_equation_term(env, solution, term)
+                    ignored_tags.extend(ignored)
+                    if term is not None:
+                        equation.append(str(term))
+                    else:
+                        first_term_is_none = True
                 else:
-                    first_term_is_none = True
+                    log("empty SUM equation")
+                    return equation
+
+                while len(components)>=2:
+                    op = components.pop(0)
+                    term = components.pop(0)
+
+                    op = parse_equation_operand(op)
+                    term, ignored = parse_equation_term(env, solution, term)
+                    ignored_tags.extend(ignored)
+                    if op is not None and term is not None:
+                        equation.append(op)
+                        equation.append(str(term))
+                    else:
+                        equation.append('')
+                        equation.append('')
             else:
-                log("empty SUM equation")
-                return equation
-
-            while len(components)>=2:
-                op = components.pop(0)
-                term = components.pop(0)
-
-                op = parse_equation_operand(op)
-                term, ignored = parse_equation_term(env, solution, term)
-                ignored_tags.extend(ignored)
-                if op is not None and term is not None:
-                    equation.append(op)
-                    equation.append(str(term))
-                else:
-                    equation.append('')
-                    equation.append('')
+                log("invalid SUM equation - doesnt match regex for equation")
         else:
-            log("invalid SUM equation - doesnt match regex for equation")
-    else:
-        log("invalid SUM equation - doesnt start with 'SUM=' prefix ")
-    if first_term_is_none and len(equation)>0:
-        equation = equation[1:]
+            log("invalid SUM equation - doesnt start with 'SUM=' prefix ")
+        if first_term_is_none and len(equation)>0:
+            equation = equation[1:]
     return equation, ignored_tags
 
 
 def parse_equation_term(env, solution, term):
-    term = term.strip()
+    term = str(term).strip()
     if term == "SUM_ALL_TESTS":
         # get all valid tests
         tests = get_valid_tests_names(env)
@@ -68,7 +70,7 @@ def parse_equation_term(env, solution, term):
             tag_args = find_tag_for_solution(solution, tag_name)
             if tag_args is not None and len(tag_args)>0:
                 # for valid tests with scoring tag add its scoring value to equation with '+'
-                value = tag_args[0].strip()
+                value = str(tag_args[0]).strip()
                 try:
                     result = result + int(value)
                 except ValueError:
@@ -87,7 +89,7 @@ def parse_equation_term(env, solution, term):
         # try to find tag with scoring_ prefix in solution tags and tests tags
         tag_args = find_tag_for_solution(solution, tag_name)
         if tag_args is not None and len(tag_args)>0:
-            value = tag_args[0].strip()
+            value = str(tag_args[0]).strip()
             try:
                 result = int(value)
                 return result, []
@@ -98,7 +100,7 @@ def parse_equation_term(env, solution, term):
             return None, [tag_name]
 
 def parse_equation_operand(op):
-    op = op.strip()
+    op = str(op).strip()
     if op in "+-*":
         return op
     else:
@@ -158,7 +160,7 @@ def parse_solution_info_predicate(predicate, solution_dir):
                 # matches: tag_name.1 > 5
                 if re.match("^\w+.[0-9]+\s*[<>=]\s*\w+$", cond):
                     components = re.split(r'([<>=])', cond)
-                    tag = components[0].strip()
+                    tag = str(components[0]).strip()
                     param = get_param_from_tag(tag, solution_dir)
                     if param is not None:
                         if len(components)==1:
@@ -166,7 +168,7 @@ def parse_solution_info_predicate(predicate, solution_dir):
                             match = True
                         elif len(components)==3:
                             # compare given parameter from tag
-                            op, value = components[1].strip(), components[2].strip()
+                            op, value = str(components[1]).strip(), str(components[2]).strip()
                             if op in ['<','>'] and (not re.match(r'[0-9]+',value) or not re.match(r'[0-9]+',param)):
                                 log("cannot compare string (must be number when using < > operand in predicate)")
                             else:
@@ -224,7 +226,7 @@ length:
     * len(string) (if visualization is just string and 'length' is not defined)
 """
 def parse_solution_info_visualization(info, solution_dir):
-    visualization = info['visualization'].strip()
+    visualization = str(info['visualization']).strip()
     visual, length = None, None
 
     # check if visualization refers to param from tag
@@ -248,7 +250,7 @@ def parse_solution_info_visualization(info, solution_dir):
 def get_param_from_tag(txt, solution_dir):
     try:
         result = None
-        txt = txt.strip()
+        txt = str(txt).strip()
         # matches: tag_name.1
         if re.match("^\w+.[0-9]+$", txt):
             components = re.split(r'[.]', txt)

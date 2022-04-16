@@ -1,10 +1,1 @@
-PROJECT=IOS_21_1
-MAXPOINTS=15
-MAXSCORE=15
-# files under test
-FUT="tradelog"
-
-#desc1_file_ok=2; desc1_file_fail=0
-#desc2a_lastfile_ok=4; desc2a_lastfile_fail=0
-tmp_ok=0; tmp_fail=-4
-test_2_ok=1; test_2_fail=0
+test_1_ok=1; test_1_fail=0
