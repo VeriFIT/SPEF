@@ -149,8 +149,9 @@ def run_function(stdscr, env, fce, key):
         return env, True
     # ==================== FOCUS TO TAGS ====================
     elif fce == GO_TO_TAGS:
-        env.set_tag_mode()
-        return env, True
+        if env.show_tags:
+            env.set_tag_mode()
+            return env, True
     # ======================= RESIZE =======================
     elif fce == RESIZE_WIN:
         env = resize_all(stdscr, env)
@@ -333,9 +334,20 @@ def run_menu_function(stdscr, env, fce, key):
                         ok, renamed, fail = rename_solutions([dest_dir], required_name, extended_variants)
                 else:
                     log("expand and rename solution | is solution but not zipfile or tarfile")
+    # ======================= CLEAN ALL =======================
+    elif fce == TEST_CLEAN_ALL:
+        if env.cwd.proj is not None:
+            solutions = get_solution_dirs(env)
+            for solution in solutions:
+                clean_test(solution)
     # ======================= RUN TEST SET =======================
     elif fce == TEST_ALL_STUDENTS: # ALL STUDENTS
-        pass
+        if env.cwd.proj is not None:
+            solutions = get_solution_dirs(env)
+            for solution in solutions:
+                env = run_testsuite(env, solution, show_results=False)
+                if env.is_exit_mode():
+                    return env, True
     elif fce == TEST_STUDENT: # on solution dir
         """ run testsuite on student solution directory """
         if env.cwd.proj is not None:

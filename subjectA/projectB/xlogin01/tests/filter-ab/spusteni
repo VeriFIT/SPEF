@@ -1,0 +1,1 @@
+./tradelog -a '2021-01-11 17:59:58' -b '2021-01-12 15:43:10' test.log <stdin >>stdout 2>>stderr; echo $? >>errcode

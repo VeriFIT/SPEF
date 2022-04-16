@@ -3,6 +3,7 @@ import curses.ascii
 import yaml
 import os
 import traceback
+import shlex
 
 from controls.control import *
 
@@ -91,6 +92,7 @@ def run_function(stdscr, env, fce, key):
 
         if tag_name is not None:
             user_input = UserInput()
+            args = [f"'{arg}'" for arg in args]
             user_input.text = list(f"{tag_name} {' '.join(args)}")
 
             # get new tag (edited)
@@ -103,7 +105,8 @@ def run_function(stdscr, env, fce, key):
 
             # replace old tag with new one 
             if text is not None:
-                tag_parts = ''.join(text).split()
+                tag_parts = shlex.split(''.join(text))
+                # tag_parts = ''.join(text).split()
                 if len(tag_parts) < 1:
                     log("edit tag | wrong tag format")
                 else:

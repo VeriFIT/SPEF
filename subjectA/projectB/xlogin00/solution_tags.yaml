@@ -1,8 +1,14 @@
+last_testing:
+- 16/04/22-20:33
 plagiat:
 - id5
 renamed_sut:
-- readme.md-->sut
+- sut-->tradelog
+score:
+- 0
 scoring:
 - '2'
 test1_ok:
 - '2'
+testsuite_version:
+- 1

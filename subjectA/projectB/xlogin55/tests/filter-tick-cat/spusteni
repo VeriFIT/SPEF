@@ -1,0 +1,1 @@
+./tradelog -t TSM test.log <stdin >>stdout 2>>stderr; echo $? >>errcode

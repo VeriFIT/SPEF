@@ -545,7 +545,8 @@ def rewrite_one_line_in_file(env, line_num):
                 if (line_num == highlight_line):
                     text_color = highlight_color
             """ print line """
-            screen.addstr(line_num, 1+shift, line, text_color)
+            y = line_num-win.row_shift
+            screen.addstr(y, 1+shift, line, text_color)
 
         screen.refresh()
 
@@ -601,8 +602,7 @@ def show_file_content(env):
     try:
         """ show file content """
         if buffer:
-            # if tokens is not None:
-            if False:
+            if tokens is not None:
                 # =============== print with syntax highlight ===============
                 screen.move(1,1+shift)
                 skip = False
@@ -835,7 +835,6 @@ def show_tags(env):
 
     tags = env.tags
 
-
     """ print borders """
     screen.erase()
     if env.is_tag_mode():
@@ -857,6 +856,7 @@ def show_tags(env):
 
         """ show tags """
         if tags.data:
+            tags.data = dict(sorted(tags.data.items()))
             i = 1
             for row, name in enumerate(tags.data):
                 if row < win.row_shift:

@@ -18,7 +18,7 @@ if file tradelog | grep -q CRLF; then
 fi
 
 # a provedeme jednotlive testy
-tst clean
+# tst clean
 
 ulimit -f 2048
 

@@ -1,4 +1,3 @@
-
 # POZOR:
 #   * mozno pouzivat len tagy s prefixom 'scoring_'
 #       - prefix sa pri parsovani rovnice pre vypocet SUM prida automaticky
@@ -14,6 +13,6 @@
 #   * okrem tagov mozno pouzit specialnu funkciu SUM_ALL_TESTS
 #       - tato funkcia scita hodnoty tagov z platnych testov
 #       - moze sa pouzit v kombinacii s dalsimi tagmi
-#       - napr: SUM=SUM_ALL_TESTS + documentation - renamed_solution
+#       - napr: SUM=SUM_ALL_TESTS + documentation - renamed
 
-SUM=SUM_ALL_TESTS
+SUM=SUM_ALL_TESTS- renamed

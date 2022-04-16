@@ -97,9 +97,10 @@ EXPAND_AND_RENAME_SOLUTION = 712
 EXPAND_ALL_SOLUTIONS = 713
 RENAME_ALL_SOLUTIONS = 714
 TEST_ALL_STUDENTS = 715
+TEST_CLEAN_ALL = 716
 
-SHOW_STATS = 716
-SHOW_HISTOGRAM = 717
+SHOW_STATS = 717
+SHOW_HISTOGRAM = 718
 
 # in solution dir
 TEST_STUDENT = 720
@@ -119,11 +120,12 @@ SHOW_TEST_RESULTS = 733
 ADD_TEST = 740
 EDIT_TESTSUITE = 741
 CHANGE_SCORING = 742
-DEFINE_TEST_FAILURE = 743
+CHANGE_SUM = 743
+DEFINE_TEST_FAILURE = 744
 
 # in tests/test dir
-REMOVE_TEST = 744
-EDIT_TEST = 745
+REMOVE_TEST = 750
+EDIT_TEST = 751
 
 
 #########################################################################
@@ -328,17 +330,18 @@ def get_menu_functions(in_proj_dir=False, in_solution_dir=False, is_test_dir=Fal
     proj = {
         'project - edit configuration': EDIT_PROJ_CONF,
         'project - show/hide project info': SHOW_OR_HIDE_PROJ_INFO,
-        'student - expand archive and name solution file correctly': EXPAND_AND_RENAME_SOLUTION,
         'all students - expand archives for all students': EXPAND_ALL_SOLUTIONS,
         'all students - name solution file correctly for all students': RENAME_ALL_SOLUTIONS,
-        'all students - run tests (testsuite)': TEST_ALL_STUDENTS
+        'all students - run tests (testsuite)': TEST_ALL_STUDENTS,
+        'all students - clean from test results': TEST_CLEAN_ALL
     }
 
     tests = {
         'tests - create new test': ADD_TEST,
         'tests - create/edit testsuite': EDIT_TESTSUITE,
         'tests - change scoring': CHANGE_SCORING,
-        'tests - define test failure': DEFINE_TEST_FAILURE
+        'tests - change sum': CHANGE_SUM
+        # 'tests - define test failure': DEFINE_TEST_FAILURE
     }
 
     test = {
@@ -346,12 +349,9 @@ def get_menu_functions(in_proj_dir=False, in_solution_dir=False, is_test_dir=Fal
         'test - edit test': EDIT_TEST
     }
 
-    stats = {
-        'show statistics': SHOW_STATS,
-        'show histogram': SHOW_HISTOGRAM
-    }
 
     student = {
+        'student - expand archive and name solution file correctly': EXPAND_AND_RENAME_SOLUTION,
         'student - run tests (testsuite)': TEST_STUDENT,
         'student - clean from test results': TEST_CLEAN,
         'student - run test':RUN_TEST,
@@ -365,10 +365,15 @@ def get_menu_functions(in_proj_dir=False, in_solution_dir=False, is_test_dir=Fal
         'student - show test results': SHOW_TEST_RESULTS
     }
 
+    stats = {
+        'show statistics': SHOW_STATS,
+        'show histogram': SHOW_HISTOGRAM
+    }
 
     result_dir = {}
     if in_solution_dir: # in solution dir or in proj dir with selected solution
         result_dir.update(proj)
+        result_dir.update(tests)
         result_dir.update(student)
         result_dir.update(stats)
         result_dir.update(basic)

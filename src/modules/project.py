@@ -156,7 +156,7 @@ class Project:
         date = {
             'identifier': 1,
             'visualization': "last_testing.1", # vypise sa ak existuje tag #last_testing
-            'length': 12, #10.12.-15:30
+            'length': 15, #10/03/22-15:30
             'description': "datetime of last test",
             'predicates': []
         }
@@ -165,20 +165,20 @@ class Project:
             'visualization': 'T',
             'description': "was tested -- tag added at the end of testsuite.sh",
             'predicates': [
-                {'predicate': ['testsuite_done'], 'color': ''} # tag: testsuite_done sa prida na konci testsuite.sh
+                {'predicate': ['last_testing'], 'color': ''} # tag: last_testing sa prida na konci testovania
             ]
         }
         group = {
             'identifier': 3,
             'visualization': 'G',
-            'desrcription': "is group project",
+            'description': "is group project",
             'predicates': [
                 {'predicate': ['group'], 'color': ''}
             ]
         }
         plagiat = {
             'identifier': 4,
-            'visualization': '!',
+            'visualization': '!!',
             'description': "is plagiat",
             'predicates': [
                 {'predicate': ['plag'], 'color': 'red'}

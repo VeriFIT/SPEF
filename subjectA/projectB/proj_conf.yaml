@@ -17,11 +17,11 @@ solution_info:
   description: was tested -- tag added at the end of testsuite.sh
   predicates:
   - predicate:
-    - testsuite_done
-    color: ''
+    - last_testing
+    color: yellow
 - identifier: 3
   visualization: G
-  desrcription: is group project
+  description: is group project
   predicates:
   - predicate:
     - group
@@ -39,10 +39,11 @@ solution_info:
   description: test
   predicates:
   - predicate: 
-      - 'score.1 > 0'
+      - score
     color: blue
 - identifier: 6
   visualization: fail
+  length: 4
   description: test 1 fail
   predicates:
   - predicate: 
@@ -51,8 +52,19 @@ solution_info:
     color: red
 - identifier: 6
   visualization: ok
+  length: 4
   description: test 1 ok
   predicates:
   - predicate: 
       - test1_ok
     color: green
+- identifier: 7
+  visualization: '.'
+  description: result of test cat1
+  predicates:
+  - predicate:
+    - cat1_ok
+    color: green
+  - predicate:
+    - cat1_fail
+    color: red

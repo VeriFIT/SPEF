@@ -7,6 +7,7 @@ import shutil
 import stat
 import subprocess
 import datetime
+import traceback
 
 from pathlib import Path
 
@@ -19,18 +20,7 @@ from utils.reporting import add_tag_to_solution
 from modules.bash import Bash_action
 
 
-
-
-# TODO: export FUT from env.cwd.proj.sut_expected (nie z scoring)
-# TODO: copy solution_dir do /opt/sut vsetko okrem 'solution_tags.yaml'
-# TODO: copy solution_dir do /opt/sut predtym spravt tst clear
-
-# TODO: solution/testxx/ adresare by sa mali ukladat vsetky do solution/tests/testxx/
-# TODO: tests_tags.yaml sa vytvori v precinku s testsuite.sh a nie v solution_dir
-
-# TODO: automaticka suma tagov
-# TODO: automaticky report tagov
-
+# TODO: automaticky report (z tagov)
 # TODO: n --> add note (vratane typical notes)
 
 
@@ -59,64 +49,70 @@ SRC_RUN_FILE = os.path.join(os.path.dirname(__file__), 'bash', 'run_testsuite.sh
 
 
 
+def run_testsuite(env, solution_dir, show_results=True):
+    try:
+        if not env.cwd.proj or not solution_dir:
+            log("run testsuite | run from solution dir in some project dir")
+            return env
 
-def run_testsuite(env, solution_dir):
-    if not env.cwd.proj or not solution_dir:
-        log("run testsuite | run from solution dir in some project dir")
-        return env
+        ############### 1. CLEAN SOLUTION ###############
+        clean_test(solution_dir)
 
-    ############### 1. CLEAN SOLUTION ###############
-    # student_results = os.path.join(solution_dir, RESULTS_SUB_DIR)
-    # shutil.rmtree(student_results)
+        ############### 2. PREPARE DATA ###############
+        data_ok = prepare_data(env, solution_dir)
+        if not data_ok:
+            log("run testsuite | problem with testing data")
+            return env
 
+        ############### 3. CHECK IF FUT EXISTS ###############
+        fut = env.cwd.proj.sut_required
+        file_list = os.listdir(solution_dir)
+        if not fut in file_list:
+            # add tag "missing sut file"
+            log("run testsuite | fut file '{fut}' doesnt exists in solution dir")
+            return env
 
-    ############### 2. PREPARE DATA ###############
-    data_ok = prepare_data(env, solution_dir)
-    if not data_ok:
-        log("run testsuite | problem with testing data")
-        return env
+        ############### 4. RUN TESTSUITE ###############
+        succ = run_testsuite_in_docker(solution_dir, fut)
+        if not succ:
+            log("run testsuite | problem with testsuite run in docker")
+            return env
 
-
-    ############### 3. RUN TESTSUITE ###############
-    fut = env.cwd.proj.sut_required
-    succ = run_testsuite_in_docker(solution_dir, fut)
-    if not succ:
-        log("run testsuite | problem with testsuite run in docker")
-        return env
-
-    # get datetime and add tag "last_testing" to solution tags
-    date_time = datetime.datetime.now().strftime("%d/%m/%y-%H:%M")
-    add_tag_to_solution(solution_dir, "last_testing", [date_time])
-    # get testsuite version and add tag "testsuite_version" to solution tags
-    tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
-    tests_tags = load_testsuite_tags(tests_dir)
-    if tests_tags is not None and len(tests_tags)>0:
-        version_args = tests_tags.get_args_for_tag("version")
-        if version_args is not None:
-            tst_version = list(version_args)[0]
-            add_tag_to_solution(solution_dir, "testsuite_version", [tst_version])
-
-
-    ############### 4. CALCULATE SCORE ###############
-    total_score = calculate_score(env, solution_dir)
-    # if found some tags from sum equation
-    if total_score is not None:
-        # add tag "score(body)" to solution
-        score, bonus = total_score
-        add_tag_to_solution(solution_dir, "score", [score])
-        if bonus > 0:
-            add_tag_to_solution(solution_dir, "score_bonus", [bonus])
+        # get datetime and add tag "last_testing" to solution tags
+        date_time = datetime.datetime.now().strftime("%d/%m/%y-%H:%M")
+        add_tag_to_solution(solution_dir, "last_testing", [date_time])
+        # get testsuite version and add tag "testsuite_version" to solution tags
+        tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
+        tests_tags = load_testsuite_tags(tests_dir)
+        if tests_tags is not None and len(tests_tags)>0:
+            version_args = tests_tags.get_args_for_tag("version")
+            if version_args is not None:
+                tst_version = list(version_args)[0]
+                add_tag_to_solution(solution_dir, "testsuite_version", [tst_version])
 
 
-        ############### 5. GENERATE REPORT ###############
-        # TODO
-        # from reporting import generate report  
+        ############### 5. CALCULATE SCORE ###############
+        total_score = calculate_score(env, solution_dir)
+        # if found some tags from sum equation
+        if total_score is not None:
+            # add tag "score(body)" to solution
+            score, bonus = total_score
+            add_tag_to_solution(solution_dir, "score", [score])
+            if bonus > 0:
+                add_tag_to_solution(solution_dir, "score_bonus", [bonus])
 
-        ############### 6. SHOW REPORT ###############
-        # TODO
-        # ukazat v bashi
-        # bash_cmd = echo "subor s reportom"
 
+            ############### 6. GENERATE REPORT ###############
+            # TODO
+            # from reporting import generate report
+
+            ############### 7. SHOW REPORT ###############
+            # TODO
+            # ukazat v bashi
+            # bash_cmd = echo "subor s reportom"
+    except Exception as err:
+        log("run testsuite | "+str(err)+" | "+str(traceback.format_exc()))
+        env.set_exit_mode()
 
     return env
 
@@ -209,7 +205,7 @@ def run_testsuite_in_docker(solution_dir, fut):
         student_results = os.path.join(solution_dir, RESULTS_SUB_DIR)
         shutil.copytree(docker_results, student_results, dirs_exist_ok=True)
     except Exception as err:
-        log("run testsuite | "+str(err))
+        log("run testsuite | "+str(err)+" | "+str(traceback.format_exc()))
         succ = False
     finally:
         try:
@@ -220,9 +216,21 @@ def run_testsuite_in_docker(solution_dir, fut):
             os.remove(container_cid_file)
             shutil.rmtree(SHARED_DIR)
         except Exception as err:
-            log("warning | remove shared dir & cid file | "+str(err))
+            log("warning | remove shared dir & cid file | "+str(err)+" | "+str(traceback.format_exc()))
 
     return succ
+
+
+
+def clean_test(solution_dir):
+    try:
+        student_results = os.path.join(solution_dir, RESULTS_SUB_DIR)
+        if os.path.exists(student_results):
+            shutil.rmtree(student_results)
+        if os.path.exists(SHARED_DIR):
+            shutil.rmtree(SHARED_DIR)
+    except Exception as err:
+        log("clean test | "+str(err))
 
 
 
@@ -252,13 +260,9 @@ def calculate_score(env, solution_dir):
             log("ignored tags: "+str(ignored_tags))
             return None
     except Exception as err:
-        log("calculate score sum | "+str(err))
+        log("calculate score sum | "+str(err)+" | "+str(traceback.format_exc()))
         return None
 
-
-# bin/c
-def clean_test():
-    pass
 
 # bin/s
 def get_sum():
