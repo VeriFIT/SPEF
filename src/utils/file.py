@@ -11,7 +11,7 @@ from utils.printing import *
 from utils.logger import *
 from utils.match import *
 from utils.reporting import *
-from utils.history import history_new_test
+from utils.history import history_test_event
 
 
 
@@ -209,7 +209,7 @@ def create_new_test(proj_dir, test_name=None):
         add_tag_to_file(test_tags, version_tag)
 
         # add event about creating new test to testsuite history
-        # history_new_test(proj_dir, test_name)
+        history_test_event(proj_dir, test_name, "create new test")
 
         # set default scoring for new test
         scoring_file = os.path.join(tests_dir, SCORING_FILE)
