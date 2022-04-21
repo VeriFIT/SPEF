@@ -13,6 +13,7 @@ from utils.match import *
 from utils.reporting import *
 from utils.history import history_test_event
 
+from testing.tst import check_bash_functions_for_testing
 
 
 def remove_archive_suffix(path):
@@ -171,6 +172,8 @@ def create_new_test(proj_dir, test_name=None):
         # create tests dir if not exists
         tests_dir = os.path.join(proj_dir, TESTS_DIR)
         create_tests_dir(tests_dir)
+        # copy bash functions to tests/src/tst file
+        check_bash_functions_for_testing(proj_dir)
 
         ############### HISTORY ###############
         # create tests history dir if not exists

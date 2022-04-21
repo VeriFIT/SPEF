@@ -1,7 +1,0 @@
-0:cmd-profit: prikaz profit
-# ./tradelog profit test.log <stdin >>stdout 2>>stderr; echo $? >>errcode
-# diff -u stdout.ref stdout
-#   --- stdout.ref
-#   +++ stdout
-#   @@ -1 +0,0 @@
-#   -95842266.87

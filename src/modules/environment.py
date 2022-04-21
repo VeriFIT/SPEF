@@ -173,14 +173,18 @@ class Environment:
                 options[str(key)] = note.text
         return options
 
-    def get_supported_test_functions(self):
+    def get_supported_test_functions(self, bash_file):
         options = {}
-        fce_str = os.popen(f'{SRC_BASH_FILE} get_fce 2>/dev/null').read()
-        for item in fce_str.splitlines():
-            fce, descr = item.split('=')
-            fce, descr = fce.strip(), descr.strip()
-            options[str(fce)] = str(descr)
-        return options
+        try:
+            fce_str = os.popen(f'{bash_file} get_fce 2>/dev/null').read()
+            for item in fce_str.splitlines():
+                fce, descr = item.split('=')
+                fce, descr = fce.strip(), descr.strip()
+                options[str(fce)] = str(descr)
+            return options
+        except Exception as err:
+            log("get supported test functions | "+str(err))
+            return {}
 
     """ update data """
     def update_browsing_data(self, win, cwd):

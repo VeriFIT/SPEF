@@ -27,7 +27,7 @@ from utils.logger import *
 from utils.match import *
 
 from utils.reporting import get_path_relative_to_solution_dir
-
+from testing.tst import TST_FCE_DIR, TST_FCE_FILE
 
 
 def file_viewing(stdscr, env):
@@ -93,13 +93,14 @@ def file_viewing(stdscr, env):
     env.report = report
     rewrite_all_wins(env)
     rewrite = True
+    rewrite_hint = True
 
     while True:
         """ print all screens """
         screen, win = env.get_screen_for_current_mode()
         if rewrite:
-            rewrite_file(env)
-        rewrite_file(env)
+            rewrite_file(env, hint=rewrite_hint)
+        # rewrite_file(env)
 
         try:
             """ move cursor to correct position """
@@ -115,7 +116,7 @@ def file_viewing(stdscr, env):
         try:
             function = get_function_for_key(env, key)
             if function is not None:
-                env, rewrite, exit_view = run_function(stdscr, env, function, key)
+                env, rewrite, rewrite_hint, exit_view = run_function(stdscr, env, function, key)
                 if exit_view:
                     return env
         except Exception as err:
@@ -129,12 +130,13 @@ def file_viewing(stdscr, env):
 def run_function(stdscr, env, fce, key):
     screen, win = env.get_screen_for_current_mode()
     rewrite = False
+    rewrite_hint = False
 
     # ======================= EXIT =======================
     if fce == EXIT_PROGRAM:
         if file_changes_are_saved(stdscr, env):
             env.set_exit_mode()
-            return env, rewrite, True
+            return env, rewrite, rewrite_hint, True
         rewrite = True
     # ======================= BASH =======================
     elif fce == BASH_SWITCH:
@@ -142,16 +144,16 @@ def run_function(stdscr, env, fce, key):
         env.bash_action = Bash_action()
         env.bash_action.set_exit_key(('0' if len(hex_key)%2 else '')+str(hex_key))
         env.bash_active = True
-        return env, rewrite, True
+        return env, rewrite, rewrite_hint, True
     # ======================= FOCUS =======================
     elif fce == CHANGE_FOCUS:
         if env.show_tags:
             env.switch_to_next_mode()
-            return env, rewrite, True
+            return env, rewrite, rewrite_hint, True
         else:
             if file_changes_are_saved(stdscr, env):
                 env.switch_to_next_mode()
-                return env, rewrite, True
+                return env, rewrite, rewrite_hint, True
             rewrite = True
     # ======================= RESIZE =======================
     elif fce == RESIZE_WIN:
@@ -200,15 +202,17 @@ def run_function(stdscr, env, fce, key):
         else:
             env.enable_line_numbers(env.buffer)
         rewrite = True
+        rewrite_hint = True
     elif fce == SHOW_OR_HIDE_NOTE_HIGHLIGHT:
         env.note_highlight = not env.note_highlight
         rewrite = True
+        rewrite_hint = True
     # ======================= SHOW NOTES =======================
     elif fce == OPEN_NOTE_MANAGEMENT:
         env.enable_note_management()
         # env.switch_to_next_mode()
         env.set_notes_mode()
-        return env, rewrite, True
+        return env, rewrite, rewrite_hint, True
     elif fce == SHOW_TYPICAL_NOTES:
         # show list of typical notes with indexes
         options = env.get_typical_notes_dict()
@@ -228,12 +232,16 @@ def run_function(stdscr, env, fce, key):
         if env.editing_test_file:
             # show supported functions for dotest.sh while user is writing/editing some test
             # show list of implemented functions for testing
-            options = env.get_supported_test_functions()
-            custom_help = (None, "Supported functions:", options)
-            env, key = show_help(stdscr, env, custom_help=custom_help, exit_key=[])
-            print_help(center_screen, max_cols, max_rows, env, custom_help=custom_help)
-            curses.curs_set(1)
-            rewrite_all_wins(env)
+            try:
+                bash_file = os.path.join(env.cwd.proj.path, TESTS_DIR, TST_FCE_DIR, TST_FCE_FILE)
+                options = env.get_supported_test_functions(bash_file)
+                custom_help = (None, "Supported functions:", options)
+                env, key = show_help(stdscr, env, custom_help=custom_help, exit_key=[])
+                print_help(center_screen, max_cols, max_rows, env, custom_help=custom_help)
+                curses.curs_set(1)
+                rewrite_all_wins(env)
+            except Exception as err:
+                log("show test functions | "+str(err))
     # ======================= NOTES JUMP =======================
     elif fce == GO_TO_PREV_NOTE:
         if env.note_highlight:
@@ -342,7 +350,7 @@ def run_function(stdscr, env, fce, key):
             if fce == FILTER:
                 env = filter_management(stdscr, screen, win, env)
                 if env.is_exit_mode() or env.is_brows_mode():
-                    return env, rewrite, True
+                    return env, rewrite, rewrite_hint, True
                 rewrite = True
             # ======================= MANAGE -> EDIT =======================
             elif fce == SET_EDIT_FILE_MODE:
@@ -371,5 +379,5 @@ def run_function(stdscr, env, fce, key):
                 rewrite_all_wins(env)
 
     env.update_win_for_current_mode(win)
-    return env, rewrite, False
+    return env, rewrite, rewrite_hint, False
 

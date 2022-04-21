@@ -1,7 +1,0 @@
-0:filter-tick-profit: filtr -t profit
-# ./tradelog -t TSM profit test.log <stdin >>stdout 2>>stderr; echo $? >>errcode
-# diff -u stdout.ref stdout
-#   --- stdout.ref
-#   +++ stdout
-#   @@ -1 +0,0 @@
-#   -398864.20

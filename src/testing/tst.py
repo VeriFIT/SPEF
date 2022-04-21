@@ -38,7 +38,7 @@ SHARED_RUN_FILE = os.path.join(TMP_DIR, 'docker_shared/tests/run.sh')
 
 # shell functions
 TST_FCE_DIR = 'src'
-TST_FCE_FILE = 'src/tst' # proj/tests/src/tst
+TST_FCE_FILE = 'tst' # proj/tests/src/tst
 SRC_BASH_FILE = os.path.join(os.path.dirname(__file__), 'bash', 'tst.sh')
 SRC_RUN_FILE = os.path.join(os.path.dirname(__file__), 'bash', 'run_testsuite.sh')
 
@@ -167,6 +167,7 @@ def run_testsuite_in_docker(solution_dir, fut):
     succ = True
     try:
         # get user id
+        # os.getuid() + os.getgid()
         USER = os.getenv('USER')
         is_root = False
         if USER =='root':
@@ -175,16 +176,21 @@ def run_testsuite_in_docker(solution_dir, fut):
         user_id = output.stdout.decode('utf-8').strip()
 
         # create container from image `test` (IMAGE_NAME)
+
+        # dat do jedneho commandu (run + bash)
+        # funkcia: vytvor image s uzivatelom xy a uloz tento image pre dalsie pouzivanie (pre rozne alpine, fedora, centos,) 
         container_cid_file = '/tmp/docker.cid'
         out = subprocess.run(f"docker run --cidfile {container_cid_file} --rm -d --workdir {CONTAINER_DIR} -v {SHARED_DIR}:{CONTAINER_DIR}:z {IMAGE_NAME} bash -c".split(' ')+["while true; do sleep 1; done"],  capture_output=True)
-        log("docker run stdout | "+str(out.stdout.decode('utf-8')))
-        log("docker run stderr | "+str(out.stderr.decode('utf-8')))
+        # log("docker run stdout | "+str(out.stdout.decode('utf-8')))
+        # log("docker run stderr | "+str(out.stderr.decode('utf-8')))
 
         # add user in docker container (if user is not root)
         with open(container_cid_file, 'r') as f:
             cid = f.read()
         if not is_root:
             output = subprocess.run(f"docker exec {cid} useradd -u {user_id} test".split(' '), capture_output=True)
+
+        # useradd alebo adduser
 
         # run test script (cd sut; /opt/tests/run.sh)
         # run_testsuite /opt/tests/src /opt/tests /opt/sut/tests_tags.yaml tests sut {fut}
@@ -193,8 +199,8 @@ def run_testsuite_in_docker(solution_dir, fut):
         result = output.stdout.decode('utf-8')
         err = output.stderr.decode('utf-8')
 
-        log("docker exec stdout | "+str(result))
-        log("docker exec stderr | "+str(err))
+        # log("docker exec stdout | "+str(result))
+        # log("docker exec stderr | "+str(err))
 
         # remove container
         out = subprocess.run(f"docker rm -f {cid}".split(' '), capture_output=True)
@@ -285,12 +291,15 @@ def make_patch():
 
 
 def check_bash_functions_for_testing(proj_dir):
-    bash_file = os.path.join(proj_dir, TESTS_DIR, TST_FCE_FILE)
+    bash_dir = os.path.join(proj_dir, TESTS_DIR, TST_FCE_DIR)
+    bash_file = os.path.join(bash_dir, TST_FCE_FILE)
     bash_file_exists = False
     if os.path.exists(bash_file):
         bash_file_exists = True
     else:
         try:
+            if not os.path.exists(bash_dir):
+                os.mkdir(bash_dir)
             shutil.copyfile(SRC_BASH_FILE, bash_file)
             st = os.stat(bash_file)
             os.chmod(bash_file, st.st_mode | stat.S_IEXEC)

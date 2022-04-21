@@ -1,1 +1,0 @@
-strace -f -o trace -e trace=open,creat ./tradelog list-tick test.log <stdin >>stdout 2>>stderr; echo $? >>errcode

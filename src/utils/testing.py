@@ -40,7 +40,7 @@ SHARED_RUN_FILE = os.path.join(TMP_DIR, 'docker_shared/tests/run.sh')
 # shell functions
 TST_FCE_DIR = 'src'
 TST_FCE_FILE = 'src/tst' # proj/tests/src/tst
-SRC_BASH_FILE = (HOME, 'testing', 'bash' 'tst.sh')
+SRC_BASH_FILE = os.path.join(HOME, 'testing', 'bash' 'tst.sh')
 SRC_RUN_FILE = os.path.join(HOME, 'testing', 'bash', 'run_testsuite.sh')
 
 # TODO: SRC_BASH_FILE rozdelit na dva subory: podpora pre "dotest.sh" a funkcie pre "testsuite.sh"
@@ -173,7 +173,9 @@ def check_bash_functions_for_testing(proj_dir):
     bash_file_exists = False
     if os.path.exists(bash_file):
         bash_file_exists = True
+        log("file with bash functions exists")
     else:
+        log("file with bash functions not exists")
         try:
             if os.path.exists(SRC_BASH_FILE):
                 shutil.copyfile(SRC_BASH_FILE, bash_file)

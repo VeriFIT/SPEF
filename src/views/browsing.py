@@ -473,7 +473,7 @@ def run_menu_function(stdscr, env, fce, key):
             if os.path.exists(tests_dir):
                 # create testsuite file if not exists
                 testsuite_file = os.path.join(tests_dir, TESTSUITE_FILE)
-                create_test_suite(testsuite_file)
+                create_testsuite(testsuite_file)
 
                 # open "testsuite.sh" to implement testing strategy
                 env.set_file_to_open(testsuite_file)
@@ -491,6 +491,16 @@ def run_menu_function(stdscr, env, fce, key):
                 return env, True
             else:
                 log(f"cant find scoring file | '{scoring_file}' doesnt exists")
+    # =================== CHANGE SUM ===================
+    elif fce == CHANGE_SUM:
+        if env.cwd.proj is not None:
+            sum_file = os.path.join(env.cwd.proj.path, TESTS_DIR, SUM_FILE)
+            if os.path.exists(sum_file):
+                env.set_file_to_open(sum_file)
+                env.switch_to_next_mode()
+                return env, True
+            else:
+                log(f"cant find sum file | '{sum_file}' doesnt exists")
     # =================== DEFINE TEST FAILURE ===================
     elif fce == DEFINE_TEST_FAILURE:
         pass
