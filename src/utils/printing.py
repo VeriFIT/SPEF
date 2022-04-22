@@ -136,137 +136,85 @@ def print_hint(env):
     screen.refresh()
 
 
-""" custom_help = (exit_message, title, dictionary)"""
-def print_help(screen, max_cols, max_rows, env, custom_help=None):
+def print_help(screen, win, env, exit_mess, title, actions):
+    max_cols = win.end_x - win.begin_x
+    max_rows = win.end_y - win.begin_y
+
     screen.erase()
     screen.border(0)
-    mode = ""
-    if custom_help is None:
-        if env.is_filter_mode():
-            mode = "FILTER MANAGEMENT"
-            actions = {
-            "F1": "show this user help",
-            "F4": "aggregate by same tags file",
-            "F8": "delete/remove all filters",
-            "F10": "exit program",
-            "ESC": "exit filter management",
-            "Arrows": "move cursor in user input",
-            "Delete, Backspace": "delete symbol in user input",
-            "Ascii character": "insert symbol in user input",
-            "Enter": "set filter and exit filter management"}
-        elif env.is_brows_mode():
-            mode = "DIRECTORY BROWSING"
-            actions = {
-            "F1": "show this user help",
-            "F2": "open menu with other functions",
-            "F3": "set quick view mode on/off",
-            "F4": "opent file for edit",
-            "F6": "show/hide cached files (tags, report)",
-            "F9": "set filter by path",
-            "F10": "exit program",
-            "TAB": "change focus to file view or edit",
-            "Arrows": "brows between files and dirs"}
-        elif env.is_view_mode():
-            if env.show_tags:
-                tab_action = "change focus to tag management"
-            elif env.show_notes:
-                tab_action = "change focus to note management"
-            else:
-                tab_action = "change focus to directory browsing"
-
-            mode = "FILE EDIT"
-            actions = {
-            "F1": "show this user help",
-            "F2": "save file changes",
-            "F3": "change to file view/tag mode",
-            "F4": "open note management",
-            "F5": "show/hide line numbers",
-            "F6": "show/hide note highlight",
-            "F8": "reload file content from last save",
-            "F9": "set filter by content",
-            "F10": "exit program",
-            "TAB": f"{tab_action}",
-            "Arrows": "move cursor in file content",
-            "Delete, Backspace": "delete symbol in file on current cursor position",
-            "Ascii character": "insert symbol in file on current cursor position",
-            "Enter": "insert new line in file on current cursor position",
-            "CTRL + Up/Down": "jump to prev/next line with note in file",
-            "CTRL + L": "reload file content from original buffer",
-            "CTRL + R": "remove all notes on current line"}
-        elif env.is_tag_mode():
-            mode = "TAG MANAGEMENT"
-            actions = {
-            "F1": "show this user help",
-            "F2": "edit current tag",
-            "F3": "create new tag",
-            "F4": "open file with tags for edit",
-            "F8": "delete current tag",
-            "F9": "set filter by tag",
-            "F10": "exit program",
-            "TAB": "change focus to directory browsing",
-            "Arrows": "brows between tags"}
-        elif env.is_notes_mode():
-            mode = "NOTES MANAGEMENT"
-            actions = {
-            "F1": "show this user help",
-            "F2": "edit current note",
-            "F3": "create new note",
-            "F4": "insert note from saved (typical) notes",
-            "F5": "go to current note in file",
-            "F6": "save note as typical",
-            "F8": "delete current note",
-            "F10": "exit program",
-            "ESC": "exit note management",
-            "TAB": "change focus to file view or edit",
-            "Arrows": "brows between notes"}
-        else:
-            screen.refresh()
-        exit_message = "Press ESC or F1 to hide user help."
-        title = f"*** USER HELP FOR {mode} ***"
-
-    else:
-        exit_message = custom_help[0]
-        title = custom_help[1]
-        actions = custom_help[2]
 
     line = 1
-    if exit_message:
-        if len(exit_message) >= max_cols:
-            exit_message = exit_message[:max_cols-1]
-        screen.addstr(line, 1, exit_message, curses.color_pair(COL_HELP))
+    if exit_mess:
+        if len(exit_mess) >= max_cols:
+            exit_mess = exit_mess[:max_cols-1]
+        screen.addstr(line, 1, exit_mess, curses.color_pair(COL_HELP))
         line += 1
     if title:
         if len(title) >= max_cols:
             title = title[:max_cols-1]
         screen.addstr(line, int(max_cols/2-len(title)/2)+1, title, curses.A_NORMAL)
         line += 1
-    for key in actions:
+
+
+    for idx, key in enumerate(actions):
+        if idx < win.row_shift:
+            continue
+        if line >= max_rows:
+            break
+
+        # print key
+        if len(key)+3 >= max_cols:
+            break
+        screen.addstr(line, 1, str(key), curses.color_pair(COL_HELP))
+
+        # print action
         action = actions[key]
-        if line < max_rows:
-            if len(key)+2 > max_cols:
+        free_space = max_cols-len(key)-3
+        if len(action) > free_space:
+            sublines = parse_line_into_sublines(action, free_space)
+            for part in sublines:
+                if line >= max_rows:
+                    break
+                screen.addstr(line, 3+len(key), str(part), curses.A_NORMAL)
+                line +=1
+        else:
+            screen.addstr(line, 3+len(key), str(action), curses.A_NORMAL)
+            line += 1
+        screen.refresh()
+
+
+
+def parse_line_into_sublines(line, max_cols):
+    sublines = []
+
+    # split string into list of words and spaces
+    words = re.split(r'(\S+)', line)
+    split_words = []
+    for word in words:
+        # if any single word is longer max free space, split it (otherwise it would never be printed)
+        if len(word) >= max_cols:
+            while len(word) >= max_cols:
+                part = word[:max_cols-1]
+                split_words.append(part)
+                word = word[max_cols-1:]
+        split_words.append(word)
+
+    words = split_words
+    while words:
+        res_line = ""
+        word = words[0] # get first word
+        while len(res_line)+len(word) < max_cols: # check if the word fits in the line
+            """ add word to the line """
+            res_line += word
+            del words[0]
+            if not words:
                 break
-            screen.addstr(line, 1, str(key), curses.color_pair(COL_HELP))
-            # if it doesnt fit to windows weight
-            free_space = max_cols-len(key)-3
-            if len(action) > free_space:
-                words = action.split()
-                while words:
-                    if line >= max_rows:
-                        break
-                    part = ""
-                    word = words[0]
-                    while len(part)+len(word)+1 < free_space:
-                        part += " "+word
-                        del words[0]
-                        if not words:
-                            break
-                        word = words[0]
-                    screen.addstr(line, 3+len(key), str(part), curses.A_NORMAL)
-                    line +=1
-            else:
-                screen.addstr(line, 3+len(key), str(action), curses.A_NORMAL)
-                line += 1
-    screen.refresh()
+            word = words[0] # get next word
+        # TODO !!!!!!! POZOR MOZE ROBIT BORDEL !!!!!!!
+        res_line = res_line.strip()
+        if res_line != "":
+            sublines.append(res_line)
+    return sublines
 
 
 
