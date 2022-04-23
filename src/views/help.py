@@ -144,10 +144,13 @@ def get_help(env):
         actions = {
         "F1": "show this user help",
         "F2": "save file changes",
-        "F3": "change to file view/tag mode",
-        "F4": "open note management",
+        "F3": "change to file view/tag mode"}
+        if env.editing_test_file:
+            actions.update({"F4": "show supported bash functions for 'dotest.sh'"})
+        actions.update({
         "F5": "show/hide line numbers",
         "F6": "show/hide note highlight",
+        "F7": "open note management",
         "F8": "reload file content from last save",
         "F9": "set filter by content",
         "F10": "exit program",
@@ -158,7 +161,7 @@ def get_help(env):
         "Enter": "insert new line in file on current cursor position",
         "CTRL + Up/Down": "jump to prev/next line with note in file",
         "CTRL + L": "reload file content from original buffer",
-        "CTRL + R": "remove all notes on current line"}
+        "CTRL + R": "remove all notes on current line"})
     elif env.is_tag_mode():
         mode = "TAG MANAGEMENT"
         actions = {

@@ -7,7 +7,7 @@ import tarfile
 import zipfile
 
 from utils.loading import *
-from utils.printing import *
+# from utils.printing import *
 from utils.logger import *
 from utils.match import *
 from utils.reporting import *
@@ -81,6 +81,69 @@ def rename_solutions(src_dirs, required_name, extended_variants):
         except:
             fail.append(solution)
     return ok, renamed, fail
+
+
+""" vola sa ked sa otvori subor z test_dir na edit """
+# create copy of test dir -> tmp/test/v/*
+# return success
+def copy_test_history_to_tmp(proj_dir, test_dir):
+    try:
+        # check if history dir exists
+        history_dir = os.path.join(proj_dir, HISTORY_DIR)
+        if not os.path.exists(history_dir) or not os.path.isdir(history_dir):
+            create_tests_history_dir(history_dir)
+
+        testcase_tags = load_testcase_tags(test_dir)
+        if testcase_tags is not None:
+            # get version of test
+            args = testcase_tags.get_args_for_tag("version")
+            version = 1 if args is None or len(args) < 1 else int(args[0])
+
+            # create tmp dir for test with actual version
+            test_name = os.path.basename(test_dir)
+            tmp_test_dir = os.path.join(TMP_DIR, test_name)
+            tmp_test_v_dir = os.path.join(tmp_test_dir, f"version_{version}")
+            if not os.path.exists(tmp_test_dir):
+                os.mkdir(tmp_test_dir)
+            if os.path.exists(tmp_test_v_dir):
+                log(f"copy test dir to history | tmp file for test {test_name} and version {version} already exists!!")
+                return False
+            else:
+                # copy test dir to tmp dir
+                shutil.copytree(test_dir, tmp_test_v_dir)
+                log("test history saved to tmp dir")
+            return True
+        else:
+            log("copy test dir to history | cannot find test tags")
+            return False
+    except Exception as err:
+        log("copy test dir to history | "+str(err)+" | "+str(traceback.format_exc()))
+        return False
+
+
+
+""" vola sa pri save buffer ak sa edituje test dir """
+def actualize_test_history_in_tmp(proj_dir, test_dir):
+    # check if history dir exists
+    history_dir = os.path.join(proj_dir, HISTORY_DIR)
+    if not os.path.exists(history_dir) or not os.path.isdir(history_dir):
+        create_tests_history_dir(history_dir)
+
+    testcase_tags = load_testcase_tags(test_dir)
+    if testcase_tags is not None:
+        # get version of test
+        args = testcase_tags.get_args_for_tag("version")
+        version = 1 if args is None or len(args) < 1 else int(args[0])
+
+        # create tmp dir for test with actual version
+        test_name = os.path.basename(test_dir)
+        tmp_test_dir = os.path.join(TMP_DIR, test_name)
+        tmp_test_v_dir = os.path.join(tmp_test_dir, f"version_{version}")
+        if not os.path.exists(tmp_test_dir):
+            os.mkdir(tmp_test_dir)
+        # copy test dir to tmp dir
+        shutil.copytree(test_dir, tmp_test_v_dir, dirs_exist_ok=True)
+
 
 
 

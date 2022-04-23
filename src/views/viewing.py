@@ -26,6 +26,8 @@ from utils.printing import *
 from utils.logger import *
 from utils.match import *
 
+from utils.file import copy_test_history_to_tmp
+from utils.history import history_test_modified
 from utils.reporting import get_path_relative_to_solution_dir
 from testing.tst import TST_FCE_DIR, TST_FCE_FILE
 
@@ -48,8 +50,11 @@ def file_viewing(stdscr, env):
         env.set_brows_mode() # instead of exit mode
         return env
 
-    if os.path.basename(env.file_to_open) == TEST_FILE:
+    # editing test file
+    if os.path.basename(env.file_to_open) == TEST_FILE and env.cwd.proj:
         env.editing_test_file = True
+        # copy test dir to history (if there is no other copy of this test with this version)
+        succ = copy_test_history_to_tmp(env.cwd.proj.path, os.path.dirname(env.file_to_open))
 
 
     # check if file is from some project directory
@@ -188,7 +193,7 @@ def run_function(stdscr, env, fce, key):
         rewrite_all_wins(env)
     # ======================= SAVE FILE =======================
     elif fce == SAVE_FILE:
-        save_buffer(env.file_to_open, env.buffer, env.report)
+        save_buffer(stdscr, env)
         rewrite_all_wins(env)
     # ======================= SHOW/HIDE TAGS =======================
     elif fce == SHOW_OR_HIDE_TAGS:

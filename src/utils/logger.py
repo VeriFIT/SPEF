@@ -4,6 +4,9 @@ import os
 from pathlib import Path
 
 
+ESC = 27
+
+
 HOME = str(Path(__file__).parents[1])
 LOG_FILE = os.path.join(HOME,"debug.log")
 TMP_DIR = os.path.join(HOME,'tmp')
@@ -54,6 +57,26 @@ IMAGE_NAME = 'test'
 RUN_FILE = 'run.sh'
 DOCKER_SUT_DIR = 'sut'
 RESULTS_SUB_DIR = 'tests'
+
+
+# printing messages
+EXIT_WITHOUT_SAVING = """WARNING: Exit without saving.\n\
+    Press F2 to save and exit.\n\
+    Press {} to force exiting without saving.\n\
+    Press any other key to continue editing your file."""
+
+TEST_MODIFICATION = """Modified test file - do you want to save test history?\n\
+    Press F2 to save the old test version to history.\n\
+    Press any other key to continue without saving...(old test version will be discard on system exit)"""
+
+RELOAD_FILE_WITHOUT_SAVING = """WARNING: Reload file will discard changes.\n\
+    Press F2 to save changes.\n\
+    Press {} to reload file and discard all changes.\n\
+    Press any other key to continue editing your file."""
+
+EMPTY_PATH_FILTER_MESSAGE = "add path filter... ex: test1/unit "
+EMPTY_CONTENT_FILTER_MESSAGE = "add content filter... ex: def test1 "
+EMPTY_TAG_FILTER_MESSAGE = "add tag filter... ex: plagiat(^[0-5]$) "
 
 
 def log(message):

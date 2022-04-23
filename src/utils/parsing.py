@@ -6,7 +6,7 @@ import curses
 from utils.coloring import *
 from utils.logger import *
 from utils.loading import load_solution_tags, load_tests_tags
-from utils.match import get_valid_tests_names
+from utils.match import get_tests_names
 
 
 def parse_sum_equation(env, solution, sum_equation_str):
@@ -60,7 +60,7 @@ def parse_equation_term(env, solution, term):
     term = str(term).strip()
     if term == "SUM_ALL_TESTS":
         # get all valid tests
-        tests = get_valid_tests_names(env)
+        tests = get_tests_names(env)
 
         # for all test try to find its scoring tag in solution tags and tests tags 
         result = 0

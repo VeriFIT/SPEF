@@ -125,7 +125,7 @@ def run_function(stdscr, env, fce, key):
         screen, win = env.get_screen_for_current_mode()
         curses.curs_set(0)
         if text is not None:
-            tag_parts = ''.join(text).split()
+            tag_parts = shlex.split(''.join(text))
             if len(tag_parts) < 1:
                 log("add tag | wrong tag format")
             else:

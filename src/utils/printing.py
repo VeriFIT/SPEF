@@ -1,35 +1,20 @@
 import curses
 import os
 import re
+import shutil
 import traceback
 
 from modules.buffer import UserInput
 from modules.directory import Directory
 
 from utils.highlighter import parse_code
-from utils.loading import save_buffer, load_solution_tags, load_tests_tags
+from utils.loading import save_buffer_to_file, save_report_to_file, load_solution_tags, load_tests_tags, load_testcase_tags
 from utils.coloring import *
 from utils.logger import *
 from utils.parsing import parse_solution_info_visualization, parse_solution_info_predicate
 from utils.match import match_regex, is_root_project_dir, is_testcase_result_dir
-
-ESC = 27
-
-
-EXIT_WITHOUT_SAVING = """WARNING: Exit without saving.\n\
-    Press F2 to save and exit.\n\
-    Press {} to force exiting without saving.\n\
-    Press any other key to continue editing your file."""
-
-RELOAD_FILE_WITHOUT_SAVING = """WARNING: Reload file will discard changes.\n\
-    Press F2 to save changes.\n\
-    Press {} to reload file and discard all changes.\n\
-    Press any other key to continue editing your file."""
-
-EMPTY_PATH_FILTER_MESSAGE = "add path filter... ex: test1/unit "
-EMPTY_CONTENT_FILTER_MESSAGE = "add content filter... ex: def test1 "
-EMPTY_TAG_FILTER_MESSAGE = "add tag filter... ex: plagiat(^[0-5]$) "
-
+from utils.history import history_test_modified, is_test_history_in_tmp
+from utils.file import actualize_test_history_in_tmp
 
 def refresh_main_screens(env):
     env.screens.left.erase()
@@ -101,7 +86,7 @@ def print_hint(env):
     B_HELP = {"F1":"help", "F2":"menu", "F3":f"view {view_switch}","F4":"edit", "F5": "go to tags",
                 "F6":f"{cached_files} cached files", "F8":"delete", "F9":"filter", "F10":"exit"}
 
-    E_HELP = {"F1":"help", "F2":"save", "F3":f"{tags_switch} tags", "F4":"edit file", "F5":f"{line_nums_switch} lines",
+    E_HELP = {"F1":"help", "F2":"save", "F3":f"{tags_switch} tags", "F5":f"{line_nums_switch} lines",
                 "F6":"note highlight", "F7":"note mgmt", "F8":"reload", "F9":"show typical notes", "ESC":"manage file", "F10":"exit"}
 
     T_HELP = {"F1":"help", "F3":"new tag", "F4":"edit tags", "F8":"delete", "F9":"filter", "F10":"exit"}
@@ -238,13 +223,43 @@ def file_changes_are_saved(stdscr, env, warning=None, exit_key=None):
             if key == curses_key: # force exit without saving
                 return True
             elif key == curses.KEY_F2: # save and exit
-                save_buffer(env.file_to_open, env.buffer, env.report)
+                save_buffer(stdscr, env)
                 return True
             else:
                 return False
     else:
         return True
 
+
+def save_buffer(stdscr, env):
+    if not env.file_to_open or not env.buffer:
+        log("save buffer | missing env.file_to_open or mising env.buffer")
+        return
+
+    save_buffer_to_file(env.file_to_open, env.buffer)
+    env.buffer.set_save_status(True)
+    env.buffer.last_save = env.buffer.lines.copy()
+    if env.report:
+        save_report_to_file(env.report)
+
+    # if buffer is test file, save test history
+    if env.editing_test_file and env.cwd.proj:
+        test_name = os.path.basename(os.path.dirname(env.file_to_open))
+        if is_test_history_in_tmp(env.cwd.proj.path, test_name):
+            """ print warning message """
+            screen = env.screens.right
+            screen.erase()
+            screen.addstr(1, 1, str(TEST_MODIFICATION), curses.A_BOLD)
+            screen.border(0)
+            screen.refresh()
+
+            key = stdscr.getch()
+            if key == curses.KEY_F2: # save to history and actualize tmp
+                history_test_modified(env.cwd.proj.path, test_name)
+                env.tags = load_testcase_tags(os.path.dirname(env.file_to_open))
+                actualize_test_history_in_tmp(env.cwd.proj.path, os.path.dirname(env.file_to_open))
+            else: # dont save to history
+                log("dont save old test version to history | will be discard after system exit")
 
 
 """ show file name/path of currently opened file/directory """

@@ -9,10 +9,8 @@ from modules.buffer import Buffer
 from modules.report import Report, Note
 from modules.tags import Tags
 
-# from utils.printing import *
 from utils.logger import *
 from utils.match import *
-
 
 
 """ **************** CONFIG **************** """
@@ -187,7 +185,7 @@ def load_testsuite_tags(proj_tests_dir):
         return None
 
 def load_testcase_tags(proj_testcase_dir):
-    if os.path.exists(proj_tests_dir):
+    if os.path.exists(proj_testcase_dir):
         tags_file = os.path.join(proj_testcase_dir, TESTCASE_TAGS)
         return load_tags(tags_file)
     else:
@@ -210,7 +208,6 @@ def load_tags(tags_file):
         log("load tags | "+str(err)+" | "+str(traceback.format_exc()))
     finally:
         return tags
-
 
 
 def load_tags_from_file(path):
@@ -315,14 +312,10 @@ def load_tags_if_changed(env, path=None):
 
 
 """ **************** SAVE BUFFER **************** """
-def save_buffer(file_name, buffer, report=None):
-    with open(file_name, 'w') as f:
+def save_buffer_to_file(file, buffer):
+    with open(file, 'w') as f:
         lines = '\n'.join(buffer.lines)
         f.write(lines)
-    buffer.set_save_status(True)
-    buffer.last_save = buffer.lines.copy()
-    if report:
-        save_report_to_file(report)
 
 
 """ **************** SUM FILE **************** """

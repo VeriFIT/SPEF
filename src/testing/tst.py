@@ -42,9 +42,54 @@ TST_FCE_FILE = 'tst' # proj/tests/src/tst
 SRC_BASH_FILE = os.path.join(os.path.dirname(__file__), 'bash', 'tst.sh')
 SRC_RUN_FILE = os.path.join(os.path.dirname(__file__), 'bash', 'run_testsuite.sh')
 
-
+DOCKER_FILE = os.path.join(os.path.dirname(__file__), 'Dockerfile')
 # TODO: SRC_BASH_FILE rozdelit na dva subory: podpora pre "dotest.sh" a funkcie pre "testsuite.sh"
 # funkcie pre "testsuite.sh" a "dotest.sh" su v "tests/src/tst" (tst run, tst sum, tst clean,...)
+
+
+
+def create_docker_image(proj_path):
+
+    try:
+        # 1. create Dockerfile if not exists
+        proj_docker_file = os.path.join(proj_path, 'Dockerfile')
+        if not os.path.exists(proj_docker_file):
+
+            # a) ask for user id and for distribution
+            user_id, group_id = None, None
+            distribution = None
+
+            # TODO spytat sa na userid, groupid a distribuciu
+            distribution = "centos:7"
+
+            if user_id is None:
+                user_id = os.getuid()
+            if group_id is None:
+                group_id = os.getgid()
+            if distribution is None:
+                log("create docker image | you have to specify distribution for Dockerfile")
+                return False
+
+            # b) create dockerfile in project directory
+            with open(proj_docker_file, 'w+') as f:
+                f.write(f"FROM {distribution}\n")
+                # f.write(f"RUN adduser -D -u {user_id} -G {group_id} test || useradd -u {user_id} -g {group_id} test\n")
+
+                f.write(f"RUN yum install -y file strace\n") # TODO <----- odstranit
+                f.write(f"RUN adduser -D -u {user_id} test || useradd -u {user_id} test\n") # TODO <----- odstranit
+
+        # 2. create image
+        docker_cmd = f"docker build -f {proj_docker_file} -t test ."
+
+        output = subprocess.run(docker_cmd.split(' '), capture_output=True)
+        log("docker build stdout | "+str(output.stdout.decode('utf-8')))
+        log("docker build stderr | "+str(output.stderr.decode('utf-8')))
+
+        return True
+
+    except Exception as err:
+        log("create docker image | "+str(err))
+        return False
 
 
 
@@ -166,29 +211,40 @@ def prepare_data(env, solution_dir):
 def run_testsuite_in_docker(solution_dir, fut):
     succ = True
     try:
-        # get user id
         # os.getuid() + os.getgid()
-        USER = os.getenv('USER')
+        # USER = os.getenv('USER')
+        # is_root = False
+        # if USER =='root':
+        #     is_root = True
+        # output = subprocess.run(f"id -u {USER}".split(' '), capture_output=True)
+        # user_id = output.stdout.decode('utf-8').strip()
+
+        # get user id
+        user_id = os.getuid()
+        group_id = os.getgid()
         is_root = False
-        if USER =='root':
+        if user_id == 0:
             is_root = True
-        output = subprocess.run(f"id -u {USER}".split(' '), capture_output=True)
-        user_id = output.stdout.decode('utf-8').strip()
 
         # create container from image `test` (IMAGE_NAME)
 
         # dat do jedneho commandu (run + bash)
-        # funkcia: vytvor image s uzivatelom xy a uloz tento image pre dalsie pouzivanie (pre rozne alpine, fedora, centos,) 
+        # funkcia: vytvor image s uzivatelom xy a uloz tento image pre dalsie pouzivanie (pre rozne alpine, fedora, centos,)
         container_cid_file = '/tmp/docker.cid'
-        out = subprocess.run(f"docker run --cidfile {container_cid_file} --rm -d --workdir {CONTAINER_DIR} -v {SHARED_DIR}:{CONTAINER_DIR}:z {IMAGE_NAME} bash -c".split(' ')+["while true; do sleep 1; done"],  capture_output=True)
-        # log("docker run stdout | "+str(out.stdout.decode('utf-8')))
-        # log("docker run stderr | "+str(out.stderr.decode('utf-8')))
+
+        output = subprocess.run(f"docker run --cidfile {container_cid_file} --rm -d --workdir {CONTAINER_DIR} -v {SHARED_DIR}:{CONTAINER_DIR}:z {IMAGE_NAME} bash -c".split(' ')+["while true; do sleep 1; done"],  capture_output=True)
+        log("docker run stdout | "+str(output.stdout.decode('utf-8')))
+        log("docker run stderr | "+str(output.stderr.decode('utf-8')))
 
         # add user in docker container (if user is not root)
         with open(container_cid_file, 'r') as f:
             cid = f.read()
         if not is_root:
             output = subprocess.run(f"docker exec {cid} useradd -u {user_id} test".split(' '), capture_output=True)
+            # output = subprocess.run(f"docker exec {cid} useradd -u {user_id} -g {group_id} test".split(' '), capture_output=True)
+            log("docker exec useradd stdout | "+str(output.stdout.decode('utf-8')))
+            log("docker exec useradd stderr | "+str(output.stderr.decode('utf-8')))
+
 
         # useradd alebo adduser
 
@@ -199,8 +255,8 @@ def run_testsuite_in_docker(solution_dir, fut):
         result = output.stdout.decode('utf-8')
         err = output.stderr.decode('utf-8')
 
-        # log("docker exec stdout | "+str(result))
-        # log("docker exec stderr | "+str(err))
+        log("docker exec stdout | "+str(result))
+        log("docker exec stderr | "+str(err))
 
         # remove container
         out = subprocess.run(f"docker rm -f {cid}".split(' '), capture_output=True)
@@ -364,7 +420,7 @@ def run_testsuite_in_local(tests_dir, solution_dir, fut):
 """ /bin/tst run param --> spusti /tests/tst run param"""
 def run_tests(env, solution_dir, test_list):
     try:
-        if test_list == []: # no test to run
+        if not test_list: # no test to run
             return env
 
         if not env.cwd.proj or not solution_dir:

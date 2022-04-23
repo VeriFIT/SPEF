@@ -269,10 +269,6 @@ def run_menu_function(stdscr, env, fce, key):
         save_proj_to_conf_file(proj.path, proj_data)
         # actualize current working directory
         env.cwd = get_directory_content(env)
-    elif fce == EXPAND_HERE:
-        pass
-    elif fce == EXPAND_TO:
-        pass
     elif fce == CREATE_DIR:
         pass
     elif fce == CREATE_FILE:
@@ -378,7 +374,7 @@ def run_menu_function(stdscr, env, fce, key):
 
             """ show menu with tests for selection """
             title = "Select one or more tests and press 'enter' to run them sequentially..."
-            test_names = get_valid_tests_names(env)
+            test_names = get_tests_names(env)
             test_names.sort()
             env, option_list = brows_menu(stdscr, env, test_names, keys=True, select_multiple=True, title=title)
             if env.is_exit_mode():
@@ -501,14 +497,41 @@ def run_menu_function(stdscr, env, fce, key):
                 return env, True
             else:
                 log(f"cant find sum file | '{sum_file}' doesnt exists")
-    # =================== DEFINE TEST FAILURE ===================
-    elif fce == DEFINE_TEST_FAILURE:
-        pass
     # =================== EDIT TEST ===================
     elif fce == EDIT_TEST:
-        pass
+        if env.cwd.proj is not None:
+            """ show menu with tests for selection """
+            title = "Select test to open for edit..."
+            test_names = get_tests_names(env)
+            test_names.sort()
+            env, option_idx = brows_menu(stdscr, env, test_names, keys=True, title=title)
+            if env.is_exit_mode():
+                return env, True
+            screen, win = env.get_screen_for_current_mode()
+            curses.curs_set(0)
+
+            if option_idx is not None:
+                if len(test_names) > option_idx:
+                    test_name = test_names[option_idx]
+                    test_dir = os.path.join(env.cwd.proj.path, TESTS_DIR, test_name)
+                    # go to test dir
+                    os.chdir(test_dir)
+                    env.cwd = get_directory_content(env)
+                    win.reset(0,0)
+
+                    # open 'dotest.sh' to edit
+                    test_file = os.path.join(test_dir, TEST_FILE)
+                    if os.path.exists(test_file):
+                        env.set_file_to_open(test_file)
+                        env.switch_to_next_mode()
+                        return env, True
+                    else:
+                        log(f"edit test | cant find '{test_file}' file for test")
     # =================== REMOVE TEST ===================
     elif fce == REMOVE_TEST:
+        pass
+    # =================== CREATE DOCKER IMAGE ===================
+    elif fce == CREATE_DOCKER_IMAGE:
         pass
 
     env.update_win_for_current_mode(win)

@@ -93,14 +93,13 @@ MOVE_FILE = 708
 # in proj root dir
 EDIT_PROJ_CONF = 710
 SHOW_OR_HIDE_PROJ_INFO = 711
-EXPAND_AND_RENAME_SOLUTION = 712
-EXPAND_ALL_SOLUTIONS = 713
-RENAME_ALL_SOLUTIONS = 714
-TEST_ALL_STUDENTS = 715
-TEST_CLEAN_ALL = 716
+CREATE_DOCKER_IMAGE = 712
+EXPAND_AND_RENAME_SOLUTION = 713
+EXPAND_ALL_SOLUTIONS = 714
+RENAME_ALL_SOLUTIONS = 715
+TEST_ALL_STUDENTS = 716
+TEST_CLEAN_ALL = 717
 
-SHOW_STATS = 717
-SHOW_HISTOGRAM = 718
 
 # in solution dir
 TEST_STUDENT = 720
@@ -116,12 +115,14 @@ SHOW_AUTO_REPORT = 731
 SHOW_TOTAL_REPORT = 732
 SHOW_TEST_RESULTS = 733
 
+SHOW_STATS = 734
+SHOW_HISTOGRAM = 735
+
 # in tests dir
 ADD_TEST = 740
 EDIT_TESTSUITE = 741
 CHANGE_SCORING = 742
 CHANGE_SUM = 743
-DEFINE_TEST_FAILURE = 744
 
 # in tests/test dir
 REMOVE_TEST = 750
@@ -330,6 +331,7 @@ def get_menu_functions(in_proj_dir=False, in_solution_dir=False, is_test_dir=Fal
     proj = {
         'project - edit configuration': EDIT_PROJ_CONF,
         'project - show/hide project info': SHOW_OR_HIDE_PROJ_INFO,
+        'testing - create Docker image for testing': CREATE_DOCKER_IMAGE,
         'all students - expand archives for all students': EXPAND_ALL_SOLUTIONS,
         'all students - name solution file correctly for all students': RENAME_ALL_SOLUTIONS,
         'all students - run tests (testsuite)': TEST_ALL_STUDENTS,
@@ -340,13 +342,12 @@ def get_menu_functions(in_proj_dir=False, in_solution_dir=False, is_test_dir=Fal
         'tests - create new test': ADD_TEST,
         'tests - create/edit testsuite': EDIT_TESTSUITE,
         'tests - change scoring': CHANGE_SCORING,
-        'tests - change sum': CHANGE_SUM
-        # 'tests - define test failure': DEFINE_TEST_FAILURE
+        'tests - change sum': CHANGE_SUM,
+        'tests - edit test': EDIT_TEST
     }
 
     test = {
-        'test - remove test': REMOVE_TEST,
-        'test - edit test': EDIT_TEST
+        'test - remove test': REMOVE_TEST
     }
 
 

@@ -112,6 +112,7 @@ def main(stdscr):
         else:
             print_hint(env)
             if env.is_exit_mode():
+                shutil.rmtree(TMP_DIR)
                 bash_proc.set_reader(False)
                 break
             elif env.is_brows_mode():
@@ -305,6 +306,8 @@ def preparation():
 if __name__ == "__main__":
     # clear log file
     with open(LOG_FILE, 'w+'): pass
+    if not os.path.exists(TMP_DIR):
+        os.mkdir(TMP_DIR)
 
     # prepare bash subprocess
     pid, fd = os.forkpty()

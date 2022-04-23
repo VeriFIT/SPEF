@@ -153,13 +153,12 @@ class Buffer:
     def newline(self, win, report=None):
         row = win.cursor.row - win.begin_y
         col = win.cursor.col - win.begin_x
-        old_line_len = len(self[row])
-        if self.lines:
+        if len(self.lines)>0:
             current_line = self.lines.pop(row)
             self.lines.insert(row, current_line[:col])
             self.lines.insert(row + 1, current_line[col:])
         else:
-            self.lines.insert(row, "")
+            self.lines.append("")
         self.set_save_status(False)
         """ shift notes """
         if report:
