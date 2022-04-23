@@ -21,6 +21,34 @@ def is_test_history_in_tmp(proj_dir, test_name):
         return os.path.exists(tmp_test_v_dir) and os.path.isdir(tmp_test_v_dir)
 
 
+def history_test_removed(proj_dir, test_name):
+    try:
+        history_dir = os.path.join(proj_dir, HISTORY_DIR)
+        history_file = os.path.join(history_dir, HISTORY_FILE)
+
+        testcase_dir = os.path.join(proj_dir, TESTS_DIR, test_name)
+        testcase_tags = load_testcase_tags(testcase_dir)
+        if testcase_tags is not None:
+            # get version of test
+            args = testcase_tags.get_args_for_tag("version")
+            version = 1 if args is None or len(args) < 1 else int(args[0])
+
+            # copy test dir to history
+            history_test_dir = os.path.join(history_dir, test_name)
+            history_test_v_dir = os.path.join(history_test_dir, f"version_{version}")
+            if not os.path.exists(history_test_dir) or not os.path.isdir(history_test_dir):
+                os.mkdir(history_test_dir)
+            if not os.path.exists(history_test_v_dir):
+                # if actual version of this test do not already exists in history
+                shutil.copytree(testcase_dir, history_test_v_dir)
+
+            # add event to history logs
+            history_test_event(proj_dir, test_name, f"remove test (version {version})")
+            return True
+    except Exception as err:
+        log("history test removed | "+str(err)+" | "+str(traceback.format_exc()))
+    return False
+
 
 """ vola sa pri ukladani bufferu (ukladanie modifikovaneho testu) """
 # increment test tag
@@ -44,7 +72,6 @@ def history_test_modified(proj_dir, test_name):
                 version = 1
             else:
                 version = int(args[0])
-                log(f"version: {version}")
 
             # check if tmp dir with test with actual version exists
             tmp_test_dir = os.path.join(TMP_DIR, test_name)
@@ -68,11 +95,9 @@ def history_test_modified(proj_dir, test_name):
                 log(f"history test modified | test {test_name} with version {version} already exists in history!!")
                 return False
             shutil.copytree(tmp_test_v_dir, history_test_v_dir)
-            log("shutil copy do history")
 
             # add event to history logs
             history_test_event(proj_dir, test_name, f"modify test (test version {version} -> {version+1})")
-            log("history test event")
 
             # remove tmp dir with test
             # shutil.rmtree(tmp_test_v_dir)

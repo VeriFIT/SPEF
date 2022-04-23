@@ -40,11 +40,10 @@ SHARED_RUN_FILE = os.path.join(TMP_DIR, 'docker_shared/tests/run.sh')
 TST_FCE_DIR = 'src'
 TST_FCE_FILE = 'tst' # proj/tests/src/tst
 SRC_BASH_FILE = os.path.join(os.path.dirname(__file__), 'bash', 'tst.sh')
-SRC_RUN_FILE = os.path.join(os.path.dirname(__file__), 'bash', 'run_testsuite.sh')
+SRC_RUN_TESTSUITE_FILE = os.path.join(os.path.dirname(__file__), 'bash', 'run_testsuite.sh')
+SRC_RUN_TESTS_FILE = os.path.join(os.path.dirname(__file__), 'bash', 'run_tests.sh')
 
 DOCKER_FILE = os.path.join(os.path.dirname(__file__), 'Dockerfile')
-# TODO: SRC_BASH_FILE rozdelit na dva subory: podpora pre "dotest.sh" a funkcie pre "testsuite.sh"
-# funkcie pre "testsuite.sh" a "dotest.sh" su v "tests/src/tst" (tst run, tst sum, tst clean,...)
 
 
 
@@ -103,7 +102,7 @@ def run_testsuite(env, solution_dir, show_results=True):
         clean_test(solution_dir)
 
         ############### 2. PREPARE DATA ###############
-        data_ok = prepare_data(env, solution_dir)
+        data_ok = prepare_data(env, solution_dir, SRC_RUN_TESTSUITE_FILE)
         if not data_ok:
             log("run testsuite | problem with testing data")
             return env
@@ -161,7 +160,7 @@ def run_testsuite(env, solution_dir, show_results=True):
     return env
 
 
-def prepare_data(env, solution_dir):
+def prepare_data(env, solution_dir, run_file):
     if not env.cwd.proj or not solution_dir:
         return False
 
@@ -197,7 +196,7 @@ def prepare_data(env, solution_dir):
         os.makedirs(SHARED_DIR, exist_ok=True)
         shutil.copytree(tests_dir, SHARED_TESTS_DIR) # proj/tests/ -> /docker_shared/tests/
         shutil.copytree(solution_dir, SHARED_SUT_DIR) # proj/xlogin/ -> /docker_shared/sut/
-        shutil.copyfile(SRC_RUN_FILE, SHARED_RUN_FILE)
+        shutil.copyfile(run_file, SHARED_RUN_FILE)
     except Exception as err:
         log("prepare data | copy data | "+str(err))
         return False
@@ -412,8 +411,6 @@ def run_testsuite_in_local(tests_dir, solution_dir, fut):
 
 
 
-# export FUT={fut}\n\
-
 
 
 # bin/tst
@@ -424,11 +421,17 @@ def run_tests(env, solution_dir, test_list):
             return env
 
         if not env.cwd.proj or not solution_dir:
-            log("run test | run from solution dir in some project dir")
+            log("run tests | run from solution dir in some project dir")
             return
 
-        ############### 1. nastavenie premennych ###############
-        command = ""
+        ############### 1. CLEAN SOLUTION ###############
+        clean_test(solution_dir)
+
+        ############### 2. PREPARE DATA ###############
+        data_ok = prepare_data(env, solution_dir, SRC_RUN_TESTS_FILE)
+        if not data_ok:
+            log("run tests | problem with testing data")
+            return env
         tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
         if not os.path.exists(tests_dir) or not os.path.isdir(tests_dir):
             log(f"run test | tests_dir '{tests_dir}' doesnt exists or its not a directory")
@@ -439,33 +442,49 @@ def run_tests(env, solution_dir, test_list):
                 log(f"run test | '{test_dir}' is not valid test dir with dotest.sh in it")
                 return env
 
-        ############### 2. kontrola bash funkcii v tests_dir ###############
-        # ci su nakopirovane bash funkcie v tests_dir (ak nie, nakopiruj ich do tests_dir/DST_BASH_FILE)
-        bash_tests_ok = check_bash_functions_for_testing(env.cwd.proj.path)
-        if not bash_tests_ok:
-            log("run test | problem with bash functions for tests")
+
+        ############### 3. CHECK IF FUT EXISTS ###############
+        fut = env.cwd.proj.sut_required
+        file_list = os.listdir(solution_dir)
+        if not fut in file_list:
+            log("run tests | fut file '{fut}' doesnt exists in solution dir")
             return env
 
+        ############### 4. RUN TESTS ###############
+        env = run_tests_in_docker(env, solution_dir, fut, test_list)
+        # shutil.rmtree(SHARED_DIR)
 
-        ############### 3. spusti test ###############
-        tst_file = os.path.join(tests_dir, DST_BASH_FILE)
-        login = os.path.basename(solution_dir)
-        command += f"export TESTSDIR={tests_dir}\n"
-        command += f"export TEST_FILE={TEST_FILE}\n"
-        command += f"export login={login}\n"
-        command += f"cd {solution_dir}\n"
-        for test_name in test_list:
-            command += f"{tst_file} run {test_name};"
-        command += "\n"
+    except Exception as err:
+        log("run tests | "+str(err)+" | "+str(traceback.format_exc()))
+        env.set_exit_mode()
 
-        # command += f"{print_score}\n"
+    return env
+
+
+def run_tests_in_docker(env, solution_dir, fut, test_list):
+    try:
+        # get user id
+        user_id = os.getuid()
+        group_id = os.getgid()
+        is_root = False
+        if user_id == 0:
+            is_root = True
+
+        # create container from image `test` (IMAGE_NAME)
+        docker_results = os.path.join(SHARED_SUT_DIR, RESULTS_SUB_DIR)
+        student_results = os.path.join(solution_dir, RESULTS_SUB_DIR)
+        tests = ' '.join(test_list)
+        docker_command = f"{CONTAINER_RUN_FILE} /opt/tests/src/tst /opt/tests tests_tags.yaml {RESULTS_SUB_DIR} sut {fut} {tests}"
+        cmd = f"docker run --rm -d --user {user_id} --workdir {CONTAINER_SUT_DIR} -v {SHARED_DIR}:{CONTAINER_DIR}:z {IMAGE_NAME} bash -c '{docker_command} 2>&1'\n"
+        cmd += f"cp {docker_results} {student_results}\n"
+        cmd += f"rm -rf {SHARED_DIR}\n"
 
         env.bash_active = True
         env.bash_action = Bash_action()
         env.bash_action.dont_jump_to_cwd()
-        env.bash_action.add_command(command)
+        env.bash_action.add_command(cmd)
         return env
     except Exception as err:
-        log("run test | "+str(err))
+        log("run tests | "+str(err)+" | "+str(traceback.format_exc()))
         return env
 

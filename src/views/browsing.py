@@ -26,7 +26,7 @@ from utils.logger import *
 from utils.reporting import *
 from utils.match import *
 from utils.file import *
-# from utils.testing import *
+from utils.history import history_test_removed
 
 from testing.tst import *
 
@@ -269,6 +269,7 @@ def run_menu_function(stdscr, env, fce, key):
         save_proj_to_conf_file(proj.path, proj_data)
         # actualize current working directory
         env.cwd = get_directory_content(env)
+    # ======================= FILE MGMT =======================
     elif fce == CREATE_DIR:
         pass
     elif fce == CREATE_FILE:
@@ -331,13 +332,22 @@ def run_menu_function(stdscr, env, fce, key):
                         ok, renamed, fail = rename_solutions([dest_dir], required_name, extended_variants)
                 else:
                     log("expand and rename solution | is solution but not zipfile or tarfile")
-    # ======================= CLEAN ALL =======================
+    # ======================= CLEAN =======================
     elif fce == TEST_CLEAN_ALL:
         if env.cwd.proj is not None:
             solutions = get_solution_dirs(env)
             for solution in solutions:
                 clean_test(solution)
-    # ======================= RUN TEST SET =======================
+    elif fce == TEST_CLEAN: # on solution dir
+        if env.cwd.proj is not None:
+            idx = win.cursor.row
+            dirs_and_files = env.cwd.get_all_items()
+            selected_item = os.path.join(env.cwd.path, dirs_and_files[idx]) # selected item
+            if is_root_solution_dir(env.cwd.proj.solution_id, env.cwd.path):
+                clean_test(env.cwd.path)
+            elif is_root_solution_dir(env.cwd.proj.solution_id, selected_item):
+                clean_test(selected_item)
+    # ======================= RUN TESTSUITE =======================
     elif fce == TEST_ALL_STUDENTS: # ALL STUDENTS
         if env.cwd.proj is not None:
             solutions = get_solution_dirs(env)
@@ -360,6 +370,7 @@ def run_menu_function(stdscr, env, fce, key):
             if solution is not None:
                 env = run_testsuite(env, solution) # run testsuite in docker
                 return env, True
+    # ======================= RUN TEST (TODO)=======================
     elif fce == RUN_TEST: # on solution dir
         """ select one or more tests and run this tests on student solution directory """
         if env.cwd.proj is not None:
@@ -372,28 +383,26 @@ def run_menu_function(stdscr, env, fce, key):
             elif is_root_solution_dir(env.cwd.proj.solution_id, selected_item):
                 solution = selected_item
 
-            """ show menu with tests for selection """
-            title = "Select one or more tests and press 'enter' to run them sequentially..."
-            test_names = get_tests_names(env)
-            test_names.sort()
-            env, option_list = brows_menu(stdscr, env, test_names, keys=True, select_multiple=True, title=title)
-            if env.is_exit_mode():
-                return env, True
-            screen, win = env.get_screen_for_current_mode()
-            curses.curs_set(0)
+            if solution is not None:
+                """ show menu with tests for selection """
+                title = "Select one or more tests and press 'enter' to run them sequentially..."
+                test_names = get_tests_names(env)
+                test_names.sort()
+                env, option_list = brows_menu(stdscr, env, test_names, keys=True, select_multiple=True, title=title)
+                if env.is_exit_mode():
+                    return env, True
+                screen, win = env.get_screen_for_current_mode()
+                curses.curs_set(0)
 
-            if option_list is not None:
-                tests = []
-                for option_idx in option_list:
-                    if len(test_names) > option_idx:
-                        test_name = test_names[option_idx]
-                        tests.append(test_name)
-                # run selected tests
-                env = run_tests(env, solution, tests)
-                return env, True
-
-    elif fce == TEST_CLEAN: # on solution dir
-        pass
+                if option_list is not None:
+                    tests = []
+                    for option_idx in option_list:
+                        if len(test_names) > option_idx:
+                            test_name = test_names[option_idx]
+                            tests.append(test_name)
+                    # run selected tests
+                    env = run_tests(env, solution, tests)
+                    return env, True
     # =================== GENERATE REPORT ===================
     elif fce == GEN_CODE_REVIEW: # on solution dir
         idx = win.cursor.row
@@ -411,9 +420,11 @@ def run_menu_function(stdscr, env, fce, key):
             elif is_root_solution_dir(env.cwd.proj.solution_id, selected_item):
                 solution = selected_item
 
-            # calculate sum
-            score_sum = calculate_score(env, solution)
-            log(score_sum)
+            if solution is not None:
+                # calculate sum <--------------------------------------- TODO
+                score_sum = calculate_score(env, solution)
+                log(score_sum)
+
     # ======================= ADD NOTES TO REPORT =======================
     elif fce == ADD_AUTO_NOTE:
         pass
@@ -529,7 +540,42 @@ def run_menu_function(stdscr, env, fce, key):
                         log(f"edit test | cant find '{test_file}' file for test")
     # =================== REMOVE TEST ===================
     elif fce == REMOVE_TEST:
-        pass
+        if env.cwd.proj is not None:
+            idx = win.cursor.row
+            dirs_and_files = env.cwd.get_all_items()
+            selected_item = os.path.join(env.cwd.path, dirs_and_files[idx]) # selected item
+            test_dir = None
+            if is_testcase_dir(env.cwd.path):
+                test_dir = env.cwd.path
+            elif is_testcase_dir(selected_item):
+                test_dir = selected_item
+
+            # copy test dir to history
+            if test_dir is not None:
+                test_name = os.path.basename(test_dir)
+                succ = history_test_removed(env.cwd.proj.path, test_name)
+                if succ:
+                    # remove test dir
+                    shutil.rmtree(test_dir)
+                    env.cwd = get_directory_content(env)
+
+                    # check if test dir is in sum equation -> warning (test in sum equation)
+                    sum_file = os.path.join(env.cwd.proj.path, TESTS_DIR, SUM_FILE)
+                    if os.path.exists(sum_file):
+                        with open(sum_file, 'r') as f:
+                            if test_name in f.read():
+                                log(f"remove test | warning - test '{test_name}' may be included in total sum equation (check '{sum_file}' file)")
+
+                    # check if test dir is in testsuite.sh -> warning (test in testsuite.sh)
+                    testsuite_file = os.path.join(env.cwd.proj.path, TESTS_DIR, TESTSUITE_FILE)
+                    if os.path.exists(testsuite_file):
+                        with open(testsuite_file, 'r') as f:
+                            if test_name in f.read():
+                                log(f"remove test | warning - test '{test_name}' may be included in testsuite (check '{testsuite_file}' file)")
+
+                    # check if solution has test tag -> warning (test results in solution: {solution})
+                    # TODO: warning - this may take some time... (depending on how many solution dirs are in this project) do you want to continue?
+
     # =================== CREATE DOCKER IMAGE ===================
     elif fce == CREATE_DOCKER_IMAGE:
         pass

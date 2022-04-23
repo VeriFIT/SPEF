@@ -175,7 +175,7 @@ def create_sum_file(sum_file):
     mess = """# POZOR:
 #   * mozno pouzivat len tagy s prefixom 'scoring_'
 #       - prefix sa pri parsovani rovnice pre vypocet SUM prida automaticky
-#       - ak teda existuje tag 'scoring_test_1', v rovnici ho pouzi ako 'test_1'
+#       - ak teda existuje tag 'scoring_test_x', v rovnici ho pouzi ako 'test_x'
 #   * mozno pouzivat len tagy ktore maju presne jeden parameter
 #       - tag s viacerymi parametrami --> do rovnice sa berie hodnota prveho parametra
 #       - tag bez parametra --> v rovnici sa ignoruje (a vypise sa upozornenie)

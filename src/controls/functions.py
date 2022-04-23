@@ -355,7 +355,7 @@ def get_menu_functions(in_proj_dir=False, in_solution_dir=False, is_test_dir=Fal
         'student - expand archive and name solution file correctly': EXPAND_AND_RENAME_SOLUTION,
         'student - run tests (testsuite)': TEST_STUDENT,
         'student - clean from test results': TEST_CLEAN,
-        'student - run test':RUN_TEST,
+        # 'student - run test':RUN_TEST,
         'student - generate code review from notes': GEN_CODE_REVIEW,
         'student - generate auto report from tests': GEN_AUTO_REPORT, # TODO
         'student - add note to auto report': ADD_AUTO_NOTE, # TODO
