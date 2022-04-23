@@ -321,11 +321,11 @@ def get_menu_functions(in_proj_dir=False, in_solution_dir=False, is_test_dir=Fal
         # 'expand archive here': EXPAND_HERE,
         # 'expand archive to ...': EXPAND_TO,
         'create new directory': CREATE_DIR,
-        'create new file': CREATE_FILE,
-        'remove file': REMOVE_FILE,
-        'rename file': RENAME_FILE,
-        'copy file': COPY_FILE,
-        'move file': MOVE_FILE
+        'create new file': CREATE_FILE
+        # 'remove file': REMOVE_FILE,
+        # 'rename file': RENAME_FILE,
+        # 'copy file': COPY_FILE,
+        # 'move file': MOVE_FILE
     }
 
     proj = {

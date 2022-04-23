@@ -73,7 +73,7 @@ def directory_browsing(stdscr, env):
         if env.quick_view and idx < len(env.cwd):
             dirs_and_files = env.cwd.get_all_items()
             # if its file, show its content and tags
-            if idx >= len(env.cwd.dirs):
+            if idx >= len(env.cwd.dirs) and len(dirs_and_files)>idx:
                 selected_file = os.path.join(env.cwd.path, dirs_and_files[idx])
                 # if its archive file, show its content (TODO)
                 if is_archive_file(selected_file):
@@ -92,7 +92,7 @@ def directory_browsing(stdscr, env):
                             env.enable_line_numbers(buffer)
             # if its project directory, show project info and test results
             else:
-                if env.cwd.proj is not None: # current working directory is a project subdirectory (ex: "proj1/")
+                if env.cwd.proj is not None and len(dirs_and_files)>idx: # current working directory is a project subdirectory (ex: "proj1/")
                     # env.cwd.proj
                     selected_dir =  os.path.join(env.cwd.path, dirs_and_files[idx])
                     env = load_tags_if_changed(env, selected_dir)
@@ -189,7 +189,11 @@ def run_function(stdscr, env, fce, key):
     elif fce == OPEN_MENU:
         idx = win.cursor.row
         dirs_and_files = env.cwd.get_all_items()
-        selected_item = os.path.join(env.cwd.path, dirs_and_files[idx]) # selected item
+        if len(dirs_and_files)>idx:
+            selected_item = os.path.join(env.cwd.path, dirs_and_files[idx]) # selected item
+        else:
+            selected_item = env.cwd.path
+
         # show menu with functions
         in_proj_dir = is_in_project_dir(selected_item)
         in_solution_dir = is_in_solution_dir(env.cwd.proj.solution_id, selected_item) if env.cwd.proj is not None else False
@@ -223,21 +227,24 @@ def run_function(stdscr, env, fce, key):
     # ======================= OPEN FILE =======================
     elif fce == OPEN_FILE:
         idx = win.cursor.row
-        if idx >= len(env.cwd.dirs) or env.filter: # cant open directory
-            dirs_and_files = env.cwd.get_all_items()
-            env.set_file_to_open(os.path.join(env.cwd.path, dirs_and_files[idx]))
-            env.switch_to_next_mode()
-            return env, True
+        dirs_and_files = env.cwd.get_all_items()
+        if len(dirs_and_files)>idx:
+            selected_item = os.path.join(env.cwd.path, dirs_and_files[idx])
+            if os.path.isfile(selected_item):
+                env.set_file_to_open(os.path.join(env.cwd.path, dirs_and_files[idx]))
+                env.switch_to_next_mode()
+                return env, True
     # ======================= DELETE FILE =======================
     elif fce == DELETE_FILE:
         idx = win.cursor.row
         dirs_and_files = env.cwd.get_all_items()
-        file_to_delete = os.path.join(env.cwd.path, dirs_and_files[idx])
-        if os.path.exists(file_to_delete) and os.path.isfile(file_to_delete):
-            os.remove(file_to_delete)
-            win.up(env.cwd, use_restrictions=False)
-            # actualize current working directory
-            env.cwd = get_directory_content(env)
+        if len(dirs_and_files)>idx:
+            file_to_delete = os.path.join(env.cwd.path, dirs_and_files[idx])
+            if os.path.exists(file_to_delete) and os.path.isfile(file_to_delete):
+                os.remove(file_to_delete)
+                win.up(env.cwd, use_restrictions=False)
+                # actualize current working directory
+                env.cwd = get_directory_content(env)
     # ======================= FILTER =======================
     elif fce == FILTER:
         env = filter_management(stdscr, screen, win, env)
@@ -269,19 +276,40 @@ def run_menu_function(stdscr, env, fce, key):
         save_proj_to_conf_file(proj.path, proj_data)
         # actualize current working directory
         env.cwd = get_directory_content(env)
-    # ======================= FILE MGMT =======================
+    # ======================= CREATE DIR =======================
     elif fce == CREATE_DIR:
-        pass
+        # get name for new dir
+        title = "Enter a name for new directory:"
+        env, dir_name = get_user_input(stdscr, env, title=title)
+        if env.is_exit_mode():
+            return env, True
+        screen, win = env.get_screen_for_current_mode()
+        curses.curs_set(0)
+        if dir_name is not None:
+            dir_name = ''.join(dir_name).strip()
+            new_dir = os.path.join(env.cwd.path, dir_name)
+            if os.path.exists(new_dir) and os.path.isdir(new_dir):
+                log(f"create dir | directory {new_dir} already exists")
+            else:
+                os.mkdir(new_dir)
+                env.cwd = get_directory_content(env)
+    # ======================= CREATE FILE =======================
     elif fce == CREATE_FILE:
-        pass
-    elif fce == REMOVE_FILE:
-        pass
-    elif fce == RENAME_FILE:
-        pass
-    elif fce == COPY_FILE:
-        pass
-    elif fce == MOVE_FILE:
-        pass
+        # get name for new file
+        title = "Enter a name for new file:"
+        env, file_name = get_user_input(stdscr, env, title=title)
+        if env.is_exit_mode():
+            return env, True
+        screen, win = env.get_screen_for_current_mode()
+        curses.curs_set(0)
+        if file_name is not None:
+            file_name = ''.join(file_name).strip()
+            new_file = os.path.join(env.cwd.path, file_name)
+            if os.path.exists(new_file) and os.path.isfile(new_file):
+                log(f"create file | file {new_file} already exists")
+            else:
+                with open(new_file, 'w+'): pass
+                env.cwd = get_directory_content(env)
     # ====================== EDIT PROJ CONFIG ======================
     elif fce == EDIT_PROJ_CONF:
         if env.cwd.proj is not None:
@@ -313,9 +341,9 @@ def run_menu_function(stdscr, env, fce, key):
                 log("students with no supported extention of solution file: "+str(fail))
     # ====================== EXPAND AND RENAME ======================
     elif fce == EXPAND_AND_RENAME_SOLUTION: # on solution dir
-        if env.cwd.proj is not None:
-            idx = win.cursor.row
-            dirs_and_files = env.cwd.get_all_items()
+        idx = win.cursor.row
+        dirs_and_files = env.cwd.get_all_items()
+        if env.cwd.proj is not None and len(dirs_and_files)>idx:
             path = os.path.join(env.cwd.path, dirs_and_files[idx]) # selected item
             if is_solution_file(env.cwd.proj.solution_id, path):
                 if is_archive_file(path):
@@ -339,9 +367,9 @@ def run_menu_function(stdscr, env, fce, key):
             for solution in solutions:
                 clean_test(solution)
     elif fce == TEST_CLEAN: # on solution dir
-        if env.cwd.proj is not None:
-            idx = win.cursor.row
-            dirs_and_files = env.cwd.get_all_items()
+        idx = win.cursor.row
+        dirs_and_files = env.cwd.get_all_items()
+        if env.cwd.proj is not None and len(dirs_and_files)>idx:
             selected_item = os.path.join(env.cwd.path, dirs_and_files[idx]) # selected item
             if is_root_solution_dir(env.cwd.proj.solution_id, env.cwd.path):
                 clean_test(env.cwd.path)
@@ -357,9 +385,9 @@ def run_menu_function(stdscr, env, fce, key):
                     return env, True
     elif fce == TEST_STUDENT: # on solution dir
         """ run testsuite on student solution directory """
-        if env.cwd.proj is not None:
-            idx = win.cursor.row
-            dirs_and_files = env.cwd.get_all_items()
+        idx = win.cursor.row
+        dirs_and_files = env.cwd.get_all_items()
+        if env.cwd.proj is not None and len(dirs_and_files)>idx:
             selected_item = os.path.join(env.cwd.path, dirs_and_files[idx]) # selected item
             solution = None
             if is_root_solution_dir(env.cwd.proj.solution_id, env.cwd.path):
@@ -373,9 +401,9 @@ def run_menu_function(stdscr, env, fce, key):
     # ======================= RUN TEST (TODO)=======================
     elif fce == RUN_TEST: # on solution dir
         """ select one or more tests and run this tests on student solution directory """
-        if env.cwd.proj is not None:
-            idx = win.cursor.row
-            dirs_and_files = env.cwd.get_all_items()
+        idx = win.cursor.row
+        dirs_and_files = env.cwd.get_all_items()
+        if env.cwd.proj is not None and len(dirs_and_files)>idx:
             selected_item = os.path.join(env.cwd.path, dirs_and_files[idx]) # selected item
             solution = None
             if is_root_solution_dir(env.cwd.proj.solution_id, env.cwd.path):
@@ -407,12 +435,13 @@ def run_menu_function(stdscr, env, fce, key):
     elif fce == GEN_CODE_REVIEW: # on solution dir
         idx = win.cursor.row
         dirs_and_files = env.cwd.get_all_items()
-        generate_code_review(env, os.path.join(env.cwd.path, dirs_and_files[idx]))
-        env.cwd = get_directory_content(env)
+        if len(dirs_and_files)>idx:
+            generate_code_review(env, os.path.join(env.cwd.path, dirs_and_files[idx]))
+            env.cwd = get_directory_content(env)
     elif fce == GEN_AUTO_REPORT: # on solution dir
-        if env.cwd.proj is not None:
-            idx = win.cursor.row
-            dirs_and_files = env.cwd.get_all_items()
+        idx = win.cursor.row
+        dirs_and_files = env.cwd.get_all_items()
+        if env.cwd.proj is not None and len(dirs_and_files)>idx:
             selected_item = os.path.join(env.cwd.path, dirs_and_files[idx]) # selected item
             solution = None
             if is_root_solution_dir(env.cwd.proj.solution_id, env.cwd.path):
@@ -540,9 +569,9 @@ def run_menu_function(stdscr, env, fce, key):
                         log(f"edit test | cant find '{test_file}' file for test")
     # =================== REMOVE TEST ===================
     elif fce == REMOVE_TEST:
-        if env.cwd.proj is not None:
-            idx = win.cursor.row
-            dirs_and_files = env.cwd.get_all_items()
+        idx = win.cursor.row
+        dirs_and_files = env.cwd.get_all_items()
+        if env.cwd.proj is not None and len(dirs_and_files)>idx:
             selected_item = os.path.join(env.cwd.path, dirs_and_files[idx]) # selected item
             test_dir = None
             if is_testcase_dir(env.cwd.path):
