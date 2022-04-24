@@ -45,6 +45,11 @@ class Solution:
             return self.test_notes[version]
         return []
 
+    def reload_test_tags(self):
+        tags_file = os.path.join(self.path, TESTS_DIR)
+        self.test_tags = load_tests_tags(tags_file)
+
+
 
 class Project:
     def __init__(self, path):

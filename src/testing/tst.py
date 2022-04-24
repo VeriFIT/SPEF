@@ -119,6 +119,8 @@ def run_testsuite(env, solution, show_results=True):
         if not succ:
             log("run testsuite | problem with testsuite run in docker")
             return env
+        # reload tests tags for solution after testsuite is done
+        solution.reload_test_tags()
 
         # get datetime and add tag "last_testing" to solution tags
         date_time = datetime.datetime.now().strftime("%d/%m/%y-%H:%M")
@@ -141,8 +143,8 @@ def run_testsuite(env, solution, show_results=True):
             solution.tags.set_tag("score", [score])
             if bonus > 0:
                 solution.tags.set_tag("score_bonus", [bonus])
-
         save_tags_to_file(solution.tags)
+
 
     except Exception as err:
         log("run testsuite | "+str(err)+" | "+str(traceback.format_exc()))

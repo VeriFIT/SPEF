@@ -374,9 +374,16 @@ def run_menu_function(stdscr, env, fce, key):
     # ======================= CLEAN =======================
     elif fce == TEST_CLEAN_ALL:
         if env.cwd.proj is not None:
-            for key, solution in env.cwd.proj.solutions.items():
+            solution_list = []
+            for dir_name in env.cwd.dirs:
+                solution_name = os.path.basename(dir_name)
+                if solution_name in env.cwd.proj.solutions:
+                    solution_list.append(env.cwd.proj.solutions[solution_name])
+
+            # for key, solution in env.cwd.proj.solutions.items():
+            for solution in solution_list:
                 clean_test(solution)
-                env.cwd = get_directory_content(env)
+            env.cwd = get_directory_content(env)
     elif fce == TEST_CLEAN: # on solution dir
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)
@@ -386,11 +393,18 @@ def run_menu_function(stdscr, env, fce, key):
     # ======================= RUN TESTSUITE =======================
     elif fce == TEST_ALL_STUDENTS: # ALL STUDENTS
         if env.cwd.proj is not None:
-            for key, solution in env.cwd.proj.solutions.items():
+            solution_list = []
+            for dir_name in env.cwd.dirs:
+                solution_name = os.path.basename(dir_name)
+                if solution_name in env.cwd.proj.solutions:
+                    solution_list.append(env.cwd.proj.solutions[solution_name])
+
+            # for key, solution in env.cwd.proj.solutions.items():
+            for solution in solution_list:
                 env = run_testsuite(env, solution, show_results=False)
                 if env.is_exit_mode():
                     return env, True
-                env.cwd = get_directory_content(env)
+            env.cwd = get_directory_content(env)
     elif fce == TEST_STUDENT: # on solution dir
         """ run testsuite on student solution directory """
         idx = win.cursor.row
@@ -441,7 +455,25 @@ def run_menu_function(stdscr, env, fce, key):
             report_dir = os.path.join(env.cwd.proj.path, REPORT_DIR)
             create_report_dir(report_dir)
             generate_report_from_template(env, solution)
-    # ======================= ADD NOTES TO REPORT =======================
+    # ======================= ADD TEST NOTES TO REPORT =======================
+    elif fce == ADD_TEST_NOTE_TO_ALL:
+        # get list of solutions to which will be added note
+        solution_list = []
+        for dir_name in env.cwd.dirs:
+            solution_name = os.path.basename(dir_name)
+            if solution_name in env.cwd.proj.solutions:
+                solution_list.append(env.cwd.proj.solutions[solution_name])
+        if solution_list:
+            # get text from user input
+            title = "Enter a test note (related to current version of testsuite):"
+            env, note_text = get_user_input(stdscr, env, title=title)
+            if env.is_exit_mode():
+                return env, True
+            screen, win = env.get_screen_for_current_mode()
+            curses.curs_set(0)
+            if note_text is not None:
+                note_text = ''.join(note_text).strip()
+                add_test_note_to_solutions(env, solution_list, note_text)
     elif fce == ADD_TEST_NOTE: # on solution
         # add note to auto report from tests
         idx = win.cursor.row
@@ -456,16 +488,29 @@ def run_menu_function(stdscr, env, fce, key):
             curses.curs_set(0)
             if note_text is not None:
                 note_text = ''.join(note_text).strip()
-                # get current testsuite version
-                tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
-                testsuite_tags = load_testsuite_tags(tests_dir)
-                if testsuite_tags is not None:
-                    args = testsuite_tags.get_args_for_tag("version")
-                    if args is not None and len(args)>0:
-                        version = int(args[0])
-                        # add test note
-                        solution.add_test_note(note_text, version)
-                        save_test_notes_for_solution(solution)
+                add_test_note_to_solutions(env, [solution], note_text)
+    # ======================= ADD USER NOTES TO REPORT =======================
+    elif fce == ADD_USER_NOTE_TO_ALL:
+        # get list of solutions to which will be added note
+        solution_list = []
+        for dir_name in env.cwd.dirs:
+            solution_name = os.path.basename(dir_name)
+            if solution_name in env.cwd.proj.solutions:
+                solution_list.append(env.cwd.proj.solutions[solution_name])
+        if solution_list:
+            # get text from user input
+            title = "Enter a note for project solution:"
+            env, note_text = get_user_input(stdscr, env, title=title)
+            if env.is_exit_mode():
+                return env, True
+            screen, win = env.get_screen_for_current_mode()
+            curses.curs_set(0)
+            if note_text is not None:
+                note_text = ''.join(note_text).strip()
+                for solution in solution_list:
+                    # add user note
+                    solution.add_user_note(note_text)
+                    save_user_notes_for_solution(solution)
     elif fce == ADD_USER_NOTE: # on solution
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)

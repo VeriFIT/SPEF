@@ -109,6 +109,9 @@ GEN_CODE_REVIEW = 723
 GEN_TOTAL_REPORT = 724
 ADD_TEST_NOTE = 725
 ADD_USER_NOTE = 726
+ADD_TEST_NOTE_TO_ALL = 727
+ADD_USER_NOTE_TO_ALL = 728
+
 
 SHOW_CODE_REVIEW = 730
 SHOW_TEST_NOTES = 731
@@ -336,8 +339,11 @@ def get_menu_functions(in_proj_dir=False, in_solution_dir=False, is_test_dir=Fal
         'all students - expand archives for all students': EXPAND_ALL_SOLUTIONS,
         'all students - name solution file correctly for all students': RENAME_ALL_SOLUTIONS,
         'all students - run tests (testsuite)': TEST_ALL_STUDENTS,
-        'all students - clean from test results': TEST_CLEAN_ALL
+        'all students - clean from test results': TEST_CLEAN_ALL,
+        'all students - add test note related to automatic tests': ADD_TEST_NOTE_TO_ALL,
+        'all students - add custom user note related to solution': ADD_USER_NOTE_TO_ALL
     }
+
 
     tests = {
         'tests - create new test': ADD_TEST,
@@ -359,7 +365,7 @@ def get_menu_functions(in_proj_dir=False, in_solution_dir=False, is_test_dir=Fal
         # 'student - run test':RUN_TEST,
         'student - generate code review from notes': GEN_CODE_REVIEW, # create /reports/code_review
         'student - generate total report': GEN_TOTAL_REPORT, # create /reports/total_report
-        'student - add note related to automatic tests': ADD_TEST_NOTE, # add to /reports/test_notes
+        'student - add test note related to automatic tests': ADD_TEST_NOTE, # add to /reports/test_notes
         'student - add custom user note related to solution': ADD_USER_NOTE, # add to /reports/user_notes
         'student - show code review': SHOW_CODE_REVIEW,
         'student - show test notes': SHOW_TEST_NOTES,

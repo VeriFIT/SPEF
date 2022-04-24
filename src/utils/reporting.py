@@ -86,3 +86,20 @@ def generate_code_review(env, solution):
     with open(code_review_file, 'w+') as f:
         f.write('\n'.join(code_review))
 
+
+
+def add_test_note_to_solutions(env, solutions, note_text):
+    if env.cwd.proj is None:
+        return
+
+    # get current testsuite version
+    tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
+    testsuite_tags = load_testsuite_tags(tests_dir)
+    if testsuite_tags is not None:
+        args = testsuite_tags.get_args_for_tag("version")
+        if args is not None and len(args)>0:
+            version = int(args[0])
+            for solution in solutions:
+                # add test note
+                solution.add_test_note(note_text, version)
+                save_test_notes_for_solution(solution)
