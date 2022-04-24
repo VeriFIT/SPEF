@@ -125,7 +125,7 @@ def history_test_event(proj_dir, test_name, event):
     if testsuite_tags is not None:
         # get testsuite version
         args = testsuite_tags.get_args_for_tag("version")
-        if args is None or len(args) > 1:
+        if args is None or len(args) < 1:
             log("history new test | testsuite tags - cant find tag #version(int)")
             version = 1
         else:

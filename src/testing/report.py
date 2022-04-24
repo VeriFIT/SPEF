@@ -138,12 +138,22 @@ def get_data_for_report(env, solution):
 
 
     # get user notes
-    user_notes = []
-    # user_notes = solution.user_notes
+    user_notes = solution.user_notes
 
-    # get test notes
+    # get current version of testsuite
+    version = None 
+    tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
+    testsuite_tags = load_testsuite_tags(tests_dir)
+    if testsuite_tags is not None:
+        # get testsuite version
+        args = testsuite_tags.get_args_for_tag("version")
+        if args is not None and len(args)>0:
+            version = int(args[0])
+
+    # get test notes for current version of testsuite
     test_notes = []
-    # test_notes = solution.test_notes
+    if version is not None:
+        test_notes = solution.get_test_notes_for_version(version)
 
 
     # create dictionary with data for report template

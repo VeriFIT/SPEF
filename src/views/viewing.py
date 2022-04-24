@@ -251,7 +251,6 @@ def run_function(stdscr, env, fce, key):
                 options = env.get_supported_test_functions(bash_file)
                 custom_help = (None, "Supported functions:", options)
                 env, key = show_help(stdscr, env, custom_help=custom_help, exit_key=[])
-                print_help(center_screen, max_cols, max_rows, env, custom_help=custom_help)
                 curses.curs_set(1)
                 rewrite_all_wins(env)
             except Exception as err:
@@ -263,7 +262,6 @@ def run_function(stdscr, env, fce, key):
                 options = get_supported_data_for_report()
                 custom_help = (None, "Supported data:", options)
                 env, key = show_help(stdscr, env, custom_help=custom_help, exit_key=[])
-                print_help(center_screen, max_cols, max_rows, env, custom_help=custom_help)
                 curses.curs_set(1)
                 rewrite_all_wins(env)
             except Exception as err:

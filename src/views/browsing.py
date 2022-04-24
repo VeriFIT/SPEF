@@ -447,15 +447,41 @@ def run_menu_function(stdscr, env, fce, key):
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)
         if solution is not None:
-            pass
-
+            # get text from user input
+            title = "Enter a test note (related to current version of testsuite):"
+            env, note_text = get_user_input(stdscr, env, title=title)
+            if env.is_exit_mode():
+                return env, True
+            screen, win = env.get_screen_for_current_mode()
+            curses.curs_set(0)
+            if note_text is not None:
+                note_text = ''.join(note_text).strip()
+                # get current testsuite version
+                tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
+                testsuite_tags = load_testsuite_tags(tests_dir)
+                if testsuite_tags is not None:
+                    args = testsuite_tags.get_args_for_tag("version")
+                    if args is not None and len(args)>0:
+                        version = int(args[0])
+                        # add test note
+                        solution.add_test_note(note_text, version)
+                        save_test_notes_for_solution(solution)
     elif fce == ADD_USER_NOTE: # on solution
-        # add custom user note to solution
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)
         if solution is not None:
-            pass
-
+            # get text from user input
+            title = "Enter a note for project solution:"
+            env, note_text = get_user_input(stdscr, env, title=title)
+            if env.is_exit_mode():
+                return env, True
+            screen, win = env.get_screen_for_current_mode()
+            curses.curs_set(0)
+            if note_text is not None:
+                note_text = ''.join(note_text).strip()
+                # add user note
+                solution.add_user_note(note_text)
+                save_user_notes_for_solution(solution)
     # ======================= SHOW INFO =======================
     elif fce == SHOW_OR_HIDE_PROJ_INFO:
         env.show_solution_info = not env.show_solution_info

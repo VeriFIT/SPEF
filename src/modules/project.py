@@ -34,11 +34,11 @@ class Solution:
     def add_user_note(self, text):
         self.user_notes.append(text)
 
-    def add_test_note(self, version, text):
+    def add_test_note(self, text, version):
         if version in self.test_notes:
             self.test_notes[version].append(text)
         else:
-            self.test_notes[verion] = [text]
+            self.test_notes[version] = [text]
 
     def get_test_notes_for_version(self, version):
         if version in self.test_notes:
@@ -87,8 +87,8 @@ class Project:
             solution_data.test_tags = load_tests_tags(os.path.join(solution_dir, TESTS_DIR))
 
             # load solution reports
-            # TODO
-
+            solution_data.user_notes = load_user_notes_for_solution(solution_dir)
+            solution_data.test_notes = load_test_notes_for_solution(solution_dir)
 
             res[solution_id] = solution_data
         return res

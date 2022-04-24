@@ -93,6 +93,48 @@ def save_typical_notes_to_file(notes):
             f.write(lines)
 
 
+""" **************** USER NOTES **************** """
+def load_user_notes_for_solution(solution_dir):
+    user_notes_file = os.path.join(solution_dir, REPORT_DIR, USER_NOTES_FILE)
+    if os.path.exists(user_notes_file):
+        with open(user_notes_file, 'r') as f:
+            lines = f.read().splitlines()
+            return lines
+    return []
+
+def save_user_notes_for_solution(solution):
+    report_dir = os.path.join(solution.path, REPORT_DIR)
+    user_notes_file = os.path.join(report_dir, USER_NOTES_FILE)
+    try:
+        if not os.path.exists(report_dir) or not os.path.isdir(report_dir):
+            os.mkdir(report_dir)
+        with open(user_notes_file, 'w+') as f:
+            lines = '\n'.join(solution.user_notes)
+            f.write(lines)
+    except Exception as err:
+        log("save user notes for solution | "+str(err)+" | "+str(traceback.format_exc()))
+
+
+""" **************** TEST NOTES **************** """
+def load_test_notes_for_solution(solution_dir):
+    test_notes_file = os.path.join(solution_dir, REPORT_DIR, TEST_NOTES_FILE)
+    if os.path.exists(test_notes_file):
+        with open(test_notes_file, 'r') as f:
+            data = yaml.safe_load(f)
+            return data
+    return {}
+
+def save_test_notes_for_solution(solution):
+    report_dir = os.path.join(solution.path, REPORT_DIR)
+    test_notes_file = os.path.join(report_dir, TEST_NOTES_FILE)
+    try:
+        if not os.path.exists(report_dir) or not os.path.isdir(report_dir):
+            os.mkdir(report_dir)
+        with open(test_notes_file, 'w+') as f:
+            yaml.dump(solution.test_notes, f, default_flow_style=False, allow_unicode=True)
+    except Exception as err:
+        log("save test notes for solution | "+str(err)+" | "+str(traceback.format_exc()))
+
 
 
 """ **************** REPORT **************** """
