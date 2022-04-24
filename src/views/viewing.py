@@ -29,7 +29,9 @@ from utils.match import *
 from utils.file import copy_test_history_to_tmp
 from utils.history import history_test_modified
 from utils.reporting import get_path_relative_to_solution_dir
+
 from testing.tst import TST_FCE_DIR, TST_FCE_FILE
+from testing.report import get_supported_data_for_report
 
 
 def file_viewing(stdscr, env):
@@ -55,6 +57,11 @@ def file_viewing(stdscr, env):
         env.editing_test_file = True
         # copy test dir to history (if there is no other copy of this test with this version)
         succ = copy_test_history_to_tmp(env.cwd.proj.path, os.path.dirname(env.file_to_open))
+
+    if os.path.basename(env.file_to_open) == REPORT_TEMPLATE and env.cwd.proj:
+        env.editing_report_template = True
+    else:
+        env.editing_report_template = False
 
 
     # check if file is from some project directory
@@ -231,11 +238,13 @@ def run_function(stdscr, env, fce, key):
                 str_text = options[char_key]
                 note_row, note_col = win.cursor.row, win.cursor.col - win.begin_x
                 env.report.add_note(note_row, note_col, str_text)
+                save_report_to_file(env.report)
         rewrite_all_wins(env)
-    # ==================== SHOW TEST FUNCTIONS ====================
-    elif fce == SHOW_TEST_FUNCTIONS:
+    # ==================== SHOW SUPPORTED DATA ====================
+    elif fce == SHOW_SUPPORTED_DATA:
         if env.editing_test_file:
-            # show supported functions for dotest.sh while user is writing/editing some test
+            # ==================== SHOW TEST FUNCTIONS ====================
+            # show supported functions for 'dotest.sh' while user is writing/editing some test
             # show list of implemented functions for testing
             try:
                 bash_file = os.path.join(env.cwd.proj.path, TESTS_DIR, TST_FCE_DIR, TST_FCE_FILE)
@@ -247,6 +256,18 @@ def run_function(stdscr, env, fce, key):
                 rewrite_all_wins(env)
             except Exception as err:
                 log("show test functions | "+str(err))
+        elif env.editing_report_template:
+            # =============== SHOW DATA FOR REPORT TEMPLATE ===============
+            # show supported data for 'report_template.j2' while user is creating report template
+            try:
+                options = get_supported_data_for_report()
+                custom_help = (None, "Supported data:", options)
+                env, key = show_help(stdscr, env, custom_help=custom_help, exit_key=[])
+                print_help(center_screen, max_cols, max_rows, env, custom_help=custom_help)
+                curses.curs_set(1)
+                rewrite_all_wins(env)
+            except Exception as err:
+                log("show report template data | "+str(err))
     # ======================= NOTES JUMP =======================
     elif fce == GO_TO_PREV_NOTE:
         if env.note_highlight:
@@ -373,6 +394,7 @@ def run_function(stdscr, env, fce, key):
                 env.specific_line_highlight = None
                 if text is not None:
                     env.report.add_note(note_row, note_col, ''.join(text))
+                    save_report_to_file(env.report)
                 rewrite_all_wins(env)
             elif fce == ADD_TYPICAL_NOTE:
                 options = env.get_typical_notes_dict()
@@ -381,6 +403,7 @@ def run_function(stdscr, env, fce, key):
                     str_text = options[char_key]
                     note_row, note_col = win.cursor.row, win.cursor.col - win.begin_x
                     env.report.add_note(note_row, note_col, str_text)
+                    save_report_to_file(env.report)
                 rewrite_all_wins(env)
 
     env.update_win_for_current_mode(win)

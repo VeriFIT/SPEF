@@ -1,0 +1,24 @@
+Scoring for project: {{ project_name }}
+Total score: {{ total_score }} / {{ max_score }}
+Bonus score: {{ bonus_score }}
+==================================
+{% for test in test_results %}
+{{ test.score }}:{{ test.result }}:{{ test.name }}:{{ test.description }}
+{% endfor %}
+==================================
+
+
+Code review
+==================================
+{% for note in code_review %}
+{{ note.file }}:{{ note.row }}:{{ note.col }}:{{ note.text }}
+{% endfor %}
+==================================
+
+
+Additional notes
+==================================
+{% for note in user_notes %}
+{{ note }}
+{% endfor %}
+==================================

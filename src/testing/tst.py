@@ -15,7 +15,6 @@ from pathlib import Path
 from utils.logger import *
 from utils.loading import *
 from utils.parsing import parse_sum_equation
-from utils.reporting import add_tag_to_solution
 
 from modules.bash import Bash_action
 
@@ -39,11 +38,11 @@ SHARED_RUN_FILE = os.path.join(TMP_DIR, 'docker_shared/tests/run.sh')
 # shell functions
 TST_FCE_DIR = 'src'
 TST_FCE_FILE = 'tst' # proj/tests/src/tst
-SRC_BASH_FILE = os.path.join(os.path.dirname(__file__), 'bash', 'tst.sh')
-SRC_RUN_TESTSUITE_FILE = os.path.join(os.path.dirname(__file__), 'bash', 'run_testsuite.sh')
-SRC_RUN_TESTS_FILE = os.path.join(os.path.dirname(__file__), 'bash', 'run_tests.sh')
+SRC_BASH_FILE = os.path.join(DATA_DIR, 'tst.sh')
+SRC_RUN_TESTSUITE_FILE = os.path.join(DATA_DIR, 'run_testsuite.sh')
+SRC_RUN_TESTS_FILE = os.path.join(DATA_DIR, 'run_tests.sh')
 
-DOCKER_FILE = os.path.join(os.path.dirname(__file__), 'Dockerfile')
+DOCKER_FILE = os.path.join(DATA_DIR, 'Dockerfile')
 
 
 
@@ -92,38 +91,39 @@ def create_docker_image(proj_path):
 
 
 
-def run_testsuite(env, solution_dir, show_results=True):
+def run_testsuite(env, solution, show_results=True):
     try:
-        if not env.cwd.proj or not solution_dir:
+        if not env.cwd.proj or not solution:
             log("run testsuite | run from solution dir in some project dir")
             return env
 
         ############### 1. CLEAN SOLUTION ###############
-        clean_test(solution_dir)
+        clean_test(solution)
 
         ############### 2. PREPARE DATA ###############
-        data_ok = prepare_data(env, solution_dir, SRC_RUN_TESTSUITE_FILE)
+        data_ok = prepare_data(env, solution.path, SRC_RUN_TESTSUITE_FILE)
         if not data_ok:
             log("run testsuite | problem with testing data")
             return env
 
         ############### 3. CHECK IF FUT EXISTS ###############
         fut = env.cwd.proj.sut_required
-        file_list = os.listdir(solution_dir)
+        file_list = os.listdir(solution.path)
         if not fut in file_list:
             # add tag "missing sut file"
             log("run testsuite | fut file '{fut}' doesnt exists in solution dir")
             return env
 
         ############### 4. RUN TESTSUITE ###############
-        succ = run_testsuite_in_docker(solution_dir, fut)
+        succ = run_testsuite_in_docker(solution.path, fut)
         if not succ:
             log("run testsuite | problem with testsuite run in docker")
             return env
 
         # get datetime and add tag "last_testing" to solution tags
         date_time = datetime.datetime.now().strftime("%d/%m/%y-%H:%M")
-        add_tag_to_solution(solution_dir, "last_testing", [date_time])
+        solution.tags.set_tag("last_testing", [date_time])
+
         # get testsuite version and add tag "testsuite_version" to solution tags
         tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
         tests_tags = load_testsuite_tags(tests_dir)
@@ -131,28 +131,19 @@ def run_testsuite(env, solution_dir, show_results=True):
             version_args = tests_tags.get_args_for_tag("version")
             if version_args is not None:
                 tst_version = list(version_args)[0]
-                add_tag_to_solution(solution_dir, "testsuite_version", [tst_version])
-
+                solution.tags.set_tag("testsuite_version", [tst_version])
 
         ############### 5. CALCULATE SCORE ###############
-        total_score = calculate_score(env, solution_dir)
+        total_score = calculate_score(env, solution)
         # if found some tags from sum equation
         if total_score is not None:
-            # add tag "score(body)" to solution
             score, bonus = total_score
-            add_tag_to_solution(solution_dir, "score", [score])
+            solution.tags.set_tag("score", [score])
             if bonus > 0:
-                add_tag_to_solution(solution_dir, "score_bonus", [bonus])
+                solution.tags.set_tag("score_bonus", [bonus])
 
+        save_tags_to_file(solution.tags)
 
-            ############### 6. GENERATE REPORT ###############
-            # TODO
-            # from reporting import generate report
-
-            ############### 7. SHOW REPORT ###############
-            # TODO
-            # ukazat v bashi
-            # bash_cmd = echo "subor s reportom"
     except Exception as err:
         log("run testsuite | "+str(err)+" | "+str(traceback.format_exc()))
         env.set_exit_mode()
@@ -282,9 +273,9 @@ def run_testsuite_in_docker(solution_dir, fut):
 
 
 
-def clean_test(solution_dir):
+def clean_test(solution):
     try:
-        student_results = os.path.join(solution_dir, RESULTS_SUB_DIR)
+        student_results = os.path.join(solution.path, RESULTS_SUB_DIR)
         if os.path.exists(student_results):
             shutil.rmtree(student_results)
         if os.path.exists(SHARED_DIR):
@@ -294,8 +285,8 @@ def clean_test(solution_dir):
 
 
 
-def calculate_score(env, solution_dir):
-    if not env.cwd.proj or not solution_dir:
+def calculate_score(env, solution):
+    if not env.cwd.proj or not solution:
         return None
 
     max_score = env.cwd.proj.max_score
@@ -306,7 +297,7 @@ def calculate_score(env, solution_dir):
         sum_equation_str = load_sum_equation_from_file(env, sum_file)
 
         # parse sum equation
-        equation, ignored_tags = parse_sum_equation(env, solution_dir, sum_equation_str)
+        equation, ignored_tags = parse_sum_equation(env, solution, sum_equation_str)
         equation = ' '.join(str(x) for x in equation)
 
         # calculate sum
@@ -415,20 +406,20 @@ def run_testsuite_in_local(tests_dir, solution_dir, fut):
 
 # bin/tst
 """ /bin/tst run param --> spusti /tests/tst run param"""
-def run_tests(env, solution_dir, test_list):
+def run_tests(env, solution, test_list):
     try:
         if not test_list: # no test to run
             return env
 
-        if not env.cwd.proj or not solution_dir:
+        if not env.cwd.proj or not solution:
             log("run tests | run from solution dir in some project dir")
             return
 
         ############### 1. CLEAN SOLUTION ###############
-        clean_test(solution_dir)
+        clean_test(solution)
 
         ############### 2. PREPARE DATA ###############
-        data_ok = prepare_data(env, solution_dir, SRC_RUN_TESTS_FILE)
+        data_ok = prepare_data(env, solution.path, SRC_RUN_TESTS_FILE)
         if not data_ok:
             log("run tests | problem with testing data")
             return env
@@ -445,13 +436,13 @@ def run_tests(env, solution_dir, test_list):
 
         ############### 3. CHECK IF FUT EXISTS ###############
         fut = env.cwd.proj.sut_required
-        file_list = os.listdir(solution_dir)
+        file_list = os.listdir(solution.path)
         if not fut in file_list:
             log("run tests | fut file '{fut}' doesnt exists in solution dir")
             return env
 
         ############### 4. RUN TESTS ###############
-        env = run_tests_in_docker(env, solution_dir, fut, test_list)
+        env = run_tests_in_docker(env, solution.path, fut, test_list)
         # shutil.rmtree(SHARED_DIR)
 
     except Exception as err:

@@ -254,7 +254,7 @@ class Window:
         row = self.cursor.row - self.begin_y
         col = self.cursor.col - self.begin_x
 
-        if len(buffer) > 0:
+        if len(buffer) > row:
             current_line = buffer.lines[row]
             tab_count = current_line.count("\t", 0, col)
             self.tab_shift = (tab_size-1)*tab_count # -1 cursor shift (right/left) correction

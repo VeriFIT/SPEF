@@ -268,7 +268,9 @@ add_test_tag(){
         res="${res} []" >> $TAGS
     else
         for arg in "$@"; do
-            res="${res}\n- ${arg}" >> $TAGS
+            if [[ -n "$arg" ]]; then
+                res="${res}\n- ${arg}" >> $TAGS
+            fi
         done
     fi
     printf "${res}\n" >> $TAGS
@@ -626,7 +628,7 @@ auto_report()
     else
         echo "$failure:$test: $@"
         echo "$d"
-        add_test_tag "scoring_${test}" ${failure} "$@" "${d}"
+        add_test_tag "scoring_${test}" ${failure} "$@"
         add_test_tag "${test}_fail"
     fi
 }
@@ -820,7 +822,7 @@ tst_run_txt_filter()
         if [[ "$diff" = y ]]; then
             echo "$failure:chyba:$msg"
             echo "$d"
-            add_test_tag "scoring_${test}" ${failure} ${msg} "${d}";
+            add_test_tag "scoring_${test}" ${failure} ${msg};
             add_test_tag "${test}_fail";
         else
             echo "$failure:chyba:$msg viz $test/stdouterr.diff"

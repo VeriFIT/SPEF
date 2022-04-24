@@ -20,7 +20,7 @@ SET_MANAGE_FILE_MODE = 11
 SHOW_OR_HIDE_TAGS = 12
 SHOW_OR_HIDE_LINE_NUMBERS = 13
 SHOW_OR_HIDE_NOTE_HIGHLIGHT = 14
-SHOW_TEST_FUNCTIONS = 15
+SHOW_SUPPORTED_DATA = 15
 SHOW_TYPICAL_NOTES = 16
 OPEN_NOTE_MANAGEMENT = 17
 ADD_CUSTOM_NOTE = 18
@@ -106,17 +106,18 @@ TEST_STUDENT = 720
 TEST_CLEAN = 721
 RUN_TEST = 722
 GEN_CODE_REVIEW = 723
-GEN_AUTO_REPORT = 724
-ADD_AUTO_NOTE = 725
+GEN_TOTAL_REPORT = 724
+ADD_TEST_NOTE = 725
 ADD_USER_NOTE = 726
 
 SHOW_CODE_REVIEW = 730
-SHOW_AUTO_REPORT = 731
-SHOW_TOTAL_REPORT = 732
-SHOW_TEST_RESULTS = 733
+SHOW_TEST_NOTES = 731
+SHOW_USER_NOTES = 732
+SHOW_TOTAL_REPORT = 733
+SHOW_TEST_RESULTS = 734
 
-SHOW_STATS = 734
-SHOW_HISTOGRAM = 735
+SHOW_STATS = 735
+SHOW_HISTOGRAM = 736
 
 # in tests dir
 ADD_TEST = 740
@@ -145,7 +146,7 @@ def map_file_function(str_fce):
         'show_or_hide_note_highlight': SHOW_OR_HIDE_NOTE_HIGHLIGHT,
         'open_note_management': OPEN_NOTE_MANAGEMENT,
         'reload_file_from_last_save': RELOAD_FILE_FROM_LAST_SAVE,
-        'show_test_functions': SHOW_TEST_FUNCTIONS,
+        'show_supported_data': SHOW_SUPPORTED_DATA,
         'show_typical_notes': SHOW_TYPICAL_NOTES,
         'set_edit_file_mode': SET_EDIT_FILE_MODE,
         'set_manage_file_mode': SET_MANAGE_FILE_MODE,
@@ -356,12 +357,13 @@ def get_menu_functions(in_proj_dir=False, in_solution_dir=False, is_test_dir=Fal
         'student - run tests (testsuite)': TEST_STUDENT,
         'student - clean from test results': TEST_CLEAN,
         # 'student - run test':RUN_TEST,
-        'student - generate code review from notes': GEN_CODE_REVIEW,
-        'student - generate auto report from tests': GEN_AUTO_REPORT, # TODO
-        'student - add note to auto report': ADD_AUTO_NOTE, # TODO
-        'student - add custom user note': ADD_USER_NOTE, # TODO
-        'student - show code review notes': SHOW_CODE_REVIEW,
-        'student - show auto report': SHOW_AUTO_REPORT,
+        'student - generate code review from notes': GEN_CODE_REVIEW, # create /reports/code_review
+        'student - generate total report': GEN_TOTAL_REPORT, # create /reports/total_report
+        'student - add note related to automatic tests': ADD_TEST_NOTE, # add to /reports/test_notes
+        'student - add custom user note related to solution': ADD_USER_NOTE, # add to /reports/user_notes
+        'student - show code review': SHOW_CODE_REVIEW,
+        'student - show test notes': SHOW_TEST_NOTES,
+        'student - show user notes': SHOW_USER_NOTES,
         'student - show total report with score': SHOW_TOTAL_REPORT,
         'student - show test results': SHOW_TEST_RESULTS
     }
@@ -374,9 +376,9 @@ def get_menu_functions(in_proj_dir=False, in_solution_dir=False, is_test_dir=Fal
     result_dir = {}
     if in_solution_dir: # in solution dir or in proj dir with selected solution
         result_dir.update(proj)
-        result_dir.update(tests)
         result_dir.update(student)
         result_dir.update(stats)
+        result_dir.update(tests)
         result_dir.update(basic)
     elif is_test_dir: # in test dir or in tests dir with selected test
         result_dir.update(proj)

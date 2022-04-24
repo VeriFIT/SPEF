@@ -147,6 +147,8 @@ def get_help(env):
         "F3": "change to file view/tag mode"}
         if env.editing_test_file:
             actions.update({"F4": "show supported bash functions for 'dotest.sh'"})
+        elif env.editing_report_template:
+            actions.update({"F4": "show supported data for report template"})
         actions.update({
         "F5": "show/hide line numbers",
         "F6": "show/hide note highlight",

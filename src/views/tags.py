@@ -15,7 +15,7 @@ from modules.buffer import UserInput
 from modules.tags import Tags
 from modules.bash import Bash_action
 
-from utils.loading import load_tags_from_file, save_tags_to_file
+from utils.loading import save_tags_to_file
 from utils.screens import *
 from utils.printing import *
 from utils.logger import *

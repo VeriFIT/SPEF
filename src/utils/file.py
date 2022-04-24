@@ -14,6 +14,7 @@ from utils.reporting import *
 from utils.history import history_test_event
 
 from testing.tst import check_bash_functions_for_testing
+from testing.report import copy_default_report_template
 
 
 def remove_archive_suffix(path):
@@ -56,30 +57,38 @@ def extract_archives(archives):
     return problem_archives
 
 
-def rename_solutions(src_dirs, required_name, extended_variants):
+def rename_solutions(proj, solution=None):
+    required_name = proj.sut_required
+    extended_variants = proj.sut_ext_variants
     ok, renamed, fail = [], [], []
-    for solution in src_dirs:
+    if solution is not None:
+        solutions = [solution]
+    else:
+        solutions = [data for key, data in proj.solutions.items()]
+    for solution in solutions:
         try:
+            solution_dir = solution.path
             # find sut in solution dir
-            file_list = glob.glob(os.path.join(solution, '**', required_name), recursive=True)
+            file_list = glob.glob(os.path.join(solution_dir, '**', required_name), recursive=True)
             file_list = filter_intern_files(file_list)
             if len(file_list) == 1: # only one file matches the sut required
-                ok.append(solution)
+                ok.append(solution_dir)
             else:
                 files = []
                 for ext in extended_variants: # find extended version of sut in solution dir
-                    files.extend(glob.glob(os.path.join(solution, '**', ext), recursive=True))
+                    files.extend(glob.glob(os.path.join(solution_dir, '**', ext), recursive=True))
                 files = filter_intern_files(files)
                 if len(files) == 1: # only one file matches some sut extened variant
                     old_file = files[0]
                     new_file = os.path.join(os.path.dirname(old_file), required_name)
                     shutil.copy(old_file, new_file)
-                    renamed.append(solution)
-                    add_tag_to_solution(solution, "renamed_sut", [f"{os.path.basename(old_file)}-->{os.path.basename(new_file)}"])
+                    renamed.append(solution_dir)
+                    solution.tags.set_tag("renamed_sut", [f"{os.path.basename(old_file)}-->{os.path.basename(new_file)}"])
+                    save_tags_to_file(solution.tags)
                 else:
-                    fail.append(solution)
+                    fail.append(solution_dir)
         except:
-            fail.append(solution)
+            fail.append(solution_dir)
     return ok, renamed, fail
 
 
@@ -145,14 +154,47 @@ def actualize_test_history_in_tmp(proj_dir, test_dir):
         shutil.copytree(test_dir, tmp_test_v_dir, dirs_exist_ok=True)
 
 
+def create_project(env):
+    # create project object
+    proj = Project(env.cwd.path)
+    proj.set_default_values()
+    proj_data = proj.to_dict()
+    save_proj_to_conf_file(proj.path, proj_data)
+    env.cwd.proj = proj
+
+    # create report dir
+    report_dir = os.path.join(proj.path, REPORT_DIR)
+    create_report_dir(report_dir)
+
+    # create tests dir
+    tests_dir = os.path.join(proj.path, TESTS_DIR)
+    create_tests_dir(tests_dir)
+
+    # create history dir
+    history_dir = os.path.join(proj.path, HISTORY_DIR)
+    create_tests_history_dir(history_dir)
+    return env
+
+
+############ REPORT ############
+def create_report_dir(report_dir):
+    mail_file = os.path.join(report_dir, MAIL_TEXT)
+    report_template = os.path.join(report_dir, REPORT_TEMPLATE)
+    if not (os.path.exists(report_dir) and os.path.isdir(report_dir)):
+        os.mkdir(report_dir)
+    if not os.path.exists(mail_file):
+        with open(mail_file, 'w+'): pass
+    if not os.path.exists(report_template):
+        copy_default_report_template(report_template)
 
 
 ############ HISTORY ############
 def create_tests_history_dir(history_dir):
     testsuite_history = os.path.join(history_dir, HISTORY_FILE)
-    if not os.path.exists(history_dir):
+    if not (os.path.exists(history_dir) and os.path.isdir(history_dir)):
         os.mkdir(history_dir)
-        with open(testsuite_history, 'w+') as f: pass
+    if not os.path.exists(testsuite_history):
+        with open(testsuite_history, 'w+'): pass
 
 
 ############ TESTS ############
@@ -162,7 +204,8 @@ def create_tests_dir(tests_dir):
     scoring_file = os.path.join(tests_dir, SCORING_FILE)
     sum_file = os.path.join(tests_dir, SUM_FILE)
     testsuite_tags = os.path.join(tests_dir, TESTSUITE_TAGS)
-    if not os.path.exists(tests_dir):
+
+    if not (os.path.exists(tests_dir) and os.path.isdir(tests_dir)):
         os.mkdir(tests_dir)
     create_scoring_file(scoring_file) # create scoring file
     create_sum_file(sum_file) # create sum file

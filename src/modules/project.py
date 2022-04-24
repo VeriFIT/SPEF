@@ -13,10 +13,43 @@ from utils.loading import *
 from utils.logger import *
 from utils.match import *
 
+"""
+1. ak som v proj root dir
+2. solutions = get_solutions(proj dir)
+3. if env.cwd.proj.solutions.getkeys() != solutions
+4. nacitaj znovu solutions: env.cwd.proj.reload_solutions()
+"""
+
+class Solution:
+    def __init__(self, path):
+        self.path = path
+        self.name = os.path.basename(path)
+        self.tags = None
+        self.test_tags = None
+
+        self.test_notes = {} # poznamky k automatickym testom
+        self.user_notes = [] # dalsie nezavisle poznamky
+
+
+    def add_user_note(self, text):
+        self.user_notes.append(text)
+
+    def add_test_note(self, version, text):
+        if version in self.test_notes:
+            self.test_notes[version].append(text)
+        else:
+            self.test_notes[verion] = [text]
+
+    def get_test_notes_for_version(self, version):
+        if version in self.test_notes:
+            return self.test_notes[version]
+        return []
+
 
 class Project:
     def __init__(self, path):
         self.path = path
+        self.name = ""
         self.created = None
         self.solution_id = None
         self.max_score = 0
@@ -29,8 +62,47 @@ class Project:
         self.description = ""
         self.test_timeout = 0
 
+        self.solutions = None
+
+    def reload_solutions(self):
+        self.solutions = self.load_solutions()
+
+    def load_solutions(self):
+        res = {}
+        # get solution dirs
+        dirs = set()
+        items = os.listdir(self.path) # list all dirs and files in proj dir
+        for item in items:
+            path = os.path.join(self.path, item)
+            if os.path.isdir(path) and bool(re.match(self.solution_id, item)):
+                dirs.add(path)
+        solutions = list(dirs)
+
+        for solution_dir in solutions:
+            solution_id = os.path.basename(solution_dir)
+            solution_data = Solution(solution_dir)
+
+            # load solution tags
+            solution_data.tags = load_solution_tags(solution_dir)
+            solution_data.test_tags = load_tests_tags(os.path.join(solution_dir, TESTS_DIR))
+
+            # load solution reports
+            # TODO
+
+
+            res[solution_id] = solution_data
+        return res
+
+    def get_solution_dirs(self):
+        res = []
+        if self.solutions:
+            for name, data in self.solutions.items():
+                res.append(data.path)
+        return res
+
     def set_values_from_conf(self, data):
         try:
+            self.name = data['name']
             self.created = data['created']
             self.solution_id = data['solution_id']
             self.max_score = data['max_score']
@@ -38,6 +110,7 @@ class Project:
             self.sut_ext_variants = data['sut_ext_variants']
             self.solution_info = data['solution_info']
             self.tests_info = data['tests_info']
+            self.solutions = self.load_solutions()
             return True
         except:
             log("wrong data for proj")
@@ -45,6 +118,7 @@ class Project:
 
 
     def set_default_values(self):
+        self.name = "project"
         self.created = datetime.date.today() # date of creation
         self.solution_id =  "x[a-z]{5}[0-9]{2}" # default solution identifier: xlogin00
         self.max_score = 10
@@ -53,8 +127,23 @@ class Project:
         self.sut_ext_variants = ["*sut*", "sut.sh", "sut.bash"]
         self.solution_info = self.get_solution_info()
         self.tests_info = self.get_tests_info()
+        self.solutions = self.load_solutions()
 
         self.test_timeout = 5
+
+
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'created': self.created,
+            'solution_id': self.solution_id,
+            'max_score' : self.max_score,
+            'sut_required': self.sut_required,
+            'sut_ext_variants': self.sut_ext_variants,
+            'solution_info': self.solution_info,
+            'tests_info': self.tests_info
+        }
+        #     'test_timeout': self.test_timeout
 
 
     """
@@ -241,16 +330,4 @@ class Project:
         solution_info = [date, status, group, plagiat]
         # solution_info = [date, status, group, plagiat, test1, test2]
         return solution_info
-
-    def to_dict(self):
-        return {
-            'created': self.created,
-            'solution_id': self.solution_id,
-            'max_score' : self.max_score,
-            'sut_required': self.sut_required,
-            'sut_ext_variants': self.sut_ext_variants,
-            'solution_info': self.solution_info,
-            'tests_info': self.tests_info
-        }
-        #     'test_timeout': self.test_timeout
 

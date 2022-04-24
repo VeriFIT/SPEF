@@ -57,6 +57,7 @@ class Environment:
 
         self.file_to_open = None
         self.editing_test_file = False # True while editing test (if file_to_open is TEST_FILE)
+        self.editing_report_template = False # True if editing report template (if file_to_open is REPORT_TEMPLATE)
 
         self.cwd = None # Directory(path, dirs, files)
         self.buffer = None # Buffer(path, lines)

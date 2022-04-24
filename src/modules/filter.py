@@ -43,11 +43,11 @@ class Filter:
 
     """ add filter by tag """
     def add_tag(self, tag):
-        tag_parsing_ok, n, a = parse_tag(tag)
+        # return parsing_ok, tag_name, tag_param, compare_to = (op, value)
+        tag_parsing_ok, _, _, _ = parse_tag(tag)
         if not tag_parsing_ok:
             log("invalid input for tag filter")
         else:
-            # log(f"name: {n}, args: {a}")
             self.tag = tag
 
 
@@ -230,8 +230,6 @@ class Filter:
     tag: tag to match, ex: "test1(0,.*,2,[0-5],5)"
     """
     def get_files_by_tag(self, env, files):
-        # return files
-
         # TODO !!!!!!!!!
         # if len(files) > 10:
         #     upozornenie_moze_to_dlho_trvat
@@ -239,22 +237,53 @@ class Filter:
         #     if no:
         #         return files
 
-
         # if not is_in_project_dir(self.root):
         #     log("filter by tag | there is no tags (bcs you are not in proj dir)")
         #     return files
 
         try:
-            succ, tag_name, compare_args = parse_tag(self.tag)
+            succ, tag_name, tag_param_num, compare_to = parse_tag(self.tag)
             if not succ or tag_name is None:
                 return set()
 
             tag_matches = set()
             for file_path in files:
-                tags = load_tags_from_file(file_path)
+                tags = None
+                if env.cwd.proj is not None:
+                    # if file_path is in solution dir, tags are saved in proj.solutions (no need to load tags from file)
+                    solution_root_dir = get_root_solution_dir(env.cwd.proj.solution_id, file_path)
+                    tests_root_dir = get_root_tests_dir(file_path)
+                    if solution_root_dir is not None:
+                        solution_name = os.path.basename(solution_root_dir)
+                        if solution_name in env.cwd.proj.solutions:
+                            if tests_root_dir is not None:
+                                tags = env.cwd.proj.solutions[solution_name].test_tags
+                            else:
+                                tags = env.cwd.proj.solutions[solution_name].tags
+                if tags is None:
+                    tags = load_tags_from_file(file_path)
+
                 if tags and len(tags)>0:
-                    if tags.find(tag_name, compare_args):
-                        tag_matches.add(file_path)
+                    # find tag_name
+                    if tags.find(tag_name):
+                        if tag_param_num is None:
+                            tag_matches.add(file_path)
+                        else:
+                            # find tag param
+                            param = tags.get_param_by_idx(tag_name, tag_param_num-1)
+                            if param is not None:
+                                match = True
+                                if compare_to is not None:
+                                    # compare tag param
+                                    op, value = compare_to
+                                    match = False
+                                    if op in ['<','>'] and not re.match(r'[0-9]+',str(param)):
+                                        continue
+                                    if op == '<': match = int(param) < int(value)
+                                    elif op == '>': match = int(param) > int(value)
+                                    elif op == '=': match = str(param) == str(value)
+                                if match:
+                                    tag_matches.add(file_path)
             return tag_matches
         except Exception as err:
             log("Filter by tag | "+str(err)+" | "+str(traceback.format_exc()))

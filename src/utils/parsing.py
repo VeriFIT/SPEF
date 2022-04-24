@@ -5,7 +5,6 @@ import curses
 
 from utils.coloring import *
 from utils.logger import *
-from utils.loading import load_solution_tags, load_tests_tags
 from utils.match import get_tests_names
 
 
@@ -107,26 +106,53 @@ def parse_equation_operand(op):
         return None
 
 
+# return parsing_ok, tag_name, tag_param, compare_to = (op, value)
 def parse_tag(tag):
-    """ parse tag """
-    tag_parsing_ok = False
-    tag_name = None
-    compare_args = None
+    parsing_ok = False
+    tag_name, tag_param_num, compare_to = None, None, None
     tag = str(tag).strip()
-    if re.match('[\w\(\)]+', tag):
-        components = re.split('[()]', tag)
-        # log(components)
-        if len(components)>0:
-            # search only for tag name
-            tag_name = components[0]
-            tag_parsing_ok = True
-            if len(components)>1 and components[1]!="":
-                compare_args = list(map(str, components[1].split(',')))
-    return tag_parsing_ok, tag_name, compare_args
+    # matches: tag_name.1 > 5
+    if re.match("^\w+.[0-9]+\s*[<>=]\s*\w+$", tag):
+        components = re.split(r'([<>=])', tag)
+        tag = str(components[0]).strip()
+
+        # parse tag name and param
+        tag_components = re.split(r'[.]', tag)
+        if len(tag_components) == 2:
+            tag_name, param_num = tag_components
+            if int(param_num) > 0:
+                tag_param_num = int(param_num)
+                parsing_ok = True
+
+        # parse tag comparison
+        if len(components)==3 and parsing_ok:
+            op, value = str(components[1]).strip(), str(components[2]).strip()
+            if op in ['<','>'] and not re.match(r'[0-9]+',value):
+                log("cannot compare string (must be number when using < > operand in predicate)")
+                parsing_ok = False
+            elif op in ['<', '>', '=']:
+                compare_to = (op, value)
+            else:
+                log("invalid operand in info predicate (in proj conf)")
+                parsing_ok = False
+    # matches: tag_name.1
+    elif re.match("^\w+.[0-9]+$", tag):
+        tag_components = re.split(r'[.]', tag)
+        if len(tag_components) == 2:
+            tag_name, param_num = tag_components
+            if int(param_num) > 0:
+                tag_param_num = int(param_num)
+                parsing_ok = True
+    # matches: tag_name
+    else:
+        tag_name = tag
+        parsing_ok = True
+
+    return parsing_ok, tag_name, tag_param_num, compare_to
 
 
 
-def parse_solution_info_predicate(predicate, solution_dir, info_for_tests=False, test_name=None):
+def parse_solution_info_predicate(predicate, solution, info_for_tests=False, test_name=None):
     # defined colors
     red = curses.color_pair(HL_RED)
     green = curses.color_pair(HL_GREEN)
@@ -151,7 +177,7 @@ def parse_solution_info_predicate(predicate, solution_dir, info_for_tests=False,
                     if re.match("^\w+.[0-9]+\s*[<>=]\s*\w+$", cond):
                         components = re.split(r'([<>=])', cond)
                         tag = str(components[0]).strip()
-                        param = get_param_from_tag(tag, solution_dir, info_for_tests=info_for_tests, test_name=test_name)
+                        param = get_param_from_tag(tag, solution, info_for_tests=info_for_tests, test_name=test_name)
                         if param is not None:
                             if len(components)==1:
                                 # there is no comparison so predicate refers to existance of tag parameter
@@ -176,14 +202,13 @@ def parse_solution_info_predicate(predicate, solution_dir, info_for_tests=False,
                         # predicate condition refers to existance of tag
                         # try to find given tag in solution tags
                         if not info_for_tests:
-                            solution_tags = load_solution_tags(solution_dir)
+                            solution_tags = solution.tags
                             if solution_tags is not None and len(solution_tags)>0:
                                 match = solution_tags.find(cond)
 
                         # try to find given tag in tests tags
                         if not match:
-                            solution_tests_dir = os.path.join(solution_dir, TESTS_DIR)
-                            tests_tags = load_tests_tags(solution_tests_dir)
+                            tests_tags = solution.test_tags
                             if tests_tags is not None and len(tests_tags)>0:
                                 if info_for_tests and test_name is not None:
                                     cond = cond.replace("XTEST", test_name)
@@ -220,14 +245,14 @@ length:
     * 1 (if visualization refers to param from tag and 'length' is not defined)
     * len(string) (if visualization is just string and 'length' is not defined)
 """
-def parse_solution_info_visualization(info, solution_dir):
+def parse_solution_info_visualization(info, solution):
     visualization = str(info['visualization']).strip()
     visual, length = None, None
 
     # check if visualization refers to param from tag
     # matches: tag_name.1
     if re.match("^\w+.[0-9]+$", visualization):
-        visual = get_param_from_tag(visualization, solution_dir)
+        visual = get_param_from_tag(visualization, solution)
         length = info['length'] if 'length' in info else 1
     else:
         visual = str(visualization)
@@ -242,7 +267,7 @@ def parse_solution_info_visualization(info, solution_dir):
     return visual, length
 
 
-def get_param_from_tag(txt, solution_dir, info_for_tests=False, test_name=None):
+def get_param_from_tag(txt, solution, info_for_tests=False, test_name=None):
     try:
         result = None
         txt = str(txt).strip()
@@ -257,7 +282,7 @@ def get_param_from_tag(txt, solution_dir, info_for_tests=False, test_name=None):
                     log("get param from tag | param idx cant be less then 1 (parameter counting starts from 1)")
                     return None
                 # check if tag has required param
-                tag_param = find_tag_param_for_solution(solution_dir, tag_name, int(param_num)-1, info_for_tests=info_for_tests)
+                tag_param = find_tag_param_for_solution(solution, tag_name, int(param_num)-1, info_for_tests=info_for_tests)
                 if tag_param is None:
                     # log("get param from tag | tag not exist or has no param in required idx")
                     return None
@@ -268,19 +293,18 @@ def get_param_from_tag(txt, solution_dir, info_for_tests=False, test_name=None):
         return None
 
 
-def find_tag_param_for_solution(solution_dir, tag_name, param_idx, info_for_tests=False):
+def find_tag_param_for_solution(solution, tag_name, param_idx, info_for_tests=False):
     param = None
     if not info_for_tests:
         # try to find required tag in solution tags
-        solution_tags = load_solution_tags(solution_dir)
+        solution_tags = solution.tags
         if solution_tags is not None and len(solution_tags)>0:
             param = solution_tags.get_param_by_idx(tag_name, param_idx)
             if param is not None:
                 return param
 
     # try to find required tag in tests tags
-    solution_tests_dir = os.path.join(solution_dir, TESTS_DIR)
-    tests_tags = load_tests_tags(solution_tests_dir)
+    tests_tags = solution.test_tags
     if tests_tags is not None and len(tests_tags)>0:
         param = tests_tags.get_param_by_idx(tag_name, param_idx)
         if param is not None:
@@ -288,18 +312,17 @@ def find_tag_param_for_solution(solution_dir, tag_name, param_idx, info_for_test
     return None
 
 
-def find_tag_for_solution(solution_dir, tag_name):
+def find_tag_for_solution(solution, tag_name):
     args = None
     # try to find required tag in solution tags
-    solution_tags = load_solution_tags(solution_dir)
+    solution_tags = solution.tags
     if solution_tags is not None and len(solution_tags)>0:
         args = solution_tags.get_args_for_tag(tag_name)
         if args is not None:
             return list(args)
 
     # try to find required tag in tests tags
-    solution_tests_dir = os.path.join(solution_dir, TESTS_DIR)
-    tests_tags = load_tests_tags(solution_tests_dir)
+    tests_tags = solution.test_tags
     if tests_tags is not None and len(tests_tags)>0:
         args = tests_tags.get_args_for_tag(tag_name)
         if args is not None:

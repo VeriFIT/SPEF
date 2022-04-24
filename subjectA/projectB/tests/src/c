@@ -1,1 +1,0 @@
-$(dirname $(realpath $0))/tst clean

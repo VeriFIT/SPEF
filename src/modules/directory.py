@@ -59,8 +59,25 @@ class Directory:
         try:
             proj_path = get_proj_path(self.path)
             if proj_path is not None:
-                proj_data = load_proj_from_conf_file(proj_path)
+                if self.proj is not None:
+                    if self.proj.path == proj_path: # same project
+                        # # get solution dirs
+                        # dirs = set()
+                        # items = os.listdir(self.proj.path) # list all dirs and files in proj dir
+                        # for item in items:
+                        #     path = os.path.join(self.proj.path, item)
+                        #     if os.path.isdir(path) and bool(re.match(self.proj.solution_id, item)):
+                        #         dirs.add(item)
+                        # solutions = list(dirs)
+
+                        # proj_solutions = self.proj.solutions.keys()
+                        # proj_solutions.sort()
+                        # solutions.sort()
+                        # if solutions != proj_solutions:
+                        #     self.proj.reload_solutions()
+                        return
                 # create Project obj from proj data
+                proj_data = load_proj_from_conf_file(proj_path)
                 self.proj = Project(proj_path)
                 succ = self.proj.set_values_from_conf(proj_data)
                 if not succ:
@@ -78,24 +95,27 @@ class Directory:
             infos = None
             dir_path = os.path.join(self.path, dir_name)
             if self.proj is not None:
-                if is_root_proj and match_regex(self.proj.solution_id, dir_name):
+                if dir_name in self.proj.solutions:
                     # IS SOLUTION DIR
-                    infos = self.get_info_for_solution(env, self.proj, dir_path)
+                    solution = self.proj.solutions[dir_name]
+                    infos = self.get_info_for_solution(env, solution)
                 elif is_testcase_result_dir(self.proj.solution_id, dir_path):
                     # IS TESTCASE DIR
-                    solution_dir = os.path.dirname(os.path.dirname(dir_path))
-                    infos = self.get_info_for_solution(env, self.proj, solution_dir, info_for_tests=True, test_name=dir_name)
-
+                    solution_name = os.path.basename(os.path.dirname(os.path.dirname(dir_path)))
+                    if solution_name in self.proj.solutions:
+                        solution = self.proj.solutions[solution_name]
+                        infos = self.get_info_for_solution(env, solution, info_for_tests=True, test_name=dir_name)
             result[dir_name] = infos
         self.dirs_info = result
 
-    def get_info_for_solution(self, env, proj, solution_dir, info_for_tests=False, test_name=None):
+
+    def get_info_for_solution(self, env, solution, info_for_tests=False, test_name=None):
         try:
             # get required info for project
             if info_for_tests:
-                solution_info = proj.get_only_valid_tests_info()
+                solution_info = self.proj.get_only_valid_tests_info()
             else:
-                solution_info = proj.get_only_valid_solution_info()
+                solution_info = self.proj.get_only_valid_solution_info()
             if not solution_info:
                 return []
 
@@ -108,7 +128,7 @@ class Directory:
                 predicates = info['predicates']
 
                 # parse visualization and length
-                visualization, length = parse_solution_info_visualization(info, solution_dir)
+                visualization, length = parse_solution_info_visualization(info, solution)
 
                 # check predicates and get color
                 if length is not None:
@@ -119,7 +139,7 @@ class Directory:
                         predicate_matches = False if len(predicates)>0 else True
                         for predicate in predicates:
                             # match first predicate and get its color
-                            predicate_matches, col = parse_solution_info_predicate(predicate, solution_dir, info_for_tests=info_for_tests, test_name=test_name)
+                            predicate_matches, col = parse_solution_info_predicate(predicate, solution, info_for_tests=info_for_tests, test_name=test_name)
                             if predicate_matches:
                                 color = col
                                 break

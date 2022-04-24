@@ -32,7 +32,7 @@ general:
 file_functions:
   save_file: 'F2'
   show_or_hide_tags: 'F3'
-  show_test_functions: 'F4'
+  show_supported_data: 'F4'
   show_or_hide_line_numbers: 'F5'
   show_or_hide_note_highlight: 'F6'
   open_note_management: 'F7'

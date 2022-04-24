@@ -10,7 +10,7 @@ ESC = 27
 HOME = str(Path(__file__).parents[1])
 LOG_FILE = os.path.join(HOME,"debug.log")
 TMP_DIR = os.path.join(HOME,'tmp')
-
+DATA_DIR = os.path.join(HOME, 'data')
 
 REPORT_SUFFIX = "_report.yaml"
 TAGS_SUFFIX = "_tags.yaml"
@@ -28,7 +28,8 @@ HISTORY_DIR = "history"
 
 # proj/REPORT_DIR/
 MAIL_TEXT = "mail.txt"
-REPROT_TEMPLATE = "report_template.jinja"
+REPORT_TEMPLATE = "report_template.j2"
+
 
 # proj/HISTORY_DIR/
 HISTORY_FILE = "testsuite_history.txt"
@@ -50,6 +51,7 @@ TESTS_TAGS = "tests"+TAGS_SUFFIX
 # proj/solution/REPORT_DIR/
 CODE_REVIEW_FILE = "code_review"
 USER_NOTES_FILE = "user_notes"
+TEST_NOTES_FILE = "test_notes"
 TOTAL_REPORT_FILE = "total_report"
 
 # docker mapping
@@ -76,7 +78,7 @@ RELOAD_FILE_WITHOUT_SAVING = """WARNING: Reload file will discard changes.\n\
 
 EMPTY_PATH_FILTER_MESSAGE = "add path filter... ex: test1/unit "
 EMPTY_CONTENT_FILTER_MESSAGE = "add content filter... ex: def test1 "
-EMPTY_TAG_FILTER_MESSAGE = "add tag filter... ex: plagiat(^[0-5]$) "
+EMPTY_TAG_FILTER_MESSAGE = "add tag filter... ex: score.1 > 5"
 
 
 def log(message):

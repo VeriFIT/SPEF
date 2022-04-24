@@ -8,10 +8,9 @@ from modules.buffer import UserInput
 from modules.directory import Directory
 
 from utils.highlighter import parse_code
-from utils.loading import save_buffer_to_file, save_report_to_file, load_solution_tags, load_tests_tags, load_testcase_tags
+from utils.loading import save_buffer_to_file, save_report_to_file, load_testcase_tags
 from utils.coloring import *
 from utils.logger import *
-from utils.parsing import parse_solution_info_visualization, parse_solution_info_predicate
 from utils.match import match_regex, is_root_project_dir, is_testcase_result_dir
 from utils.history import history_test_modified, is_test_history_in_tmp
 from utils.file import actualize_test_history_in_tmp

@@ -12,16 +12,6 @@ from modules.project import Project
 
 
 
-def add_tag_to_solution(solution_dir, tag_name, tag_args):
-    tags = load_solution_tags(solution_dir)
-    if tags is not None:
-        tags.set_tag(tag_name, tag_args)
-        save_tags_to_file(tags)
-    else:
-        log("add tag to file | cannot load tags file")
-
-
-
 """ from subjA/proj1/xlogin00/dir/file_name to xlogin00/dir/file_name """
 def get_path_relative_to_solution_dir(dest_path):
     # check if its project subdir
@@ -59,30 +49,20 @@ def get_path_relative_to_solution_dir(dest_path):
 
 
 
-def generate_code_review(env, dir_path=None):
-    # check if cwd is project solution dir
-    dir_path = dir_path if os.path.isdir(dir_path) else os.path.dirname(dir_path)
-    if dir_path is None:
-        dir_path = env.cwd.path
-    
-    if env.cwd.proj:
-        if not is_in_solution_dir(env.cwd.proj.solution_id, dir_path):
-            log("generate code review | given path is not solution dir")
-            return    
-    else:
+def generate_code_review(env, solution):
+    if not env.cwd.proj or not solution:
         log("generate code review | current directory is not project (sub)directory")
         return
 
     # create dir for reports if not exists
-    solution_dir = get_root_solution_dir(env.cwd.proj.solution_id, dir_path)
-    report_dir = os.path.join(solution_dir, REPORT_DIR)
+    report_dir = os.path.join(solution.path, REPORT_DIR)
     if not os.path.exists(report_dir):
         os.makedirs(report_dir)
 
     # process all notes from code review
     code_review = []
     try:
-        dest_path = os.path.join(solution_dir, "**", "*"+REPORT_SUFFIX)
+        dest_path = os.path.join(solution.path, "**", "*"+REPORT_SUFFIX)
         for report_file in glob.glob(dest_path, recursive=True):
             if os.path.isfile(report_file):
                 report = load_report_from_file(report_file, add_suffix=False)
@@ -90,7 +70,7 @@ def generate_code_review(env, dir_path=None):
                     if report.orig_file_name is not None:
                         file_name = report.orig_file_name[:-1]
                     else:
-                        file_name = os.path.relpath(report.path, os.path.dirname(solution_dir))
+                        file_name = os.path.relpath(report.path, solution.name)
                         file_name = str(file_name).removesuffix(REPORT_SUFFIX)
                     if note.row is not None and note.col is not None:
                         code_review.append(f"{file_name}:{note.row}:{note.col}")
@@ -102,10 +82,45 @@ def generate_code_review(env, dir_path=None):
         return
 
     # save code review to file
-    code_review_file = os.path.join(report_dir, "code_review")
+    code_review_file = os.path.join(report_dir, CODE_REVIEW_FILE)
     with open(code_review_file, 'w+') as f:
         f.write('\n'.join(code_review))
 
 
-def generate_report(env, solution_dir):
+
+def add_user_note(env):
     pass
+
+def add_test_note(env):
+    pass
+
+
+# def add_note_to_auto_tests(env, dir_path=None):
+#     # check if cwd is project solution dir
+#     dir_path = dir_path if os.path.isdir(dir_path) else os.path.dirname(dir_path)
+#     if dir_path is None:
+#         dir_path = env.cwd.path
+    
+#     if env.cwd.proj:
+#         if not is_in_solution_dir(env.cwd.proj.solution_id, dir_path):
+#             log("add note to auto tests | given path is not solution dir")
+#             return    
+#     else:
+#         log("add note to auto tests | current directory is not project (sub)directory")
+#         return
+
+#     # create dir for reports if not exists
+#     solution_dir = get_root_solution_dir(env.cwd.proj.solution_id, dir_path)
+#     report_dir = os.path.join(solution_dir, REPORT_DIR)
+#     if not os.path.exists(report_dir):
+#         os.makedirs(report_dir)
+
+#     test_notes_file = os.path.join(report_dir, TEST_NOTES_FILE)
+#     if not os.path.exists(test_notes_file):
+#         with open(test_notes_file, 'w+') as f:
+#             f.write('')
+
+
+#     # save code review to file
+#     with open(test_notes_file, 'a+') as f:
+#         f.write('\n'.join(code_review))

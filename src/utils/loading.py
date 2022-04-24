@@ -62,14 +62,8 @@ def save_proj_to_conf_file(path, data):
 
 
 """ ************* TYPICAL NOTES ************* """
-def get_typical_notes_file_name():
-    utils_dir = os.path.dirname(__file__)
-    src_dir = os.path.abspath(os.path.join(utils_dir, os.pardir))
-    notes_file = os.path.join(src_dir, TYPICAL_NOTES_FILE)
-    return notes_file
-
 def load_typical_notes_from_file():
-    notes_file = get_typical_notes_file_name()
+    notes_file = os.path.join(DATA_DIR, TYPICAL_NOTES_FILE)
     notes = []
     try:
         with open(notes_file, 'r') as f:
@@ -93,7 +87,7 @@ def save_typical_notes_to_file(notes):
         for note in notes:
             lines.append(note.text)
 
-        notes_file = get_typical_notes_file_name()
+        notes_file = os.path.join(DATA_DIR, TYPICAL_NOTES_FILE)
         with open(notes_file, 'w+') as f:
             lines = '\n'.join(lines)
             f.write(lines)

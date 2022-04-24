@@ -349,21 +349,6 @@ def get_root_testcase_dir(path):
         return None
 
 
-# return list of solution dirs in current project directory (cwd)
-def get_solution_dirs(env):
-    result = set()
-    if env.cwd.proj is not None:
-        solution_id = env.cwd.proj.solution_id
-        items = os.listdir(env.cwd.proj.path) # list all dirs and files in proj dir
-        for item in items:
-            path = os.path.join(env.cwd.proj.path, item)
-            if is_root_solution_dir(solution_id, path):
-                result.add(path)
-    else:
-        log("get_solution_dirs | cwd is not project root directory")
-    return list(result)
-
-
 # return list of solution files in current project directory (cwd)
 def get_solution_files(env):
     result = set()
@@ -408,6 +393,6 @@ def get_tests_names(env, with_check=True):
             if is_testcase_dir(path, with_check=with_check):
                 result_names.add(item)
     else:
-        log("get_solution_dirs | cwd is not project root directory")
+        log("get tests names | cwd is not project root directory")
     return list(result_names)
 
