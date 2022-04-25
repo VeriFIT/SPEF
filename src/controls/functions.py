@@ -119,8 +119,8 @@ SHOW_USER_NOTES = 732
 SHOW_TOTAL_REPORT = 733
 SHOW_TEST_RESULTS = 734
 
-SHOW_STATS = 735
-SHOW_HISTOGRAM = 736
+SHOW_SCORING_STATS = 735
+SHOW_TST_RES_STATS = 736
 
 # in tests dir
 ADD_TEST = 740
@@ -376,8 +376,8 @@ def get_menu_functions(in_proj_dir=False, in_solution_dir=False, is_test_dir=Fal
     }
 
     stats = {
-        'show statistics': SHOW_STATS,
-        'show histogram': SHOW_HISTOGRAM
+        'show solution scoring stats': SHOW_SCORING_STATS,
+        'show test results stats': SHOW_TST_RES_STATS
     }
 
     result_dir = {}

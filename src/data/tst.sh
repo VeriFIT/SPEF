@@ -1,62 +1,14 @@
 #!/usr/bin/env bash
 
-# tst - Testovaci prostredi (snad blbuvzdorny) pro ukoly do IOS postupne
-# iterujici od roku 2007.  Bugreport -> smrcka@fit.vutbr.cz
-#
-# Changelog 2014-04-08:
-#   * funkce auto_report
-#   * implicitni scoring: $success=1, $failure=0
-#   * bugfix: pri spusteni v neSANDBOXu spatna cesta ke testovacim vstupum
+# autor: Ales Smrcka
+# uprava: Natalia Dizova
+
 
 ###############################################################################
-#  1. CO A JAK PRIPRAVIT U NOVEHO PROJEKTU
+#  JAK PROBIHA TEST
 ###############################################################################
-# 1. Priprav si, co a jak hodnotit a jak to roztridit do jednotlivych testu
-# 2. Vytvor soubor s hodnocenim (scoring). Tento soubor obsahuje definici
-#    promenne:
-#    -  PROJECT  (obsahuje jmeno promenne, ve ktere je jmeno adresare s korenem
-#           vsech testovacich zalezitosti -- pro tst sanitize, nepovinne)
-#    -  PROJDIR  (adresar s korenem projektu obsahujici testovaci skripty a
-#           odevzdana reseni)
-#    -  MAXPOINT (maximalni pocet bodu za projekt),
-#    -  MAXSCORE (maximalni score, pokud da soucet testu vic nez MAXPOINT -- na
-#           body to bude prepocteno pomerem MAXPOINT/MAXSCORE, nepovinne) a
-#    -  definici promennych s jejich float hodnotami. Tyto promenne bys mel
-#       pouzivat ve skriptu `dotest.sh' pri vypisovani, jak moc hodnotis
-#       vysledek daneho testu (viz nize). Pri spusteni `dotest.sh' (viz nize)
-#       budou tyto promenne nastaveny v prostredi, takze je dotest.sh muze
-#       vyuzit.
-# 3. Pro kazdy test vytvor adresar, ve kterem vytvor soubor:
-#       dotest.sh - provede spusteni testu, bude proveden formou: . dotest.sh
-#                Vysledky testu vypisuj na standardni vystup.
-# 4. Vytvor strategii testovani v souboru `testsuite', tj.:
-#    a) kontrola, jestli tam studentsky skript je
-#    b) prevedeni na unixove ukonceni radku, +x mod, ...
-#    c) spusteni jednotlivych testu tak, jak to chces poporade, pomoci:
-#       tst run jmeno_testu [args...]
-#    d) nebo spusteni vybranych testu paralelne pomoci:
-#       tst run_concurrently <<EOF
-#       test1 [args...]
-#       test2 [args...]
-#       ...
-#       testn
-#       EOF
-# 5. V path/to/testing/bin/ vytvor:
-#     a) tst: /path/to/tst "$@" | grep -v Terminated
-#     b) t: /path/to/testsuite "$@"
-#     c) n: skript, ktery ti bude vkladat do souboru $UHODNOCENI caste poznamky
-#     d) s: tst sum
-#    Pak:
-#     $ cd xlogin00
-#     $ t
-#     ...provadim testy
-#     $ ...rucni inspekce kodu a vysledku
-#     $ n pricti_odecti_X_bodu_se_zduvodnenim_Y
-#     $ s
+# Musi byt nastavene promenne: TESTSDIR, login, TAG_FILE, FUT
 
-###############################################################################
-#  2. JAK PROBIHA TEST
-###############################################################################
 # Pri spusteni testu z adresare se studentskym resenim ("tst run jmeno_testu",
 # kde jmeno_testu je nazev adresare minimalne se souborem `dotest.sh'):
 # 1. Ze souboru s hodnocenim se nactou hodnotici promenne a vsechny se
@@ -97,30 +49,10 @@
 #    TESTSDIR - adresar s testy
 #    TD       - adresar s definici aktualne provadeneho testu
 #    T        - vytvoreny adresar urceny pro vysledky testu
-# Rekapitulace adresarove struktury testu:
-#    tests/
-#    |- lock/            - adresar pro zamky testu
-#    |- test_name1/      - adresar s jednim testem
-#    |  |- setup.sh      - skript pro pripravu testu (napr. nastaveni
-#                          test-specific hodnoty promenne FUT nebo TIMEOUT)
-#    |  |- dotest.sh     - skript pro provedeni testu
-#    |  |- errcode.ref   - (doporucene) referencni navratovy kod pro `diffall'
-#    |  |- stdin.ref     - (doporucene) presmerovany vstup pro testovany skript
-#    |  |- stdout.ref    - (doporucene) referencni vystup pro `diffni/diffall'
-#    |  `- stderr.ref    - (doporucene) referencni chyb. vystup pro `diffall'
-#    |- scoring          - soubor s hodnoticimi parametry a MAXPOINT
-#    |- scoring_pedantic - (nepovinne) pedanticka varianta hodnoceni
-#    |- testsuite        - (doporucene) strategie, vola "tst run test_name1",
-#    |                     pripadne "tst run test_name args ..." (args ...
-#    |                     budou predany skriptu test_name/dotest.sh)
-#    |                     a "tst sum"
-#    |- wrappers/        - adresar s wrappery (pro testovani skriptu, viz
-#    |                     funkce wrappers_on a wrappers_off pouzivane v
-#    |                     dotest.sh)
-#    `- tst              - tento skript
+
 
 ###############################################################################
-#  3. NASTAVENI KONSTANT (pokud mozno nemenit)
+#  NASTAVENI KONSTANT (pokud mozno nemenit)
 ###############################################################################
 # Sem nastav root adresar testu (tam, kde je soubor tst a podadresare
 # jednotlivych testu). Nech prazdny pro automatickou detekci (podle $0).
@@ -167,7 +99,6 @@ SPUSTENI=spusteni
 #realpath_wrapper() { python -c "import os; print(os.path.realpath('$12'))"; }
 
 export test
-# export login
 
 umask 0002
 
@@ -232,6 +163,7 @@ diffdir [-b] ref test       = diff soubory v ref/ se soubory v test/ (soubory na
 diffdirboth [-b] ref test   = diff soubory v ref/ se soubory v test/
 auto_report "popis testu"   = vypise report o vysledku
 asserterror "popis testu"   = vypise report o vysledku (ocekava nenulovy 'errcode' a 'stderr')
+add_test_tag "tag" [params] = prida tag do souboru $TAGS (tagy vysledku testu)
 EOF
 }
 
@@ -260,7 +192,6 @@ fi
 # typicke pouzitie:
 #   add_test_tag "scoring_test1" "body" "popis testu" "doplnujuce info"
 #   add_test_tag "test1_fail" "pricina zlyhania"
-# SKOC_SEM
 add_test_tag(){
     res="${1}:"
     shift
@@ -611,7 +542,6 @@ $report"
 #  $test = jmeno testu
 #  $stdoutfilter (volitelne) = filter na stdout (napr. "sort -u")
 #  $@ = zprava
-# SKOC_SEM
 auto_report()
 {
     [[ -f $TD/stdout.ref ]] && cp $TD/stdout.ref $T/

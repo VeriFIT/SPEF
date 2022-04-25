@@ -295,13 +295,6 @@ def run_in_bash(stdscr, env):
 
 """ ======================================================================= """
 
-# TODO: cache all tags and reports to local files TAG_DIR and REPORT_DIR
-def preparation():
-    """ clear log file """
-    with open(LOG_FILE, 'w+'): pass
-
-
-
 
 if __name__ == "__main__":
     # clear log file

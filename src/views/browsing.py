@@ -613,10 +613,20 @@ def run_menu_function(stdscr, env, fce, key):
             env.cwd = get_directory_content(env)
             win.reset(0,0)
     # ======================= SHOW STATS =======================
-    elif fce == SHOW_STATS:
+    elif fce == SHOW_SCORING_STATS:
         generate_scoring_stats(env)
-    elif fce == SHOW_HISTOGRAM:
-        pass
+        stats_file = os.path.join(env.cwd.proj.path, REPORT_DIR, SCORING_STATS_FILE)
+        if os.path.exists(stats_file):
+            env.set_file_to_open(stats_file)
+            env.set_view_mode()
+            return env, True
+    elif fce == SHOW_TST_RES_STATS:
+        generate_test_results_hist(env)
+        stats_file = os.path.join(env.cwd.proj.path, REPORT_DIR, TESTS_STATS_FILE)
+        if os.path.exists(stats_file):
+            env.set_file_to_open(stats_file)
+            env.set_view_mode()
+            return env, True
     # =================== ADD TEST ===================
     elif fce == ADD_TEST:
         env.update_win_for_current_mode(win)

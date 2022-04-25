@@ -3,8 +3,6 @@ import os
 import glob
 import traceback
 
-import matplotlib.pyplot as plt
-
 from utils.logger import *
 from utils.loading import *
 from utils.match import *
@@ -147,13 +145,11 @@ def generate_scoring_stats(env):
                 scoring_severity[i] = 0
 
         scoring_severity = dict(sorted(scoring_severity.items()))
-        # log(scoring_severity)
-
         average = round(sum_score/scored_solutions, 2) if scored_solutions>0 else 0
         nonzero_average = round(sum_score/nonzero_scored_solutions, 2) if nonzero_scored_solutions>0 else 0
-        highest_score = max(list(scoring_severity.values()))
-        median = max(scoring_severity, key=scoring_severity.get)
+        modus = max(scoring_severity, key=scoring_severity.get)
         shift = len(str(env.cwd.proj.max_score))+1
+        highest_score = max(list(scoring_severity.values()))
 
         severity=""
         for key, value in scoring_severity.items():
@@ -168,14 +164,19 @@ Maximum score: {env.cwd.proj.max_score}
 ------------------------------------
 Average: {average}
 Average (without zero): {nonzero_average}
-Median: {median}
+Modus: {modus}
 ------------------------------------
-Severity:
+Scoring severity:
 {severity}
 """
+        # save stats to file
+        report_dir = os.path.join(env.cwd.proj.path, REPORT_DIR)
+        if not os.path.exists(report_dir) or not os.path.isdir(report_dir):
+            os.makedirs(report_dir)
 
-        log(statistics)
-
+        stats_file = os.path.join(report_dir, SCORING_STATS_FILE)
+        with open(stats_file, 'w+') as f:
+            f.write(statistics)
     except Exception as err:
         log(f"generate stats | {err} | {traceback.format_exc()}")
 
@@ -185,5 +186,123 @@ Severity:
 histogram vysledkov testov (ktore testy boli ako hodnotene)
 """
 def generate_test_results_hist(env):
-    pass
+    if env.cwd.proj is None:
+        return
+
+    max_score = env.cwd.proj.max_score
+    score_nums = set()
+    tests_stats = {} # {'test_name': {'0': x%, '1': x,...}, 'test_name': {...},...}
+    total_score_stats = {} # {'score'}
+    try:
+        ################### TESTS STATS ###################
+        tests = get_tests_names(env)
+        for test_name in tests:
+            test_scoring_severity = {}
+            tested_solutions = 0
+            # find scoring of this test for each solution
+            for key, solution in env.cwd.proj.solutions.items():
+                # get test result scoring for solution
+                test_score = None
+                if solution.test_tags is not None and len(solution.test_tags)>0:
+                    score_args = solution.test_tags.get_args_for_tag(f"scoring_{test_name}")
+                    if score_args is not None and len(score_args)>0:
+                        test_score = int(score_args[0])
+                        tested_solutions += 1
+                        score_nums.add(test_score)
+                        if test_score in test_scoring_severity:
+                            test_scoring_severity[test_score] += 1
+                        else:
+                            test_scoring_severity[test_score] = 1
+
+            # parse scoring severity to percentage
+            test_scoring_percentage={}
+            for score, severity in test_scoring_severity.items():
+                test_scoring_percentage[score]=int((severity/tested_solutions)*100)
+
+            tests_stats[test_name]=test_scoring_percentage
+
+
+        ################### TOTAL SCORE STATS ###################
+        # get total score for solution
+        scored_solutions = 0
+        total_score_severity = {}
+        for key, solution in env.cwd.proj.solutions.items():
+            score_sum = None
+            if solution.tags is not None and len(solution.tags)>0:
+                score_args = solution.tags.get_args_for_tag("score")
+                if score_args is not None and len(score_args)>0:
+                    score_sum = int(score_args[0])
+                else:
+                    scoring = calculate_score(env, solution)
+                    if scoring is not None:
+                        score_sum, bonus_score = scoring
+            if score_sum is not None:
+                scored_solutions += 1
+                if score_sum in total_score_severity:
+                    total_score_severity[score_sum] += 1
+                else:
+                    total_score_severity[score_sum] = 1
+
+        # parse total score to percentage
+        for score, severity in total_score_severity.items():
+            total_score_stats[score]=int((severity/scored_solutions)*100)
+
+
+        ################### PRINT STATISTICS ###################
+        max_len_tst_name = int(max([len(str(tst_name)) for tst_name in tests_stats]))
+
+        # all scoring numbers
+        score_nums = sorted(score_nums)
+        score_n = ""
+        for num in score_nums:
+            max_len = int(max(len(str(num)+'b'), len('100%')))
+            space = ' '*(max_len-(len(str(num)+'b')))
+            score_n += f" {num}b{space} |"
+
+        # scoring percentage for each test
+        tests_res = ""
+        tests_stats = dict(sorted(tests_stats.items()))
+        for test_name, scoring in tests_stats.items():
+            percentage = ""
+            for num in score_nums:
+                score = scoring[num] if num in scoring else 0
+                max_len = int(max(len(str(num)+'b'), len('100%')))
+                space = ' '*(max_len-(len(str(score)+'%')))              
+                percentage += f" {score}%{space} |"
+            space = ' '*(max_len_tst_name-len(test_name))
+            tests_res += f"{test_name}{space} |{percentage}\n"
+
+        # total scoring percentage
+        sum_n = ""
+        sum_res = ""
+        total_score_stats = dict(sorted(total_score_stats.items()))
+        for number, percentage in total_score_stats.items():
+            max_len = int(max(len(str(number)+'b'), len('100%')))
+            space_n = ' '*(max_len-(len(str(number)+'b')))
+            space_res = ' '*(max_len-(len(str(percentage)+'%')))
+            sum_n += f"{number}b{space_n} |"
+            sum_res += f"{percentage}%{space_res} |"
+
+
+        space = ' '*(max_len_tst_name-len("Test name"))
+        line = '-'*(max(len(f"Test name{space} |{score_n}"), len(f"Total score |{score_n}")))
+        statistics=f"""\
+Test name{space} |{score_n}
+{line}
+{tests_res}{line}
+            |{sum_n}
+Total score |{sum_res}
+"""
+        # save stats to file
+        report_dir = os.path.join(env.cwd.proj.path, REPORT_DIR)
+        if not os.path.exists(report_dir) or not os.path.isdir(report_dir):
+            os.makedirs(report_dir)
+
+        stats_file = os.path.join(report_dir, TESTS_STATS_FILE)
+        with open(stats_file, 'w+') as f:
+            f.write(statistics)
+    except Exception as err:
+        log(f"generate stats | {err} | {traceback.format_exc()}")
+
+
 
