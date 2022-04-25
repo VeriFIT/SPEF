@@ -614,7 +614,7 @@ def run_menu_function(stdscr, env, fce, key):
             win.reset(0,0)
     # ======================= SHOW STATS =======================
     elif fce == SHOW_STATS:
-        pass
+        generate_scoring_stats(env)
     elif fce == SHOW_HISTOGRAM:
         pass
     # =================== ADD TEST ===================

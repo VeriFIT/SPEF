@@ -3,6 +3,7 @@ import os
 import glob
 import traceback
 
+import matplotlib.pyplot as plt
 
 from utils.logger import *
 from utils.loading import *
@@ -103,3 +104,86 @@ def add_test_note_to_solutions(env, solutions, note_text):
                 # add test note
                 solution.add_test_note(note_text, version)
                 save_test_notes_for_solution(solution)
+
+""" 
+graf bodoveho hodnotenia (rozlozenie - kolko studentov spada do danej bodovej kategorie)
+"""
+def generate_scoring_stats(env):
+    if env.cwd.proj is None:
+        return
+
+    sum_score = 0
+    scored_solutions = 0
+    nonzero_scored_solutions = 0
+
+    try:
+        scoring_severity = {}
+        for key, solution in env.cwd.proj.solutions.items():
+            # get score for solution
+            total_score = None
+            if solution.tags is not None and len(solution.tags)>0:
+                score_args = solution.tags.get_args_for_tag("score")
+                if score_args is not None and len(score_args)>0:
+                    total_score = int(score_args[0])
+                else:
+                    scoring = calculate_score(env, solution)
+                    if scoring is not None:
+                        total_score, bonus_score = scoring
+
+            # for each score, calculate its severity
+            if total_score is not None:
+                score = int(total_score)
+                sum_score += score
+                scored_solutions += 1
+                if score > 0:
+                    nonzero_scored_solutions += 1
+                if score in scoring_severity:
+                    scoring_severity[score] += 1
+                else:
+                    scoring_severity[score] = 1
+
+        for i in range(0,env.cwd.proj.max_score+1):
+            if not i in scoring_severity:
+                scoring_severity[i] = 0
+
+        scoring_severity = dict(sorted(scoring_severity.items()))
+        # log(scoring_severity)
+
+        average = round(sum_score/scored_solutions, 2) if scored_solutions>0 else 0
+        nonzero_average = round(sum_score/nonzero_scored_solutions, 2) if nonzero_scored_solutions>0 else 0
+        highest_score = max(list(scoring_severity.values()))
+        median = max(scoring_severity, key=scoring_severity.get)
+        shift = len(str(env.cwd.proj.max_score))+1
+
+        severity=""
+        for key, value in scoring_severity.items():
+            # norm_val = int((value/highest_score)*10) if highest_score>0 else 0
+            norm_val = int(value)
+            space = ' '*(shift-len(str(key)))
+            stars = '*'*norm_val
+            severity+=f"{key}:{space}{stars} {value}\n"
+
+        statistics=f"""\
+Maximum score: {env.cwd.proj.max_score}
+------------------------------------
+Average: {average}
+Average (without zero): {nonzero_average}
+Median: {median}
+------------------------------------
+Severity:
+{severity}
+"""
+
+        log(statistics)
+
+    except Exception as err:
+        log(f"generate stats | {err} | {traceback.format_exc()}")
+
+
+
+"""
+histogram vysledkov testov (ktore testy boli ako hodnotene)
+"""
+def generate_test_results_hist(env):
+    pass
+
