@@ -3,6 +3,7 @@ import curses
 import curses.ascii
 import os
 import shutil
+import shlex
 import traceback
 import tarfile
 import zipfile
@@ -527,6 +528,30 @@ def run_menu_function(stdscr, env, fce, key):
                 # add user note
                 solution.add_user_note(note_text)
                 save_user_notes_for_solution(solution)
+    # ======================= ADD TAG =======================
+    elif fce == ADD_TAG_TO_ALL:
+        # get list of solutions to which will be added note
+        solution_list = []
+        for dir_name in env.cwd.dirs:
+            solution_name = os.path.basename(dir_name)
+            if solution_name in env.cwd.proj.solutions:
+                solution_list.append(env.cwd.proj.solutions[solution_name])
+        if solution_list:
+            # get tag from user input
+            title = "Enter new tag in format: tag_name param1 param2 ..."
+            env, text = get_user_input(stdscr, env, title=title)
+            if env.is_exit_mode():
+                return env, True
+            screen, win = env.get_screen_for_current_mode()
+            curses.curs_set(0)
+            if text is not None:
+                tag_parts = shlex.split(''.join(text))
+                if len(tag_parts)>0:
+                    tag_name, *args = tag_parts
+                    # add tag to listed solutions
+                    for solution in solution_list:
+                        solution.tags.set_tag(tag_name, args)
+                        save_tags_to_file(solution.tags)
     # ======================= SHOW INFO =======================
     elif fce == SHOW_OR_HIDE_PROJ_INFO:
         env.show_solution_info = not env.show_solution_info

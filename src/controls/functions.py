@@ -111,7 +111,7 @@ ADD_TEST_NOTE = 725
 ADD_USER_NOTE = 726
 ADD_TEST_NOTE_TO_ALL = 727
 ADD_USER_NOTE_TO_ALL = 728
-
+ADD_TAG_TO_ALL = 729
 
 SHOW_CODE_REVIEW = 730
 SHOW_TEST_NOTES = 731
@@ -341,7 +341,8 @@ def get_menu_functions(in_proj_dir=False, in_solution_dir=False, is_test_dir=Fal
         'all students - run tests (testsuite)': TEST_ALL_STUDENTS,
         'all students - clean from test results': TEST_CLEAN_ALL,
         'all students - add test note related to automatic tests': ADD_TEST_NOTE_TO_ALL,
-        'all students - add custom user note related to solution': ADD_USER_NOTE_TO_ALL
+        'all students - add custom user note related to solution': ADD_USER_NOTE_TO_ALL,
+        'all students - add tag to all solutions': ADD_TAG_TO_ALL
     }
 
 
