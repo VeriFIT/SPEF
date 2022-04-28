@@ -93,12 +93,13 @@ MOVE_FILE = 708
 # in proj root dir
 EDIT_PROJ_CONF = 710
 SHOW_OR_HIDE_PROJ_INFO = 711
-CREATE_DOCKER_IMAGE = 712
-EXPAND_AND_RENAME_SOLUTION = 713
-EXPAND_ALL_SOLUTIONS = 714
-RENAME_ALL_SOLUTIONS = 715
-TEST_ALL_STUDENTS = 716
-TEST_CLEAN_ALL = 717
+CREATE_DOCKERFILE = 712
+CREATE_DOCKER_IMAGE = 713
+EXPAND_AND_RENAME_SOLUTION = 714
+EXPAND_ALL_SOLUTIONS = 715
+RENAME_ALL_SOLUTIONS = 716
+TEST_ALL_STUDENTS = 717
+TEST_CLEAN_ALL = 718
 
 
 # in solution dir
@@ -335,6 +336,7 @@ def get_menu_functions(in_proj_dir=False, in_solution_dir=False, is_test_dir=Fal
     proj = {
         'project - edit configuration': EDIT_PROJ_CONF,
         'project - show/hide project info': SHOW_OR_HIDE_PROJ_INFO,
+        'testing - create or edit Dockerfile': CREATE_DOCKERFILE,
         'testing - create Docker image for testing': CREATE_DOCKER_IMAGE,
         'all students - expand archives for all students': EXPAND_ALL_SOLUTIONS,
         'all students - name solution file correctly for all students': RENAME_ALL_SOLUTIONS,

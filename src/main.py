@@ -257,7 +257,7 @@ def run_in_bash(stdscr, env):
 
     # send command to bash
     if env.bash_action.cmd:
-        bash_proc.write_command(env.bash_action.cmd)
+        bash_proc.write_command(env.bash_action.cmd+"\n")
 
 
     # rewrite screen with bash buffer (show in bash)

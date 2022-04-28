@@ -19,10 +19,6 @@ from utils.parsing import parse_sum_equation
 from modules.bash import Bash_action
 
 
-# TODO: automaticky report (z tagov)
-# TODO: n --> add note (vratane typical notes)
-
-
 
 CONTAINER_DIR = '/opt'
 CONTAINER_TESTS_DIR = '/opt/tests'
@@ -41,54 +37,6 @@ TST_FCE_FILE = 'tst' # proj/tests/src/tst
 SRC_BASH_FILE = os.path.join(DATA_DIR, 'tst.sh')
 SRC_RUN_TESTSUITE_FILE = os.path.join(DATA_DIR, 'run_testsuite.sh')
 SRC_RUN_TESTS_FILE = os.path.join(DATA_DIR, 'run_tests.sh')
-
-DOCKER_FILE = os.path.join(DATA_DIR, 'Dockerfile')
-
-
-
-def create_docker_image(proj_path):
-
-    try:
-        # 1. create Dockerfile if not exists
-        proj_docker_file = os.path.join(proj_path, 'Dockerfile')
-        if not os.path.exists(proj_docker_file):
-
-            # a) ask for user id and for distribution
-            user_id, group_id = None, None
-            distribution = None
-
-            # TODO spytat sa na userid, groupid a distribuciu
-            distribution = "centos:7"
-
-            if user_id is None:
-                user_id = os.getuid()
-            if group_id is None:
-                group_id = os.getgid()
-            if distribution is None:
-                log("create docker image | you have to specify distribution for Dockerfile")
-                return False
-
-            # b) create dockerfile in project directory
-            with open(proj_docker_file, 'w+') as f:
-                f.write(f"FROM {distribution}\n")
-                # f.write(f"RUN adduser -D -u {user_id} -G {group_id} test || useradd -u {user_id} -g {group_id} test\n")
-
-                f.write(f"RUN yum install -y file strace\n") # TODO <----- odstranit
-                f.write(f"RUN adduser -D -u {user_id} test || useradd -u {user_id} test\n") # TODO <----- odstranit
-
-        # 2. create image
-        docker_cmd = f"docker build -f {proj_docker_file} -t test ."
-
-        output = subprocess.run(docker_cmd.split(' '), capture_output=True)
-        log("docker build stdout | "+str(output.stdout.decode('utf-8')))
-        log("docker build stderr | "+str(output.stderr.decode('utf-8')))
-
-        return True
-
-    except Exception as err:
-        log("create docker image | "+str(err))
-        return False
-
 
 
 def run_testsuite(env, solution, show_results=True):

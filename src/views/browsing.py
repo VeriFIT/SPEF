@@ -345,6 +345,7 @@ def run_menu_function(stdscr, env, fce, key):
                 log("rename all solutions | there is no defined sut_required in proj config")
             else:
                 ok, renamed, fail = rename_solutions(env.cwd.proj)
+
                 log("students with correctly named solution file: "+str(ok))
                 log("students with wrong named solution file: "+str(renamed))
                 log("students with no supported extention of solution file: "+str(fail))
@@ -758,8 +759,89 @@ def run_menu_function(stdscr, env, fce, key):
                     # TODO: warning - this may take some time... (depending on how many solution dirs are in this project) do you want to continue?
 
     # =================== CREATE DOCKER IMAGE ===================
+    elif fce == CREATE_DOCKERFILE:
+        if env.cwd.proj is not None:
+            proj_docker_file = os.path.join(env.cwd.proj.path, 'Dockerfile')
+            try:
+                if not os.path.exists(proj_docker_file):
+                    distribution, user_id, group_id = None, None, None
+
+                    # 1. ask for distribution
+                    title = "Enter distribution for docker image:"
+                    env, distr_data = get_user_input(stdscr, env, title=title)
+                    if env.is_exit_mode():
+                        return env, True
+                    if distr_data is not None:
+                        distribution = ''.join(distr_data).strip()
+
+                    # 2. ask for user id
+                    title = "Enter user id (leave empty for autofill using getuid):"
+                    env, uid_data = get_user_input(stdscr, env, title=title)
+                    if env.is_exit_mode():
+                        return env, True
+                    if uid_data is not None:
+                        uid_data = ''.join(uid_data).strip()
+                        if uid_data != "":
+                            user_id = uid_data
+
+                    # 3. ask for group id
+                    title = "Enter group id (leave empty for autofill using getgid):"
+                    env, gid_data = get_user_input(stdscr, env, title=title)
+                    if env.is_exit_mode():
+                        return env, True
+                    if gid_data is not None:
+                        gid_data = ''.join(gid_data).strip()
+                        if gid_data != "":
+                            group_id = gid_data
+
+                    if not user_id:
+                        user_id = os.getuid()
+                    if not group_id:
+                        group_id = os.getgid()
+                    if not distribution:
+                        log("cannot create docker image without specifying the distribution")
+                        return env, True
+
+                    # 4. create Dockerfile
+                    with open(proj_docker_file, 'w+') as f:
+                        f.write(f"FROM {distribution}\n")
+                        f.write(f"RUN adduser -D -u {user_id} -G {group_id} test || useradd -u {user_id} -g {group_id} test\n")
+                    env.cwd = get_directory_content(env)
+
+                screen, win = env.get_screen_for_current_mode()
+                curses.curs_set(0)
+
+                # open Docker file for edit
+                if os.path.exists(proj_docker_file):
+                    env.set_file_to_open(proj_docker_file)
+                    env.switch_to_next_mode()
+                    return env, True
+            except Exception as err:
+                log(f"create docker file | {err}")
     elif fce == CREATE_DOCKER_IMAGE:
-        pass
+        if env.cwd.proj is not None:
+            try:
+                proj_docker_file = os.path.join(env.cwd.proj.path, 'Dockerfile')
+                if not os.path.exists(proj_docker_file):
+                    log("Dockerfile not found in project root directory (use menu option to create one first)")
+                else:
+                    # create image
+                    docker_cmd = f"docker build -f {proj_docker_file} -t test ."
+                    env.bash_active = True
+                    env.bash_action = Bash_action()
+                    env.bash_action.dont_jump_to_cwd()
+                    env.bash_action.add_command(docker_cmd)
+                    return env, True
+                    # output = subprocess.run(docker_cmd.split(' '), capture_output=True)
+                    # stdout_str = str(output.stdout.decode('utf-8'))
+                    # stderr_str = str(output.stderr.decode('utf-8'))
+                    # log(f"create docker image | docker build stdout | {stdout_str}")
+                    # log(f"create docker image | docker build stderr | {stderr_str}")
+            except Exception as err:
+                log(f"create docker image from Dockerfile | {err}")
+            # else:
+                # if not stderr_str:
+                    # log(f"docker image 'test' created")
 
     env.update_win_for_current_mode(win)
     return env, False

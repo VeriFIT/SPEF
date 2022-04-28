@@ -27,7 +27,6 @@ TESTS_DIR = "tests"
 HISTORY_DIR = "history"
 
 # proj/REPORT_DIR/
-MAIL_TEXT = "mail.txt"
 REPORT_TEMPLATE = "report_template.j2"
 SCORING_STATS_FILE = "scoring_stats"
 TESTS_STATS_FILE = "tests_stats"

@@ -178,12 +178,9 @@ def create_project(env):
 
 ############ REPORT ############
 def create_report_dir(report_dir):
-    mail_file = os.path.join(report_dir, MAIL_TEXT)
     report_template = os.path.join(report_dir, REPORT_TEMPLATE)
     if not (os.path.exists(report_dir) and os.path.isdir(report_dir)):
         os.mkdir(report_dir)
-    if not os.path.exists(mail_file):
-        with open(mail_file, 'w+'): pass
     if not os.path.exists(report_template):
         copy_default_report_template(report_template)
 
