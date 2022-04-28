@@ -15,6 +15,8 @@ import time
 import threading
 import select
 import signal
+import termios
+import tty
 
 
 from views.browsing import get_directory_content, directory_browsing
@@ -36,6 +38,7 @@ from utils.logger import *
 
 
 global bash_proc
+INT_BASH = 5
 
 
 """
@@ -86,15 +89,18 @@ def prepare_environment(stdscr):
 
 
 """ ======================= START MAIN ========================= """
-def main(stdscr):
+def main(stdscr, env=None):
     global bash_proc
     log("START")
 
     """ prepare env from configuration files """
-    env = prepare_environment(stdscr)
     if env is None:
-        bash_proc.stop()
-        exit(-1)
+        env = prepare_environment(stdscr)
+        if env is None:
+            bash_proc.stop()
+            exit(-1)
+
+    env.bash_fd = bash_proc.fd
 
     """ show all main screens """
     stdscr.clear()
@@ -105,10 +111,7 @@ def main(stdscr):
     """ main loop """
     while True:
         if env.bash_active:
-            if env.bash_action is not None:
-                env = run_in_bash(stdscr, env)
-            else:
-                env.bash_active = False
+            return INT_BASH, env
         else:
             print_hint(env)
             if env.is_exit_mode():
@@ -128,6 +131,7 @@ def main(stdscr):
     save_typical_notes_to_file(env.typical_notes)
 
     log("END")
+    return 0, None
 """ ======================= END MAIN ========================= """
 
 
@@ -161,10 +165,6 @@ class Bash_process():
     def pause_reader(self, mode):
         with self.buff_lock:
             self.pause = mode
-
-    def print_buff(self):
-        with self.buff_lock:
-            print(self.buff, end="", flush=True)
 
     def write_command(self, cmd):
         os.write(self.fd, cmd.encode("utf-8"))
@@ -208,7 +208,7 @@ def executing_bash(stdscr, env):
 
     # set bash as active (rewrite screen with bash buffer)
     bash_proc.set_active(True)
-    curses.curs_set(1) # set cursor as visible
+    # curses.curs_set(1) # set cursor as visible
 
     # set exit key from env (else CTRL+O by default (like in mc))
     exit_key = env.bash_exit_key if env.bash_exit_key is not None else '0f'
@@ -219,6 +219,7 @@ def executing_bash(stdscr, env):
         hex_c = c.encode("utf-8").hex()
 
         # exit bash
+        # if hex_c == 'a':
         if hex_c == exit_key:
             # set bash as inactive
             bash_proc.set_active(False)
@@ -226,11 +227,11 @@ def executing_bash(stdscr, env):
 
             # rewrite screen with ncurses
             os.system("clear")
-            stdscr.clear()
-            stdscr.erase()
-            stdscr.refresh()
-            refresh_main_screens(env)
-            rewrite_all_wins(env)
+            # stdscr.clear()
+            # stdscr.erase()
+            # stdscr.refresh()
+            # refresh_main_screens(env)
+            # rewrite_all_wins(env)
             return env
         else:
             # os.write(bash_proc.fd, c.encode("utf-8"))
@@ -261,8 +262,8 @@ def run_in_bash(stdscr, env):
 
     # rewrite screen with bash buffer (show in bash)
     bash_proc.set_active(True)
-    curses.curs_set(1) # set cursor as visible
-
+    old_settings = termios.tcgetattr(sys.stdin)
+    tty.setcbreak(sys.stdin.fileno())
 
     while True:
         # wait for any char
@@ -279,17 +280,11 @@ def run_in_bash(stdscr, env):
             # go back and rewrtie screen with ncurses
             env.bash_active = False
             bash_proc.set_active(False)
-
             os.system("clear")
-            stdscr.clear()
-            stdscr.erase()
-            stdscr.refresh()
-            refresh_main_screens(env)
-            rewrite_all_wins(env)
+            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
             return env
         else:
             bash_proc.write_command(c)
-
 
 
 
@@ -304,6 +299,11 @@ if __name__ == "__main__":
 
     # prepare bash subprocess
     pid, fd = os.forkpty()
+
+    if pid == -1:
+        log("forkpty failed")
+        sys.exit(0)
+
     cwd = os.getcwd()
     bash_proc = Bash_process(pid, fd)
 
@@ -326,7 +326,16 @@ if __name__ == "__main__":
         # run ncurses main function
         stdscr = curses.initscr()
         stdscr.keypad(True) # enable read special keys
-        curses.wrapper(main)
+        env = None
+        while True:
+            ret, env = curses.wrapper(main, env)
+            if ret == INT_BASH and env is not None:
+                if env.bash_action is not None:
+                    env = run_in_bash(stdscr, env)
+                else:
+                    env.bash_active = False
+            else:
+                break
         curses.endwin()
 
         th.join()

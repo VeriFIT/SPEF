@@ -2,6 +2,10 @@ import curses
 import curses.ascii
 import traceback
 
+import array
+import fcntl
+import termios
+
 
 from modules.environment import Environment
 from modules.directory import Directory
@@ -81,6 +85,11 @@ def resize_all(stdscr, env, force_resize=False):
                 stdscr.clear()
                 curses.resizeterm(y,x)
                 stdscr.refresh()
+
+                # resize also bash terminal
+                if env.bash_fd:
+                    size_buff = array.array('H', [x,y,0,0])
+                    fcntl.ioctl(env.bash_fd, termios.TIOCSWINSZ, size_buff, 1)
 
             """ create screens with new size """
             screens, windows = create_screens_and_windows(y, x, env.line_numbers)
