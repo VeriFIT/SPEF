@@ -35,7 +35,6 @@ from testing.report import get_supported_data_for_report
 
 
 def file_viewing(stdscr, env):
-    curses.curs_set(1) # set cursor as visible
     screen, win = env.get_screen_for_current_mode()
 
     if not env.file_to_open or is_archive_file(env.file_to_open): # there is no file to open
@@ -104,6 +103,7 @@ def file_viewing(stdscr, env):
     env.buffer = buffer
     env.report = report
     rewrite_all_wins(env)
+    curses.curs_set(1)
     rewrite = True
     rewrite_hint = True
 
@@ -112,7 +112,6 @@ def file_viewing(stdscr, env):
         screen, win = env.get_screen_for_current_mode()
         if rewrite:
             rewrite_file(env, hint=rewrite_hint)
-        # rewrite_file(env)
 
         try:
             """ move cursor to correct position """
@@ -172,6 +171,7 @@ def run_function(stdscr, env, fce, key):
         env = resize_all(stdscr, env)
         screen, win = env.get_screen_for_current_mode()
         rewrite_all_wins(env)
+        curses.curs_set(1)
     # ======================= ARROWS =======================
     elif fce == CURSOR_UP:
         old_shifts = win.row_shift, win.col_shift
@@ -196,17 +196,19 @@ def run_function(stdscr, env, fce, key):
     # ======================= SHOW HELP =======================
     elif fce == SHOW_HELP:
         show_help(stdscr, env)
-        curses.curs_set(1)
         rewrite_all_wins(env)
+        curses.curs_set(1)
     # ======================= SAVE FILE =======================
     elif fce == SAVE_FILE:
         save_buffer(stdscr, env)
         rewrite_all_wins(env)
+        curses.curs_set(1)
     # ======================= SHOW/HIDE TAGS =======================
     elif fce == SHOW_OR_HIDE_TAGS:
         env.show_tags = not env.show_tags
         screen, win = env.get_screen_for_current_mode()
         rewrite_all_wins(env)
+        curses.curs_set(1)
     # ======================= LINE NUMBERS =======================
     elif fce == SHOW_OR_HIDE_LINE_NUMBERS:
         if env.line_numbers:
@@ -240,6 +242,7 @@ def run_function(stdscr, env, fce, key):
                 env.report.add_note(note_row, note_col, str_text)
                 save_report_to_file(env.report)
         rewrite_all_wins(env)
+        curses.curs_set(1)
     # ==================== SHOW SUPPORTED DATA ====================
     elif fce == SHOW_SUPPORTED_DATA:
         if env.editing_test_file:
@@ -253,6 +256,7 @@ def run_function(stdscr, env, fce, key):
                 env, key = show_help(stdscr, env, custom_help=custom_help, exit_key=[])
                 curses.curs_set(1)
                 rewrite_all_wins(env)
+                curses.curs_set(1)
             except Exception as err:
                 log("show test functions | "+str(err))
         elif env.editing_report_template:
@@ -262,8 +266,8 @@ def run_function(stdscr, env, fce, key):
                 options = get_supported_data_for_report()
                 custom_help = (None, "Supported data:", options)
                 env, key = show_help(stdscr, env, custom_help=custom_help, exit_key=[])
-                curses.curs_set(1)
                 rewrite_all_wins(env)
+                curses.curs_set(1)
             except Exception as err:
                 log("show report template data | "+str(err))
     # ======================= NOTES JUMP =======================
@@ -299,7 +303,7 @@ def run_function(stdscr, env, fce, key):
         # ======================= EDIT FILE =======================
         if env.file_edit_mode:
             # ======================= DELETE =======================
-            if fce == DELETE:
+            if fce == DELETE_CHAR:
                 old_len = len(env.buffer)
                 # delete char and update report
                 env.report = env.buffer.delete(win, env.report)
@@ -313,7 +317,7 @@ def run_function(stdscr, env, fce, key):
                 if env.line_numbers:
                     env.enable_line_numbers(env.buffer)
             # ======================= BACKSPACE =======================
-            elif fce == BACKSPACE:
+            elif fce == BACKSPACE_CHAR:
                 old_len = len(env.buffer)
                 # delete char and update report
                 if (win.cursor.row, win.cursor.col) > (win.begin_y, win.begin_x):
@@ -344,16 +348,6 @@ def run_function(stdscr, env, fce, key):
                 old_len = len(env.buffer)
                 # print char
                 if key is not None:
-                    # log("-----------------------------")
-                    # log(f"row_shift: {win.row_shift}")
-                    # log(f"col_shift: {win.col_shift}")
-                    # log(f"cursor row: {win.cursor.row}")
-                    # log(f"cursor col: {win.cursor.col}")
-                    # r, c = win.get_cursor_position()
-                    # log(f"row: {r}")
-                    # log(f"col: {c}")
-                    # log(f"begin x: {win.begin_x}")
-
                     env.buffer.insert(win, chr(key))
                     win.right(env.buffer, filter_on=env.content_filter_on())
                     win.calculate_tab_shift(env.buffer, env.tab_size)
@@ -394,6 +388,7 @@ def run_function(stdscr, env, fce, key):
                     env.report.add_note(note_row, note_col, ''.join(text))
                     save_report_to_file(env.report)
                 rewrite_all_wins(env)
+                curses.curs_set(1)
             elif fce == ADD_TYPICAL_NOTE:
                 options = env.get_typical_notes_dict()
                 char_key = chr(key)
@@ -403,6 +398,7 @@ def run_function(stdscr, env, fce, key):
                     env.report.add_note(note_row, note_col, str_text)
                     save_report_to_file(env.report)
                 rewrite_all_wins(env)
+                curses.curs_set(1)
 
     env.update_win_for_current_mode(win)
     return env, rewrite, rewrite_hint, False

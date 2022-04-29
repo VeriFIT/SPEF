@@ -116,9 +116,9 @@ def run_function(stdscr, filter_data, old_filter_text, env, fce, key):
     elif fce == CURSOR_RIGHT:
         user_input.right(win)
     # ======================= EDIT FILTER =======================
-    elif fce == DELETE:
+    elif fce == DELETE_CHAR:
         user_input.delete_symbol(win)
-    elif fce == BACKSPACE:
+    elif fce == BACKSPACE_CHAR:
         if user_input.pointer > 0:
             user_input.left(win)
             user_input.delete_symbol(win)

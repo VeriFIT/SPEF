@@ -9,6 +9,8 @@ from modules.directory import Directory
 from modules.window import Window
 from modules.buffer import UserInput
 
+from views.help import show_help
+
 from utils.printing import *
 from utils.screens import *
 from utils.logger import *
@@ -90,9 +92,9 @@ def run_function(stdscr, menu_data, selected_options, env, fce, key):
         win.set_border(0)
         rewrite_all_wins(env)
     # ======================= SHOW HELP =======================
-    # elif fce == SHOW_HELP:
-    #     show_help(stdscr, env)
-    #     curses.curs_set(1)
+    elif fce == SHOW_HELP:
+        show_help(stdscr, env)
+        curses.curs_set(1)
     # ========================= ARROWS =========================
     elif fce == CURSOR_UP:
         win.up(menu_options, use_restrictions=False)

@@ -80,6 +80,7 @@ class Environment:
         self.control.set_filter_functions(contr)
         self.control.set_menu_functions(contr)
         self.control.set_user_input_functions(contr)
+        self.control.set_hints(self)
 
 
     def set_file_to_open(self, file_to_open, is_test_file=False):

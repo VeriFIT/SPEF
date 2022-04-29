@@ -1,7 +1,8 @@
 # functions identification
 
-BASH_SWITCH = 1000
-
+CHANGE_SYSTEM_CONTROL = 1000
+CHANGE_SYSTEM_CONFIG = 1001
+BASH_SWITCH = 999
 
 """ file (edit/manage) control """
 EXIT_PROGRAM = 1
@@ -30,8 +31,8 @@ GO_TO_NEXT_NOTE = 21
 RELOAD_FILE_FROM_LAST_SAVE = 22
 RELOAD_ORIGINAL_BUFF = 23
 
-DELETE = 30
-BACKSPACE = 31
+DELETE_CHAR = 30
+BACKSPACE_CHAR = 31
 PRINT_NEW_LINE = 32
 PRINT_CHAR = 33
 SAVE_FILE = 34
@@ -141,9 +142,9 @@ EDIT_TEST = 751
 """ mapping of functions from controls.yaml to intern representation of function id """
 def map_file_function(str_fce):
     functions = {
+        'show_help': SHOW_HELP,
         'exit_program': EXIT_PROGRAM,
         'bash_switch': BASH_SWITCH,
-        'show_help': SHOW_HELP,
         'save_file': SAVE_FILE,
         'show_or_hide_tags': SHOW_OR_HIDE_TAGS,
         'show_or_hide_line_numbers': SHOW_OR_HIDE_LINE_NUMBERS,
@@ -160,8 +161,8 @@ def map_file_function(str_fce):
         'cursor_down': CURSOR_DOWN,
         'cursor_left': CURSOR_LEFT,
         'cursor_right': CURSOR_RIGHT,
-        'delete': DELETE,
-        'backspace': BACKSPACE,
+        'delete': DELETE_CHAR,
+        'backspace': BACKSPACE_CHAR,
         'print_new_line': PRINT_NEW_LINE,
         'print_char': PRINT_CHAR,
         'filter': FILTER,
@@ -178,9 +179,9 @@ def map_file_function(str_fce):
 
 def map_brows_function(str_fce):
     functions = {
+        'show_help': SHOW_HELP,
         'exit_program': EXIT_PROGRAM,
         'bash_switch': BASH_SWITCH,
-        'show_help': SHOW_HELP,
         'open_menu': OPEN_MENU,
         'quick_view_on_off': QUICK_VIEW_ON_OFF,
         'go_to_tags': GO_TO_TAGS,
@@ -202,9 +203,9 @@ def map_brows_function(str_fce):
 
 def map_tags_function(str_fce):
     functions = {
+        'show_help': SHOW_HELP,
         'exit_program': EXIT_PROGRAM,
         'bash_switch': BASH_SWITCH,
-        'show_help': SHOW_HELP,
         'edit_tag': EDIT_TAG,
         'add_tag': ADD_TAG,
         'delete_tag': DELETE_TAG,
@@ -222,12 +223,13 @@ def map_tags_function(str_fce):
 
 def map_notes_function(str_fce):
     functions = {
+        'show_help': SHOW_HELP,
         'exit_program': EXIT_PROGRAM,
         'bash_switch': BASH_SWITCH,
-        'show_help': SHOW_HELP,
         'edit_note': EDIT_NOTE,
         'add_custom_note': ADD_CUSTOM_NOTE,
         'add_typical_note': ADD_TYPICAL_NOTE,
+        'show_typical_notes': SHOW_TYPICAL_NOTES,
         'go_to_note': GO_TO_NOTE,
         'save_as_typical_note': SAVE_AS_TYPICAL_NOTE,
         'delete_note': DELETE_NOTE,
@@ -244,9 +246,9 @@ def map_notes_function(str_fce):
 
 def map_filter_function(str_fce):
     functions = {
+        'show_help': SHOW_HELP,
         'exit_program': EXIT_PROGRAM,
         'bash_switch': BASH_SWITCH,
-        'show_help': SHOW_HELP,
         'aggregate': AGGREGATE_FILTER,
         'remove_filter': REMOVE_FILTER,
         'exit_filter': EXIT_FILTER,
@@ -255,8 +257,8 @@ def map_filter_function(str_fce):
         'cursor_left': CURSOR_LEFT,
         'cursor_right': CURSOR_RIGHT,
         'resize_win': RESIZE_WIN,
-        'delete': DELETE,
-        'backspace': BACKSPACE,
+        'delete': DELETE_CHAR,
+        'backspace': BACKSPACE_CHAR,
         'print_char': PRINT_CHAR,
         'save_filter': SAVE_FILTER}
     if str_fce in functions:
@@ -267,6 +269,7 @@ def map_filter_function(str_fce):
 
 def map_menu_function(str_fce):
     functions = {
+        'show_help': SHOW_HELP,
         'exit_program': EXIT_PROGRAM,
         'bash_switch': BASH_SWITCH,
         'exit_menu': EXIT_MENU,
@@ -286,6 +289,7 @@ def map_menu_function(str_fce):
 
 def map_user_input_function(str_fce):
     functions = {
+        'show_help': SHOW_HELP,
         'exit_program': EXIT_PROGRAM,
         'bash_switch': BASH_SWITCH,
         'exit_user_input': EXIT_USER_INPUT,
@@ -294,8 +298,8 @@ def map_user_input_function(str_fce):
         'cursor_down': CURSOR_DOWN,
         'cursor_left': CURSOR_LEFT,
         'cursor_right': CURSOR_RIGHT,
-        'delete': DELETE,
-        'backspace': BACKSPACE,
+        'delete': DELETE_CHAR,
+        'backspace': BACKSPACE_CHAR,
         'save_input': SAVE_INPUT,
         'print_char': PRINT_CHAR,
         'move_left': MOVE_LEFT,
@@ -313,8 +317,8 @@ def map_user_input_function(str_fce):
 # funkcie tykajuce sa nastavenia samotneho frameworku
 def global_menu_functions():
     return {
-        'open file with user control': ADD_PROJECT, # TODO otvori subor controls.yaml a znovu nacita controls
-        'open file with framework configuration': ADD_PROJECT # TODO otvori subor config.py a znovu nacita cely config
+        'open file with user control': CHANGE_SYSTEM_CONTROL, # TODO otvori subor controls.yaml a znovu nacita controls
+        'open file with framework configuration': CHANGE_SYSTEM_CONFIG # TODO otvori subor config.py a znovu nacita cely config
     }
 
 
@@ -323,8 +327,6 @@ def get_menu_functions(in_proj_dir=False, in_solution_dir=False, is_test_dir=Fal
 
     basic = {
         'create new project here': ADD_PROJECT,
-        # 'expand archive here': EXPAND_HERE,
-        # 'expand archive to ...': EXPAND_TO,
         'create new directory': CREATE_DIR,
         'create new file': CREATE_FILE
         # 'remove file': REMOVE_FILE,

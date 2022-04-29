@@ -19,16 +19,15 @@
 
 # file functions
 general:
+  bash_switch: 'CTRL+O'
   change_focus: 'TAB'
   exit_program: 'F10'
   show_help: 'F1'
+arrows:
   cursor_up: 'UP'
   cursor_down: 'DOWN'
   cursor_left: 'LEFT'
   cursor_right: 'RIGHT'
-  backspace: 'BACKSPACE'
-  delete: 'DELETE'
-  bash_switch: 'CTRL+O'
 file_functions:
   save_file: 'F2'
   show_or_hide_tags: 'F3'
@@ -40,13 +39,15 @@ file_functions:
   show_typical_notes: 'F9'
   go_to_prev_note: 'CTRL+UP'
   go_to_next_note: 'CTRL+DOWN'
-  reload_original_buff: 'CTRL+L'
-edit_file_functions:
+  reload_original_buff: 'CTRL+R'
   set_manage_file_mode: 'ESC'
-  print_new_line: 'ENTER'
-  print_char: 'ASCII'
-manage_file_functions:
   set_edit_file_mode: 'a'
+edit_file_functions:
+  delete: 'DELETE'
+  backspace: 'BACKSPACE'
+  print_char: 'ASCII'
+  print_new_line: 'ENTER'
+manage_file_functions:
   filter: 'BACKSLASH'
   add_custom_note: '0'
   add_typical_note: ['1','2','3','4','5','6','7','8','9','A..Z']
@@ -59,10 +60,6 @@ brows_functions:
   show_or_hide_cached_files: 'F6'
   delete_file: 'F8'
   filter: 'BACKSLASH'
-  cursor_up: 'UP'
-  cursor_down: 'DOWN'
-  cursor_left: 'LEFT'
-  cursor_right: 'RIGHT'
 # tags functions
 tags_functions:
   edit_tag: 'F2'
@@ -70,37 +67,39 @@ tags_functions:
   open_tag_file: 'F4'
   delete_tag: 'F8'
   filter: 'BACKSLASH'
-  cursor_up: 'UP'
-  cursor_down: 'DOWN'
 # notes functions
 notes_functions:
   edit_note: 'F2'
-  add_custom_note: '0' # 'F3'
-  add_typical_note: 'F9' # 'F4'
   go_to_note: 'F5'
   save_as_typical_note: 'F6'
   delete_note: 'F8'
+  show_typical_notes: 'F9'
   exit_notes: 'ESC'
+  add_custom_note: '0'
+  add_typical_note: ['1','2','3','4','5','6','7','8','9','A..Z']
 # filter functions
 filter_functions:
   aggregate: 'F4'
   remove_filter: 'F8'
   exit_filter: 'ESC'
+  delete: 'DELETE'
+  backspace: 'BACKSPACE'
   print_char: 'ASCII'
   save_filter: 'ENTER'
 # menu functions
 menu_functions:
+  select_option: 'F3'
+  select_by_idx: ['1','2','3','4','5','6','7','8','9','A..Z']
   exit_menu: 'ESC'
   save_option: 'ENTER'
-  select_by_idx: ['1','2','3','4','5','6','7','8','9','A..Z']
-  select_option: 'F3'
   move_left: 'CTRL+LEFT'
   move_right: 'CTRL+RIGHT'
 # user input functions
 user_input_functions:
   exit_user_input: 'ESC'
-  save_input: 'ENTER'
+  delete: 'DELETE'
+  backspace: 'BACKSPACE'
   print_char: 'ASCII'
+  save_input: 'ENTER'
   move_left: 'CTRL+LEFT'
   move_right: 'CTRL+RIGHT'
-

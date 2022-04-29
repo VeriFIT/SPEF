@@ -4,6 +4,8 @@ import re
 import shutil
 import traceback
 
+from controls.functions import *
+
 from modules.buffer import UserInput
 from modules.directory import Directory
 
@@ -14,6 +16,7 @@ from utils.logger import *
 from utils.match import match_regex, is_root_project_dir, is_testcase_result_dir
 from utils.history import history_test_modified, is_test_history_in_tmp
 from utils.file import actualize_test_history_in_tmp
+
 
 def refresh_main_screens(env):
     env.screens.left.erase()
@@ -30,6 +33,7 @@ def refresh_main_screens(env):
 
 
 def rewrite_all_wins(env):
+    curses.curs_set(0)
     # refresh_main_screens(env)
     """ print hint for user """
     print_hint(env)
@@ -48,17 +52,18 @@ def rewrite_brows(env, hint=True):
     show_directory_content(env)
 
 def rewrite_file(env, hint=True):
+    curses.curs_set(0)
     if hint:
         print_hint(env)
     show_file_content(env)
     if env.show_tags:
         show_tags(env)
+    curses.curs_set(1)
 
 def rewrite_notes(env, hint=True):
     if hint:
         print_hint(env)
     show_notes(env)
-
 
 
 def print_hint(env):
@@ -67,56 +72,14 @@ def print_hint(env):
     screen.border(0)
     size = screen.getmaxyx()
 
-    line_nums_switch = "hide" if env.line_numbers else "show"
-    cached_files = "hide" if env.show_cached_files else "show"
-    # note_switch = "hide" if env.note_highlight else "show"
-    tags_switch = "hide" if env.show_tags else "show"
-    view_switch = "off" if env.quick_view else "on"
-
-    typical_note = "save as"
-    if env.is_notes_mode() and env.report is not None:
-        if len(env.report.data) > 0 and len(env.report.data) >= env.windows.notes.cursor.row:
-            if env.report.data[env.windows.notes.cursor.row].is_typical(env):
-                typical_note = "unsave from"
-
-    N_HELP = {"F1":"help", "F2":"edit", "F3":"create new", "F4":"insert from menu", 
-                "F5":"go to", "F6":f"{typical_note} typical", "F8":"delete", "F10":"exit"}
-
-    B_HELP = {"F1":"help", "F2":"menu", "F3":f"view {view_switch}","F4":"edit", "F5": "go to tags",
-                "F6":f"{cached_files} cached files", "F8":"delete", "F9":"filter", "F10":"exit"}
-
-    E_HELP = {"F1":"help", "F2":"save", "F3":f"{tags_switch} tags", "F5":f"{line_nums_switch} lines",
-                "F6":"note highlight", "F7":"note mgmt", "F8":"reload", "F9":"show typical notes", "ESC":"manage file", "F10":"exit"}
-
-    T_HELP = {"F1":"help", "F3":"new tag", "F4":"edit tags", "F8":"delete", "F9":"filter", "F10":"exit"}
-
-    if env.is_filter_mode():
-        if env.is_brows_mode(): filter_type = "path"
-        elif env.is_view_mode(): filter_type = "content"
-        elif env.is_tag_mode(): filter_type = "tag"
-        else: filter_type = None
-
-        F_HELP = {"F1":"help", "ESC":"exit filter mode", "F4":"aggregate",
-                "F8":"remove all filters", "F9":f"edit {filter_type} filter"}
-        help_dict = {} if not filter_type else F_HELP
-    elif env.is_brows_mode():
-        help_dict = B_HELP
-    elif env.is_view_mode():
-        help_dict = E_HELP
-    elif env.is_tag_mode():
-        help_dict = T_HELP
-    elif env.is_notes_mode():
-        help_dict = N_HELP
-    else:
-        help_dict = {}
-
-
-    string = ""
-    for key in help_dict:
-        hint = " | " + str(key) + ":" + str(help_dict[key])
-        if len(string) + len(hint) <= size[1]:
-            string += hint
-    screen.addstr(1, 1, string[2:])
+    help_dict = env.control.get_hint_for_mode(env)
+    if help_dict is not None:
+        string = ""
+        for key in help_dict:
+            hint = " | " + str(key) + ":" + str(help_dict[key])
+            if len(string) + len(hint) <= size[1]:
+                string += hint
+        screen.addstr(1, 1, string[2:])
     screen.refresh()
 
 

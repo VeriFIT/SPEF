@@ -9,6 +9,7 @@ from modules.directory import Directory
 from modules.window import Window
 from modules.buffer import UserInput
 
+from views.help import show_help
 
 from utils.printing import *
 from utils.screens import *
@@ -83,9 +84,9 @@ def run_function(stdscr, user_input, env, fce, key):
         win.set_position(old_position, screen)
         rewrite_all_wins(env)
     # ======================= SHOW HELP =======================
-    # elif fce == SHOW_HELP:
-    #     show_help(stdscr, env)
-    #     curses.curs_set(1)
+    elif fce == SHOW_HELP:
+        show_help(stdscr, env)
+        curses.curs_set(1)
     # ========================= ARROWS =========================
     elif fce == CURSOR_UP: # TODO: Fix
         user_input.pointer = 0
@@ -99,9 +100,9 @@ def run_function(stdscr, user_input, env, fce, key):
     elif fce == CURSOR_RIGHT:
         user_input.right(win)
     # ======================== INPUT ========================
-    elif fce == DELETE:
+    elif fce == DELETE_CHAR:
         user_input.delete_symbol(win)
-    elif fce == BACKSPACE:
+    elif fce == BACKSPACE_CHAR:
         if user_input.pointer > 0:
             user_input.left(win)
             user_input.delete_symbol(win)
