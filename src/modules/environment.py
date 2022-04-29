@@ -88,9 +88,9 @@ class Environment:
             self.file_to_open = file_to_open
             self.editing_test_file = is_test_file
             if self.show_tags:
-                self.windows.view.reset()
+                self.windows.view_up.reset()
             else:
-                self.windows.edit.reset()
+                self.windows.view.reset()
             self.windows.tag.reset(0,0)
             self.windows.notes.reset(0,0)
             self.report = None
@@ -100,9 +100,9 @@ class Environment:
             return self.screens.left, self.windows.brows
         if self.is_view_mode():
             if self.show_tags:
-                return self.screens.right_up, self.windows.view
+                return self.screens.right_up, self.windows.view_up
             else:
-                return self.screens.right, self.windows.edit
+                return self.screens.right, self.windows.view
         if self.is_tag_mode():
             return self.screens.right_down, self.windows.tag
         if self.is_notes_mode():
@@ -114,9 +114,9 @@ class Environment:
             self.windows.brows = win
         if self.is_view_mode():
             if self.show_tags:
-                self.windows.view = win
+                self.windows.view_up = win
             else:
-                self.windows.edit = win
+                self.windows.view = win
         if self.is_tag_mode():
             self.windows.tag = win
         if self.is_notes_mode():
@@ -196,9 +196,9 @@ class Environment:
 
     def update_viewing_data(self, win, buffer, report=None):
         if self.show_tags:
-            self.windows.view = win
+            self.windows.view_up = win
         else:
-            self.windows.edit = win
+            self.windows.view = win
         self.buffer = buffer
         if report:
             self.report = report
@@ -239,7 +239,7 @@ class Environment:
 
     def update_line_numbers_shift(self):
         shift = 1 if self.line_numbers is None else len(self.line_numbers)+1
-        self.windows.edit.set_line_num_shift(shift)
+        self.windows.view_up.set_line_num_shift(shift)
         self.windows.view.set_line_num_shift(shift)
 
 

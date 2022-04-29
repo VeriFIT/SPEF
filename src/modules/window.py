@@ -22,6 +22,8 @@ class Screens:
         self.center = center
         self.right_up = right_up
         self.right_down = right_down
+        # self.left_up = left_up
+        # self.left_down = left_down
 
 
 """
@@ -30,11 +32,11 @@ viac okien moze byt zobrazovanych na tom istom screen (napr brows aj notes sa zo
 stredne okno center sa vyuziva jednorazovo na viac ucelov, preto ho treba pri kazdom pouziti resetovat (cursor a shift) 
 """
 class Windows:
-    def __init__(self, brows, edit, center, view, tag, notes):
+    def __init__(self, brows, view, center, view_up, tag, notes):
         self.brows = brows # brows directory
-        self.edit = edit # edit file
         self.center = center # menu/help/user input/... !!! pozor aby sa toto okno pri kazdom pouziti resetovalo !!!
         self.view = view # view file
+        self.view_up = view_up # view_up file
         self.tag = tag # tag management
         self.notes = notes
 
@@ -44,9 +46,9 @@ class Windows:
 
     def set_edges(self, left, right, top, bottom):
         self.brows.set_edges(left, right, top, bottom)
-        self.edit.set_edges(left, right, top, bottom)
         self.center.set_edges(left, right, top, bottom)
         self.view.set_edges(left, right, top, bottom)
+        self.view_up.set_edges(left, right, top, bottom)
         self.tag.set_edges(left, right, top, bottom)
         self.notes.set_edges(left, right, top, bottom)
 
@@ -236,12 +238,6 @@ class Window:
         shift = width - self.right_edge - self.left_edge
         pages = (self.cursor.col - self.begin_x) // (width - self.right_edge)
         self.col_shift = pages * shift
-        # log("---------------------------")
-        # log(f"cursor col: {self.cursor.col}")
-        # log(f"begin_x: {self.begin_x}")
-        # log(f"width: {width}")
-        # log(f"shift: {shift}")
-        # log(f"pages: {pages}")
 
 
     def vertical_shift(self):

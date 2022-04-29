@@ -33,7 +33,7 @@ def notes_management(stdscr, env):
         env.set_view_mode()
         return env
 
-    file_win = env.windows.view if env.show_tags else env.windows.edit
+    file_win = env.windows.view_up if env.show_tags else env.windows.view
     note_row, note_col = file_win.cursor.row, file_win.cursor.col - file_win.begin_x
 
     # define specific highlight for current line which is related to the new note

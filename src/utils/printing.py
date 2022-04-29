@@ -399,7 +399,7 @@ def show_directory_content(env):
 
 def rewrite_one_line_in_file(env, line_num):
     screen = env.screens.right_up if env.show_tags else env.screens.right
-    win = env.windows.view if env.show_tags else env.windows.edit
+    win = env.windows.view_up if env.show_tags else env.windows.view
     max_cols = win.end_x - win.begin_x
     max_rows = win.end_y - win.begin_y - 1
 
@@ -478,7 +478,7 @@ def rewrite_one_line_in_file(env, line_num):
 """ view file content """
 def show_file_content(env):
     screen = env.screens.right_up if env.show_tags else env.screens.right
-    win = env.windows.view if env.show_tags else env.windows.edit
+    win = env.windows.view_up if env.show_tags else env.windows.view
 
 
     max_cols = win.end_x - win.begin_x
