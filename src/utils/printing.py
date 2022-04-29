@@ -42,6 +42,8 @@ def rewrite_all_wins(env):
         show_notes(env)
     else:
         show_directory_content(env)
+        if env.show_logs:
+            show_logs(env)
     show_file_content(env)
     if env.show_tags:
         show_tags(env)
@@ -317,15 +319,11 @@ def show_filter(screen, user_input, max_rows, max_cols, env):
 
 """ browsing directory """
 def show_directory_content(env):
-    screen, win = env.screens.left, env.windows.brows
+    screen = env.screens.left_up if env.show_logs else env.screens.left
+    win = env.windows.brows_up if env.show_logs else env.windows.brows
 
     max_cols = win.end_x - win.begin_x
     max_rows = win.end_y - win.begin_y - 1
-
-    # cwd = Directory(env.filter.root, files=env.filter.files) if env.filter_not_empty() else env.cwd
-    cwd = env.cwd
-    dirs, files = cwd.get_shifted_dirs_and_files(win.row_shift)
-
 
     """ print borders """
     screen.erase()
@@ -336,6 +334,9 @@ def show_directory_content(env):
     else:
         screen.border(0)
 
+    # cwd = Directory(env.filter.root, files=env.filter.files) if env.filter_not_empty() else env.cwd
+    cwd = env.cwd
+    dirs, files = cwd.get_shifted_dirs_and_files(win.row_shift)
 
 
     try:
@@ -919,4 +920,80 @@ def show_menu(screen, win, menu_options, env, keys=None, selected=None, color=No
     finally:
         screen.refresh()
 
+
+def show_logs(env):
+    screen, win = env.screens.left_down, env.windows.logs
+
+    # if env.user_logs_printed == env.user_logs and env.user_logs_printed_shift == win.row_shift:
+        # return
+
+    """ print borders """
+    screen.erase()
+    screen.border(0)
+    if env.is_logs_mode():
+        screen.attron(curses.color_pair(COL_BORDER))
+        screen.border(0)
+        screen.attroff(curses.color_pair(COL_BORDER))
+    else:
+        screen.border(0)
+
+    max_cols = win.end_x - win.begin_x - 1
+    max_rows = win.end_y - win.begin_y
+
+    show_path(screen, "LOGS", max_cols)
+
+    if not env.user_logs:
+        screen.refresh()
+        return
+
+    try:
+        line = 1
+        for idx, item in enumerate(env.user_logs):
+            if idx < win.row_shift:
+                continue
+            if line >= max_rows:
+                break
+
+            date, m_type, message = item
+            date, m_type, message = str(date), str(m_type).lower(), str(message).strip()
+
+            # set color according to message type
+            if m_type in ['e','error']:
+                m_col = curses.color_pair(HL_RED)
+            elif m_type in ['i','info']:
+                m_col = curses.A_NORMAL
+            elif m_type in ['w','warning']:
+                m_col = curses.color_pair(HL_BLUE)
+            else:
+                m_col = curses.A_NORMAL
+
+            data_to_print = [str(date), " | ", str(m_type), " | ", str(message)]
+            data_colors = [curses.color_pair(HL_YELLOW), curses.A_NORMAL, m_col, curses.A_NORMAL, curses.A_NORMAL]
+            x=1
+            line_added = False
+            for i, data in enumerate(data_to_print):
+                col = data_colors[i]
+                # print action
+                free_space = max_cols-x
+                if len(data) > free_space:
+                    sublines = parse_line_into_sublines(data, free_space)
+                    for part in sublines:
+                        if line >= max_rows:
+                            break
+                        screen.addstr(line, x, str(part), col)
+                        line +=1
+                        line_added = True
+                else:
+                    screen.addstr(line, x, str(data), col)
+                x += len(data)
+            if not line_added:
+                line += 1
+
+        env.user_logs_printed = env.user_logs.copy()
+        env.user_logs_printed_shift = win.row_shift
+
+    except Exception as err:
+        log("show logs | "+str(err)+" | "+str(traceback.format_exc()))
+    finally:
+        screen.refresh()
 

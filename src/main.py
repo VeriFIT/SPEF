@@ -24,6 +24,7 @@ from views.filtering import filter_management
 from views.viewing import file_viewing
 from views.tags import tag_management
 from views.notes import notes_management
+from views.user_logs import logs_viewing
 
 from views.help import show_help
 
@@ -82,6 +83,9 @@ def prepare_environment(stdscr):
     """ load saved typical notes from file """
     env.typical_notes = load_typical_notes_from_file()
 
+    """ load user logs from file """
+    env.user_logs = load_user_logs_from_file()
+
     """ get current files and dirs """
     env.cwd = get_directory_content(env)
     return env
@@ -126,6 +130,8 @@ def main(stdscr, env=None):
                 env = tag_management(stdscr, env)
             elif env.is_notes_mode():
                 env = notes_management(stdscr, env)
+            elif env.is_logs_mode():
+                env = logs_viewing(stdscr, env)
 
     """ save typical notes to file """
     save_typical_notes_to_file(env.typical_notes)
@@ -296,6 +302,10 @@ if __name__ == "__main__":
     with open(LOG_FILE, 'w+'): pass
     if not os.path.exists(TMP_DIR):
         os.mkdir(TMP_DIR)
+    user_logs_file = os.path.join(DATA_DIR, USER_LOGS_FILE)
+    if not os.path.exists(user_logs_file):
+        with open(user_logs_file, 'w+'): pass
+
 
     # prepare bash subprocess
     pid, fd = os.forkpty()

@@ -15,12 +15,14 @@ class Control():
         self.filter_management = {}
         self.menu_brows = {}
         self.user_input = {}
+        self.user_logs = {}
 
         self.filter_hint = {}
         self.brows_hint = {}
         self.view_hint = {}
         self.tag_hint = {}
         self.note_hint = {}
+        self.logs_hint = {}
 
 
     def set_hints(self, env):
@@ -37,10 +39,12 @@ class Control():
 
         # brows
         view_switch = "off" if env.quick_view else "on"
+        logs_switch = "hide" if env.show_logs else "show"
         brows_main_functions = {
             SHOW_HELP: "help",
             OPEN_MENU: "menu",
             QUICK_VIEW_ON_OFF: f"quick view {view_switch}",
+            SHOW_OR_HIDE_LOGS: f"{logs_switch} logs",
             OPEN_FILE: "edit",
             GO_TO_TAGS: "go to tags",
             DELETE_FILE: "delete",
@@ -96,6 +100,15 @@ class Control():
         note_dict_funcions = self.note_management
         data.append(("N", note_main_functions, note_dict_funcions))
 
+        # logs
+        logs_main_functions = {
+            SHOW_HELP: "help",
+            OPEN_FILE: "open logs file",
+            CLEAR_LOG: "clear logs file",
+            EXIT_PROGRAM: "exit"}
+        logs_dict_funcions = self.user_logs
+        data.append(("L", logs_main_functions, logs_dict_funcions))
+
 
         for item in data:
             mode, main_functions, dict_funcions = item
@@ -119,6 +132,8 @@ class Control():
                 self.tag_hint = help_dict
             elif mode == "N":
                 self.note_hint = help_dict
+            elif mode == "L":
+                self.logs_hint = help_dict
 
 
     def get_hint_for_mode(self, env):
@@ -126,14 +141,19 @@ class Control():
             return self.filter_hint
         elif env.is_brows_mode():
             view_switch = "off" if env.quick_view else "on"
+            logs_switch = "hide" if env.show_logs else "show"
             brows_dict_funcions = self.directory_brows
-            brows_key = None
+            brows_key, logs_key = None, None
             for k, v in brows_dict_funcions.items():
                 if QUICK_VIEW_ON_OFF == v:
                     brows_key = k
-                    break
-            if brows_key and brows_key in self.brows_hint:
-                self.brows_hint[brows_key] = f"quick view {view_switch}"
+                elif SHOW_OR_HIDE_LOGS == v:
+                    logs_key = k
+            if brows_key and logs_key:
+                if brows_key in self.brows_hint:
+                    self.brows_hint[brows_key] = f"quick view {view_switch}"
+                if logs_key in self.brows_hint:
+                    self.brows_hint[logs_key] = f"{logs_switch} logs"
             return self.brows_hint
         elif env.is_view_mode():
             tags_switch = "hide" if env.show_tags else "show"
@@ -169,6 +189,9 @@ class Control():
             if note_key and note_key in self.note_hint:
                 self.note_hint[note_key] = f"{typical_switch} typical"
             return self.note_hint
+        elif env.is_logs_mode():
+            return self.logs_hint
+
         return None
 
 
@@ -199,6 +222,8 @@ class Control():
             dict_funcions = self.tag_management
         elif env.is_notes_mode():
             dict_funcions = self.note_management
+        elif env.is_logs_mode():
+            dict_funcions = self.user_logs
         return dict_funcions
 
 
@@ -341,6 +366,23 @@ class Control():
                 else:
                     keys[key] = fce
         self.user_input = keys
+
+    def set_user_logs_functions(self, control):
+        user_logs_functions = {}
+        user_logs_functions.update(control['general'])
+        user_logs_functions.update(control['user_logs_functions'])
+        user_logs_functions.update(control['arrows'])
+        keys = {}
+        for str_fce, key in user_logs_functions.items():
+            fce = map_user_logs_function(str_fce)
+            if fce is not None:
+                if isinstance(key,list):
+                    for k in key:
+                        keys[k] = fce
+                else:
+                    keys[key] = fce
+        self.user_logs = keys
+
 
 
 def get_function_for_key(env, key):

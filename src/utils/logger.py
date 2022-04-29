@@ -18,6 +18,7 @@ TAGS_SUFFIX = "_tags.yaml"
 # system files
 CONFIG_FILE = "config.yaml"
 CONTROL_FILE = "control.yaml"
+USER_LOGS_FILE = "logs.csv"
 TYPICAL_NOTES_FILE = "typical_notes.txt"
 
 # proj/

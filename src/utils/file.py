@@ -72,7 +72,7 @@ def rename_solutions(proj, solution=None):
             file_list = glob.glob(os.path.join(solution_dir, '**', required_name), recursive=True)
             file_list = filter_intern_files(file_list)
             if len(file_list) == 1: # only one file matches the sut required
-                ok.append(solution_dir)
+                ok.append(os.path.basename(solution_dir))
             else:
                 files = []
                 for ext in extended_variants: # find extended version of sut in solution dir
@@ -82,13 +82,13 @@ def rename_solutions(proj, solution=None):
                     old_file = files[0]
                     new_file = os.path.join(os.path.dirname(old_file), required_name)
                     shutil.copy(old_file, new_file)
-                    renamed.append(solution_dir)
+                    renamed.append(os.path.basename(solution_dir))
                     solution.tags.set_tag("renamed_sut", [f"{os.path.basename(old_file)}-->{os.path.basename(new_file)}"])
                     save_tags_to_file(solution.tags)
                 else:
-                    fail.append(solution_dir)
+                    fail.append(os.path.basename(solution_dir))
         except:
-            fail.append(solution_dir)
+            fail.append(os.path.basename(solution_dir))
     return ok, renamed, fail
 
 

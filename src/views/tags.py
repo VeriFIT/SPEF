@@ -26,7 +26,7 @@ def tag_management(stdscr, env):
     screen, win = env.get_screen_for_current_mode()
 
     if env.tags is None: # there is no tags loaded
-        env.set_brows_mode()
+        env.switch_to_next_mode()
         return env
 
 

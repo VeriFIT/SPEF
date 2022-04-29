@@ -70,19 +70,22 @@ def directory_browsing(stdscr, env):
     while True:
         screen, win = env.get_screen_for_current_mode()
 
+        """ print all screens """
+        rewrite_all_wins(env)
+
         """ try to load buffer and tag for current file in directory structure """
         idx = win.cursor.row
         if env.quick_view and idx < len(env.cwd):
             dirs_and_files = env.cwd.get_all_items()
             # if its file, show its content and tags
+            selected_item = os.path.join(env.cwd.path, dirs_and_files[idx])
             if idx >= len(env.cwd.dirs) and len(dirs_and_files)>idx:
-                selected_file = os.path.join(env.cwd.path, dirs_and_files[idx])
                 # if its archive file, show its content (TODO)
-                if is_archive_file(selected_file):
+                if is_archive_file(selected_item):
                     pass
                 else:
                     old_file_to_open = env.file_to_open
-                    env.set_file_to_open(selected_file)
+                    env.set_file_to_open(selected_item)
                     env, buffer, succ = load_buffer_and_tags(env) # try to load file
                     if not succ: # couldnt load buffer and/or fags for current file
                         env.set_file_to_open(old_file_to_open)
@@ -94,26 +97,9 @@ def directory_browsing(stdscr, env):
                             env.enable_line_numbers(buffer)
             # if its project directory, show project info and test results
             else:
-                if env.cwd.proj is not None and len(dirs_and_files)>idx: # current working directory is a project subdirectory (ex: "proj1/")
-                    # env.cwd.proj
-                    selected_dir =  os.path.join(env.cwd.path, dirs_and_files[idx])
-                    env = load_tags_if_changed(env, selected_dir)
-                    # if proj.match_solution_id(selected_dir): # selected item is solution directory (ex: "proj1/xlogin00/")
-                        # if proj.quick_view_file in selected_dir.files():
-                        #    show_file_and_tags(proj.quick_view_file)
-                    # elif proj.is_solution_subdirectory(selected_dir): # selected item is inside some solution subdirectory (ex: "proj1/xlogin00/dir/")
-                        # if proj.is_test_directory(selected_dir): # is test directory == 
-                        #    tests_conf = load_tests_from_conf_file(selected_dir)
-                        #    show_file()
-                        #    show_test_tags()
-
-                pass # TODO: show project info and test tags
+                if env.cwd.proj is not None and len(dirs_and_files)>idx:
+                    env = load_tags_if_changed(env, selected_item)
             env.update_win_for_current_mode(win)
-
-
-        """ print all screens """
-        rewrite_all_wins(env)
-
 
         key = stdscr.getch()
 
@@ -170,6 +156,7 @@ def run_function(stdscr, env, fce, key):
             """ go to subdirectory """
             os.chdir(os.path.join(env.cwd.path, env.cwd.dirs[idx]))
             env.cwd = get_directory_content(env)
+            env.reset_brows_wins()
             win.reset(0,0) # set cursor on first position (first item)
     elif fce == CURSOR_LEFT:
         current_dir = os.path.basename(env.cwd.path) # get directory name
@@ -177,6 +164,7 @@ def run_function(stdscr, env, fce, key):
             """ go to parent directory """
             os.chdir('..')
             env.cwd = get_directory_content(env)
+            env.reset_brows_wins()
             win.reset(0,0)
             """ set cursor position to prev directory """
             dir_position = env.cwd.dirs.index(current_dir) # find position of prev directory
@@ -226,6 +214,23 @@ def run_function(stdscr, env, fce, key):
     elif fce == SHOW_OR_HIDE_CACHED_FILES:
         env.show_cached_files = not env.show_cached_files
         env.cwd = get_directory_content(env)
+    # ==================== SHOW/HIDE LOGS ======================
+    elif fce == SHOW_OR_HIDE_LOGS:
+        env.update_win_for_current_mode(win)
+        # synchronize cursor
+        dest_row = win.cursor.row
+        if env.show_logs: # change from smaller win to bigger
+            env.windows.brows.reset(0,0)
+            if len(env.cwd) >= dest_row:
+                while env.windows.brows.cursor.row < dest_row:
+                    env.windows.brows.down(env.cwd, use_restrictions=False)
+        else: # change from bigger win to smaller
+            env.windows.brows_up.reset(0,0)
+            if len(env.cwd) >= dest_row:
+                while env.windows.brows_up.cursor.row < dest_row:
+                    env.windows.brows_up.down(env.cwd, use_restrictions=False)
+        env.show_logs = not env.show_logs
+        screen, win = env.get_screen_for_current_mode()
     # ======================= OPEN FILE =======================
     elif fce == OPEN_FILE:
         idx = win.cursor.row
@@ -234,7 +239,7 @@ def run_function(stdscr, env, fce, key):
             selected_item = os.path.join(env.cwd.path, dirs_and_files[idx])
             if os.path.isfile(selected_item):
                 env.set_file_to_open(os.path.join(env.cwd.path, dirs_and_files[idx]))
-                env.switch_to_next_mode()
+                env.set_view_mode()
                 return env, True
     # ======================= DELETE FILE =======================
     elif fce == DELETE_FILE:
@@ -326,7 +331,7 @@ def run_menu_function(stdscr, env, fce, key):
     elif fce == EDIT_PROJ_CONF:
         if env.cwd.proj is not None:
             env.set_file_to_open(os.path.join(env.cwd.proj.path, PROJ_CONF_FILE))
-            env.switch_to_next_mode()
+            env.set_view_mode()
             return env, True
     # ============================ EXPAND ===========================
     elif fce == EXPAND_ALL_SOLUTIONS: # ALL STUDENTS
@@ -349,6 +354,9 @@ def run_menu_function(stdscr, env, fce, key):
                 log("rename all solutions | there is no defined sut_required in proj config")
             else:
                 ok, renamed, fail = rename_solutions(env.cwd.proj)
+                add_to_user_logs(env, 'info   ', f'students with correctly named SUT: {ok}')
+                add_to_user_logs(env, 'warning', f'students with wrong named and renamed SUT: {renamed}')
+                add_to_user_logs(env, 'warning', f'students with no supported extention of SUT file: {fail}')
 
                 log("students with correctly named solution file: "+str(ok))
                 log("students with wrong named solution file: "+str(renamed))
@@ -632,6 +640,7 @@ def run_menu_function(stdscr, env, fce, key):
             test_dir = os.path.join(solution.path, TESTS_DIR)
             os.chdir(test_dir)
             env.cwd = get_directory_content(env)
+            env.reset_brows_wins()
             win.reset(0,0)
     # ======================= SHOW STATS =======================
     elif fce == SHOW_SCORING_STATS:
@@ -669,11 +678,12 @@ def run_menu_function(stdscr, env, fce, key):
             if new_test_dir is not None:
                 os.chdir(new_test_dir)
                 env.cwd = get_directory_content(env)
+                env.reset_brows_wins()
                 win.reset(0,0)
 
                 # open shell script "dotest.sh" to implement the test
                 env.set_file_to_open(os.path.join(new_test_dir, TEST_FILE), is_test_file=True)
-                env.switch_to_next_mode()
+                env.set_view_mode()
                 return env, True
     # =================== EDIT TESTSUITE ===================
     elif fce == EDIT_TESTSUITE:
@@ -686,7 +696,7 @@ def run_menu_function(stdscr, env, fce, key):
 
                 # open "testsuite.sh" to implement testing strategy
                 env.set_file_to_open(testsuite_file)
-                env.switch_to_next_mode()
+                env.set_view_mode()
                 return env, True
             else:
                 log(f"cant create testsuite file in tests dir | '{tests_dir}' doesnt exists ")
@@ -696,7 +706,7 @@ def run_menu_function(stdscr, env, fce, key):
             scoring_file = os.path.join(env.cwd.proj.path, TESTS_DIR, SCORING_FILE)
             if os.path.exists(scoring_file):
                 env.set_file_to_open(scoring_file)
-                env.switch_to_next_mode()
+                env.set_view_mode()
                 return env, True
             else:
                 log(f"cant find scoring file | '{scoring_file}' doesnt exists")
@@ -706,7 +716,7 @@ def run_menu_function(stdscr, env, fce, key):
             sum_file = os.path.join(env.cwd.proj.path, TESTS_DIR, SUM_FILE)
             if os.path.exists(sum_file):
                 env.set_file_to_open(sum_file)
-                env.switch_to_next_mode()
+                env.set_view_mode()
                 return env, True
             else:
                 log(f"cant find sum file | '{sum_file}' doesnt exists")
@@ -730,13 +740,14 @@ def run_menu_function(stdscr, env, fce, key):
                     # go to test dir
                     os.chdir(test_dir)
                     env.cwd = get_directory_content(env)
+                    env.reset_brows_wins()
                     win.reset(0,0)
 
                     # open 'dotest.sh' to edit
                     test_file = os.path.join(test_dir, TEST_FILE)
                     if os.path.exists(test_file):
                         env.set_file_to_open(test_file)
-                        env.switch_to_next_mode()
+                        env.set_view_mode()
                         return env, True
                     else:
                         log(f"edit test | cant find '{test_file}' file for test")
@@ -837,7 +848,7 @@ def run_menu_function(stdscr, env, fce, key):
                 # open Docker file for edit
                 if os.path.exists(proj_docker_file):
                     env.set_file_to_open(proj_docker_file)
-                    env.switch_to_next_mode()
+                    env.set_view_mode()
                     return env, True
             except Exception as err:
                 log(f"create docker file | {err}")

@@ -9,6 +9,7 @@ BROWS = 1
 VIEW = 2
 TAG = 3
 NOTES = 4
+LOGS = 5
 EXIT = -1
 
 """ current framework environment """
@@ -30,6 +31,7 @@ class Environment:
         self.mode = conf['env']['mode']
         self.quick_view = conf['env']['quick_view']
         self.show_tags = conf['env']['show_tags']
+        self.show_logs = conf['env']['show_logs']
         self.show_solution_info = conf['env']['show_solution_info']
         self.note_highlight = conf['env']['note_highlight']
         self.show_cached_files = conf['env']['show_cached_files'] # *_tags.yaml and *_report.yaml
@@ -64,6 +66,10 @@ class Environment:
         self.tags = None # Tags(path, data)
         self.report = None # Report(path, data)
 
+        self.user_logs = [] # [("date", "type", "message"),...]
+        self.user_logs_printed = [] # [("date", "type", "message"),...]
+        self.user_logs_printed_shift = 0
+
         self.control = Control()
         self.bash_active = False
         self.bash_action = None
@@ -80,6 +86,7 @@ class Environment:
         self.control.set_filter_functions(contr)
         self.control.set_menu_functions(contr)
         self.control.set_user_input_functions(contr)
+        self.control.set_user_logs_functions(contr)
         self.control.set_hints(self)
 
 
@@ -97,7 +104,10 @@ class Environment:
 
     def get_screen_for_current_mode(self):
         if self.is_brows_mode():
-            return self.screens.left, self.windows.brows
+            if self.show_logs:
+                return self.screens.left_up, self.windows.brows_up
+            else:
+                return self.screens.left, self.windows.brows
         if self.is_view_mode():
             if self.show_tags:
                 return self.screens.right_up, self.windows.view_up
@@ -107,11 +117,16 @@ class Environment:
             return self.screens.right_down, self.windows.tag
         if self.is_notes_mode():
             return self.screens.left, self.windows.notes
+        if self.is_logs_mode():
+            return self.screens.left_down, self.windows.logs
 
 
     def update_win_for_current_mode(self, win):
         if self.is_brows_mode():
-            self.windows.brows = win
+            if self.show_logs:
+                self.windows.brows_up = win
+            else:
+                self.windows.brows = win
         if self.is_view_mode():
             if self.show_tags:
                 self.windows.view_up = win
@@ -121,6 +136,9 @@ class Environment:
             self.windows.tag = win
         if self.is_notes_mode():
             self.windows.notes = win
+        if self.is_logs_mode():
+            self.windows.logs = win
+
 
     def update_center_win(self, win):
         self.windows.center = win
@@ -164,7 +182,12 @@ class Environment:
             self.set_brows_mode()
             self.disable_note_management()
             self.quick_view = True
+            self.windows.brows_up.reset(0,0)
             self.windows.brows.reset(0,0)
+
+    def reset_brows_wins(self):
+        self.windows.brows_up.reset(0,0)
+        self.windows.brows.reset(0,0)
 
     def get_typical_notes_dict(self):
         options = {}
@@ -191,7 +214,10 @@ class Environment:
 
     """ update data """
     def update_browsing_data(self, win, cwd):
-        self.windows.brows = win
+        if self.show_logs:
+            self.windows.brows_up = win
+        else:
+            self.windows.brows = win
         self.cwd = cwd
 
     def update_viewing_data(self, win, buffer, report=None):
@@ -256,6 +282,9 @@ class Environment:
     def set_notes_mode(self):
         self.mode = NOTES
 
+    def set_logs_mode(self):
+        self.mode = LOGS
+
     def set_exit_mode(self):
         self.mode = EXIT
 
@@ -270,15 +299,22 @@ class Environment:
                 if self.show_notes:
                     self.mode = NOTES # View -> Notes
                 else:
-                    self.mode = BROWS # View -> Brows
+                    if self.show_logs:
+                        self.mode = LOGS # View -> Logs
+                    else:
+                        self.mode = BROWS # View -> Brows
         elif self.is_tag_mode():
             if self.show_notes:
                 self.mode = NOTES # Tag -> Notes
             else:
-                self.mode = BROWS # Tag -> Brows
+                if self.show_logs:
+                    self.mode = LOGS # Tags -> Logs
+                else:
+                    self.mode = BROWS # Tag -> Brows
         elif self.is_notes_mode():
             self.mode = VIEW # Notes -> View
-
+        elif self.is_logs_mode():
+            self.mode = BROWS # Logs -> Brows
 
     """ check mode """
     def is_brows_mode(self):
@@ -292,6 +328,9 @@ class Environment:
 
     def is_notes_mode(self):
         return self.mode == NOTES
+
+    def is_logs_mode(self):
+        return self.mode == LOGS
 
     def is_exit_mode(self):
         return self.mode == EXIT

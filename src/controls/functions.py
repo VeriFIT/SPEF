@@ -44,7 +44,8 @@ OPEN_FILE = 101
 OPEN_MENU = 102
 DELETE_FILE = 103
 SHOW_OR_HIDE_CACHED_FILES = 104
-GO_TO_TAGS = 105
+SHOW_OR_HIDE_LOGS = 105
+GO_TO_TAGS = 106
 
 """ tag management control """
 EDIT_TAG = 200
@@ -76,6 +77,8 @@ SELECT_OPTION = 505
 """ user input control """
 EXIT_USER_INPUT = 600
 SAVE_INPUT = 601
+
+CLEAR_LOG = 610
 
 
 """ menu functions """
@@ -186,6 +189,7 @@ def map_brows_function(str_fce):
         'quick_view_on_off': QUICK_VIEW_ON_OFF,
         'go_to_tags': GO_TO_TAGS,
         'show_or_hide_cached_files': SHOW_OR_HIDE_CACHED_FILES,
+        'show_or_hide_logs': SHOW_OR_HIDE_LOGS,
         'open_file': OPEN_FILE,
         'delete_file': DELETE_FILE,
         'change_focus': CHANGE_FOCUS,
@@ -308,6 +312,22 @@ def map_user_input_function(str_fce):
         return functions[str_fce]
     else:
         return None
+
+def map_user_logs_function(str_fce):
+    functions = {
+        'exit_program': EXIT_PROGRAM,
+        'bash_switch': BASH_SWITCH,
+        'open_file': OPEN_FILE,
+        'clear_log': CLEAR_LOG,
+        'change_focus': CHANGE_FOCUS,
+        'resize_win': RESIZE_WIN,
+        'cursor_up': CURSOR_UP,
+        'cursor_down': CURSOR_DOWN}
+    if str_fce in functions:
+        return functions[str_fce]
+    else:
+        return None
+
 
 
 #########################################################################

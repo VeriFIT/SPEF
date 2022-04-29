@@ -205,6 +205,7 @@ def get_description_for_fce(env, fce):
         OPEN_FILE: "open file for edit",
         GO_TO_TAGS: "change focus to tags",
         SHOW_OR_HIDE_CACHED_FILES: "show/hide cached files (tags, report)",
+        SHOW_OR_HIDE_LOGS: "show/hide logs for user",
         DELETE_FILE: 'delete selected file',
         EXIT_PROGRAM: "exit program",
         CHANGE_FOCUS: "change focus to file view/edit",

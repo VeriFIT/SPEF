@@ -41,7 +41,10 @@ def file_viewing(stdscr, env):
         if env.show_tags and env.tags is not None:
             env.set_tag_mode()
         else:
-            env.set_brows_mode()
+            if env.show_logs:
+                env.set_logs_mode()
+            else:
+                env.set_brows_mode()
         return env
 
     """ try load file content and tags """

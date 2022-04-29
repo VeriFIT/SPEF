@@ -1,15 +1,24 @@
 # DP
 
+install.sh
 
-* `pip install Pygments`
+pip install setuptools
+pip install jinja2
+pip install Pygments
+pygments_dir=`python -c 'import pygments as _; print(_.__path__[0])'`
+cp src/ncurses.py $pygments_dir/styles/
+
+
 * `pip install setuptools`
+* `pip install jinja2`
+* `pip install Pygments`
 
-* ak nemas vytvoreny image, loadni vzorovy image z filu:
-`cat test.tar.gz | docker load`
-* alebo vytvor image zo vzoroveho Dockerfilu (potrebujes pristup na net)
-`docker build -f Dockerfile -t test .`
-* alebo pridat moznost "create default image"
+* treba vlozit ncurses style do pygments
+pygments_dir=`python -c 'import pygments as _; print(_.__path__[0])'`
+cp src/ncurses.py $pygments_dir/styles/
 
+
+* `docker build -f Dockerfile -t test .`
 
 sudo mkdir /sys/fs/cgroup/systemd
 sudo mount -t cgroup -o none,name=systemd cgroup /sys/fs/cgroup/systemd

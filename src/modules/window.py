@@ -15,15 +15,15 @@ koniec riadku   len(buffer[self.row - win.begin_y]) + win.begin_x
 
 """ zobrazovacie plochy rozdelene podla rozlozenia a polohy na obrazovke """
 class Screens:
-    def __init__(self, left, right, down, center, right_up, right_down):
+    def __init__(self, left, right, down, center, right_up, right_down, left_up, left_down):
         self.left = left
         self.right = right
         self.down = down # for hint
         self.center = center
         self.right_up = right_up
         self.right_down = right_down
-        # self.left_up = left_up
-        # self.left_down = left_down
+        self.left_up = left_up
+        self.left_down = left_down
 
 
 """
@@ -32,13 +32,15 @@ viac okien moze byt zobrazovanych na tom istom screen (napr brows aj notes sa zo
 stredne okno center sa vyuziva jednorazovo na viac ucelov, preto ho treba pri kazdom pouziti resetovat (cursor a shift) 
 """
 class Windows:
-    def __init__(self, brows, view, center, view_up, tag, notes):
+    def __init__(self, brows, brows_up, logs, view, view_up, tag, notes, center):
         self.brows = brows # brows directory
-        self.center = center # menu/help/user input/... !!! pozor aby sa toto okno pri kazdom pouziti resetovalo !!!
+        self.brows_up = brows_up
+        self.logs = logs
         self.view = view # view file
         self.view_up = view_up # view_up file
         self.tag = tag # tag management
         self.notes = notes
+        self.center = center # menu/help/user input/... !!! pozor aby sa toto okno pri kazdom pouziti resetovalo !!!
 
 
     def set_win_for_notes(self, win):

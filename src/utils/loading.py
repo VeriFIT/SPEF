@@ -4,6 +4,8 @@ import curses.ascii
 import yaml
 import os
 import traceback
+import csv
+import datetime
 
 from modules.buffer import Buffer
 from modules.report import Report, Note
@@ -59,6 +61,31 @@ def save_proj_to_conf_file(path, data):
     except Exception as err:
         log("cannot save project conf to file | "+str(err)+" | "+str(traceback.format_exc()))
 
+
+
+def load_user_logs_from_file():
+    user_logs_file = os.path.join(DATA_DIR, USER_LOGS_FILE)
+    logs = []
+    with open(user_logs_file, 'r') as f:
+        csv_reader = csv.reader(f, delimiter='|')
+        for row in csv_reader:
+            if len(row) == 3:
+                logs.append((row[0], row[1], row[2]))
+    return logs
+
+
+def add_to_user_logs(env, m_type, message):
+    day = datetime.date.today()
+    time = datetime.datetime.now().strftime("%X")
+    date = f"{day} {time}"
+
+    user_logs_file = os.path.join(DATA_DIR, USER_LOGS_FILE)
+    with open(user_logs_file, 'a') as f:
+        csv_writer = csv.writer(f, delimiter='|', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        csv_writer.writerow([date, m_type, message])
+
+    env.user_logs.append((date, m_type, message))
+    return env
 
 
 """ ************* TYPICAL NOTES ************* """

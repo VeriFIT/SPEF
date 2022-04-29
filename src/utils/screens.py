@@ -47,6 +47,7 @@ def new_vertical_shift(old_shift, old_height, cursor, new_height):
 def resize_all(stdscr, env, force_resize=False):
     """ get cursor positions from old windows """
     b_win_old_row, b_win_old_col = env.windows.brows.get_cursor_position()
+    bu_win_old_row, bu_win_old_col = env.windows.brows_up.get_cursor_position()
     n_win_old_row, n_win_old_col = env.windows.notes.get_cursor_position()
     t_win_old_row, t_win_old_col = env.windows.tag.get_cursor_position()
     c_win_old_row, c_win_old_col = env.windows.center.get_cursor_position()
@@ -61,6 +62,7 @@ def resize_all(stdscr, env, force_resize=False):
     vu_win_old_shift = env.windows.view_up.row_shift
 
     b_win_old_shift = env.windows.brows.row_shift
+    bu_win_old_shift = env.windows.brows_up.row_shift
     n_win_old_shift = env.windows.notes.row_shift
     t_win_old_shift = env.windows.tag.row_shift
 
@@ -72,6 +74,7 @@ def resize_all(stdscr, env, force_resize=False):
     vu_win_old_height = env.windows.view_up.end_y - env.windows.view_up.begin_y - 1
 
     b_win_old_height = env.windows.brows.end_y - env.windows.brows.begin_y - 1
+    bu_win_old_height = env.windows.brows_up.end_y - env.windows.brows_up.begin_y - 1
     n_win_old_height = env.windows.notes.end_y - env.windows.notes.begin_y - 1
     t_win_old_height = env.windows.tag.end_y - env.windows.tag.begin_y - 1
 
@@ -102,6 +105,8 @@ def resize_all(stdscr, env, force_resize=False):
             """ set old cursor positions to resized windows """
             b_win_new_row = max(min(b_win_old_row, new_env.windows.brows.end_y-2), 0)
             b_win_new_col = max(min(b_win_old_col, new_env.windows.brows.end_x), 0)
+            bu_win_new_row = max(min(bu_win_old_row, new_env.windows.brows_up.end_y-2), 0)
+            bu_win_new_col = max(min(bu_win_old_col, new_env.windows.brows_up.end_x), 0)
             n_win_new_row = max(min(n_win_old_row, new_env.windows.notes.end_y-2), 0)
             n_win_new_col = max(min(n_win_old_col, new_env.windows.notes.end_x), 0)
 
@@ -117,6 +122,7 @@ def resize_all(stdscr, env, force_resize=False):
             vu_win_new_col = vu_win_old_col + new_env.windows.view_up.begin_x
 
             new_env.windows.brows.set_cursor(b_win_new_row+b_win_old_shift, b_win_new_col)
+            new_env.windows.brows_up.set_cursor(bu_win_new_row+bu_win_old_shift, bu_win_new_col)
             new_env.windows.notes.set_cursor(n_win_new_row+n_win_old_shift, n_win_new_col)
             new_env.windows.tag.set_cursor(t_win_new_row+t_win_old_shift, t_win_new_col)
             new_env.windows.center.set_cursor(c_win_new_row, c_win_new_col)
@@ -140,6 +146,7 @@ def resize_all(stdscr, env, force_resize=False):
             new_env.windows.view_up.row_shift = vu_win_new_shift
 
             new_env.windows.brows.row_shift = b_win_old_shift
+            new_env.windows.brows_up.row_shift = bu_win_old_shift
             new_env.windows.notes.row_shift = n_win_old_shift
             new_env.windows.tag.row_shift = t_win_old_shift
 
@@ -174,19 +181,23 @@ def create_screens_and_windows(height, width, line_numbers=None):
 
 
     """ create screens """
-    left_screen = curses.newwin(l_win_h, l_win_w, l_win_y, l_win_x) # browsing
-    right_screen = curses.newwin(r_win_h, r_win_w, r_win_y, r_win_x) # editing
-    down_screen = curses.newwin(d_win_h, d_win_w, d_win_y, d_win_x) # hint
-    center_screen = curses.newwin(c_win_h, c_win_w, c_win_y, c_win_x) # help, menu
-    right_up_screen = curses.newwin(right_up_h, r_win_w, r_win_y, r_win_x)
-    right_down_screen = curses.newwin(right_down_h, r_win_w, r_win_y + right_up_h, r_win_x)
-
+    left_sc = curses.newwin(l_win_h, l_win_w, l_win_y, l_win_x) # browsing
+    right_sc = curses.newwin(r_win_h, r_win_w, r_win_y, r_win_x) # editing
+    down_sc = curses.newwin(d_win_h, d_win_w, d_win_y, d_win_x) # hint
+    center_sc = curses.newwin(c_win_h, c_win_w, c_win_y, c_win_x) # help, menu
+    right_up_sc = curses.newwin(right_up_h, r_win_w, r_win_y, r_win_x)
+    right_down_sc = curses.newwin(right_down_h, r_win_w, r_win_y + right_up_h, r_win_x)
+    left_up_sc = curses.newwin(right_up_h, r_win_w, l_win_y, l_win_x)
+    left_down_sc = curses.newwin(right_down_h, r_win_w, l_win_y + right_up_h, l_win_x)
 
     """ create windows """
     center_win = Window(c_win_h, c_win_w, c_win_y, c_win_x, border=1)
-    brows_win = Window(l_win_h, l_win_w, l_win_y, l_win_x)
     notes_win = Window(l_win_h, l_win_w, l_win_y, l_win_x)
     tag_win = Window(right_down_h, r_win_w, r_win_y+right_up_h, r_win_x)
+
+    brows_win = Window(l_win_h, l_win_w, l_win_y, l_win_x)
+    brows_up_win = Window(right_up_h, r_win_w, l_win_y, l_win_x)
+    logs_win = Window(right_down_h, r_win_w, l_win_y + right_up_h, l_win_x)
 
     # log("b :"+str(l_win_h))
     # log("v :"+str(right_up_h))
@@ -199,17 +210,20 @@ def create_screens_and_windows(height, width, line_numbers=None):
     view_vin = Window(r_win_h, max(r_win_w-shift, 0), r_win_y, r_win_x+shift, border=1, line_num_shift=shift) # +1 stands for bordes at first line and col
     view_up_win = Window(right_up_h, max(r_win_w-shift, 0), r_win_y, r_win_x+shift, border=1, line_num_shift=shift)
 
+
     """ set background color for screens """
     bkgd_col = curses.color_pair(COL_BKGD)
-    left_screen.bkgd(' ', bkgd_col)
-    right_screen.bkgd(' ', bkgd_col)
-    down_screen.bkgd(' ', bkgd_col)
-    center_screen.bkgd(' ', bkgd_col)
-    right_up_screen.bkgd(' ', bkgd_col)
-    right_down_screen.bkgd(' ', bkgd_col)
+    left_sc.bkgd(' ', bkgd_col)
+    right_sc.bkgd(' ', bkgd_col)
+    down_sc.bkgd(' ', bkgd_col)
+    center_sc.bkgd(' ', bkgd_col)
+    right_up_sc.bkgd(' ', bkgd_col)
+    right_down_sc.bkgd(' ', bkgd_col)
+    left_up_sc.bkgd(' ', bkgd_col)
+    left_down_sc.bkgd(' ', bkgd_col)
 
-    screens = Screens(left_screen, right_screen, down_screen, center_screen, right_up_screen, right_down_screen)
-    windows = Windows(brows_win, view_vin, center_win, view_up_win, tag_win, notes_win)
+    screens = Screens(left_sc, right_sc, down_sc, center_sc, right_up_sc, right_down_sc, left_up_sc, left_down_sc)
+    windows = Windows(brows_win, brows_up_win, logs_win, view_vin, view_up_win, tag_win, notes_win, center_win)
 
     return screens, windows
 

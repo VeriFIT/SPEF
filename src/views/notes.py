@@ -26,7 +26,6 @@ def notes_management(stdscr, env):
     curses.curs_set(0)
     screen, win = env.get_screen_for_current_mode()
 
-    # report = env.report
     if env.report is None:
         log("unexpected error in note management - there is no report in env")
         env.disable_note_management()
