@@ -18,7 +18,6 @@ from utils.logger import *
 
 
 def get_user_input(stdscr, env, title=None, user_input=None):
-    curses.curs_set(1)
 
     env.user_input_mode = True
 
@@ -29,6 +28,7 @@ def get_user_input(stdscr, env, title=None, user_input=None):
         user_input = UserInput()
 
     rewrite_all_wins(env)
+    curses.curs_set(1)
 
     while True:
         screen, win = env.get_center_win()
@@ -83,6 +83,7 @@ def run_function(stdscr, user_input, env, fce, key):
         win.reset()
         win.set_position(old_position, screen)
         rewrite_all_wins(env)
+        curses.curs_set(1)
     # ======================= SHOW HELP =======================
     elif fce == SHOW_HELP:
         show_help(stdscr, env)
@@ -118,12 +119,14 @@ def run_function(stdscr, user_input, env, fce, key):
         elif old_position == 3:
             win.set_position(2, screen)
         rewrite_all_wins(env)
+        curses.curs_set(1)
     elif fce == MOVE_RIGHT:
         if old_position == 1:
             win.set_position(2, screen)
         elif old_position == 2:
             win.set_position(3, screen)
         rewrite_all_wins(env)
+        curses.curs_set(1)
 
 
     env.update_center_win(win)

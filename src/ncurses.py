@@ -6,8 +6,8 @@ from pygments.token import Keyword, Name, Comment, String, Error, Text, \
 
 """
 styles_dir = /home/naty/.local/lib/python3.9/site-packages/pygments/styles
-
-cp src/ncurses.py /home/naty/.local/lib/python3.9/site-packages/pygments/styles/
+pygments_dir=`python -c 'import pygments as _; print(_.__path__[0])'`
+cp src/ncurses.py $pygments_dir/styles/
 
 """
 

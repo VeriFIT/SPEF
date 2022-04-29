@@ -40,14 +40,14 @@ file_functions:
   go_to_prev_note: 'CTRL+UP'
   go_to_next_note: 'CTRL+DOWN'
   reload_original_buff: 'CTRL+R'
-  set_manage_file_mode: 'ESC'
-  set_edit_file_mode: 'a'
 edit_file_functions:
+  set_manage_file_mode: 'ESC'
   delete: 'DELETE'
   backspace: 'BACKSPACE'
   print_char: 'ASCII'
   print_new_line: 'ENTER'
 manage_file_functions:
+  set_edit_file_mode: 'a'
   filter: 'BACKSLASH'
   add_custom_note: '0'
   add_typical_note: ['1','2','3','4','5','6','7','8','9','A..Z']

@@ -330,6 +330,8 @@ def run_menu_function(stdscr, env, fce, key):
             return env, True
     # ============================ EXPAND ===========================
     elif fce == EXPAND_ALL_SOLUTIONS: # ALL STUDENTS
+        # <-------------------------------------------------------------------------------------------------------------------------------------
+
         if env.cwd.proj is not None:
             solutions, problem_files = get_solution_archives(env)
             problem_solutions = extract_archives(solutions)
@@ -340,6 +342,8 @@ def run_menu_function(stdscr, env, fce, key):
             env.cwd.proj.reload_solutions()
     # ============================ RENAME ===========================
     elif fce == RENAME_ALL_SOLUTIONS: # ALL STUDENTS
+        # <-------------------------------------------------------------------------------------------------------------------------------------
+
         if env.cwd.proj is not None:
             if env.cwd.proj.sut_required == "":
                 log("rename all solutions | there is no defined sut_required in proj config")
@@ -351,6 +355,8 @@ def run_menu_function(stdscr, env, fce, key):
                 log("students with no supported extention of solution file: "+str(fail))
     # ====================== EXPAND AND RENAME ======================
     elif fce == EXPAND_AND_RENAME_SOLUTION: # on solution dir
+        # <-------------------------------------------------------------------------------------------------------------------------------------
+
         idx = win.cursor.row
         dirs_and_files = env.cwd.get_all_items()
         if env.cwd.proj is not None and len(dirs_and_files)>idx:
@@ -375,6 +381,8 @@ def run_menu_function(stdscr, env, fce, key):
                             ok, renamed, fail = rename_solutions(env.cwd.proj, solution=solution)
     # ======================= CLEAN =======================
     elif fce == TEST_CLEAN_ALL:
+        # <-------------------------------------------------------------------------------------------------------------------------------------
+
         if env.cwd.proj is not None:
             solution_list = []
             for dir_name in env.cwd.dirs:
@@ -387,6 +395,8 @@ def run_menu_function(stdscr, env, fce, key):
                 clean_test(solution)
             env.cwd = get_directory_content(env)
     elif fce == TEST_CLEAN: # on solution dir
+        # <-------------------------------------------------------------------------------------------------------------------------------------
+
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)
         if solution is not None:
@@ -394,6 +404,8 @@ def run_menu_function(stdscr, env, fce, key):
             env.cwd = get_directory_content(env)
     # ======================= RUN TESTSUITE =======================
     elif fce == TEST_ALL_STUDENTS: # ALL STUDENTS
+        # <-------------------------------------------------------------------------------------------------------------------------------------
+
         if env.cwd.proj is not None:
             solution_list = []
             for dir_name in env.cwd.dirs:
@@ -408,6 +420,8 @@ def run_menu_function(stdscr, env, fce, key):
                     return env, True
             env.cwd = get_directory_content(env)
     elif fce == TEST_STUDENT: # on solution dir
+        # <-------------------------------------------------------------------------------------------------------------------------------------
+
         """ run testsuite on student solution directory """
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)
@@ -418,6 +432,8 @@ def run_menu_function(stdscr, env, fce, key):
             env.cwd = get_directory_content(env)
     # ======================= RUN TEST (TODO)=======================
     elif fce == RUN_TEST: # on solution dir
+        # <-------------------------------------------------------------------------------------------------------------------------------------
+
         """ select one or more tests and run this tests on student solution directory """
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)
@@ -444,12 +460,16 @@ def run_menu_function(stdscr, env, fce, key):
                 return env, True
     # =================== GENERATE REPORT ===================
     elif fce == GEN_CODE_REVIEW: # on solution dir
+        # <-------------------------------------------------------------------------------------------------------------------------------------
+
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)
         if solution is not None:
             generate_code_review(env, solution)
             env.cwd = get_directory_content(env)
     elif fce == GEN_TOTAL_REPORT: # on solution dir
+        # <-------------------------------------------------------------------------------------------------------------------------------------
+
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)
         if solution is not None:
@@ -760,6 +780,7 @@ def run_menu_function(stdscr, env, fce, key):
 
     # =================== CREATE DOCKER IMAGE ===================
     elif fce == CREATE_DOCKERFILE:
+        # <-------------------------------------------------------------------------------------------------------------------------------------
         if env.cwd.proj is not None:
             proj_docker_file = os.path.join(env.cwd.proj.path, 'Dockerfile')
             try:
@@ -771,7 +792,10 @@ def run_menu_function(stdscr, env, fce, key):
                     env, distr_data = get_user_input(stdscr, env, title=title)
                     if env.is_exit_mode():
                         return env, True
-                    if distr_data is not None:
+                    if distr_data is None:
+                        log("cannot create docker image without specifying the distribution")
+                        return env, True
+                    else:
                         distribution = ''.join(distr_data).strip()
 
                     # 2. ask for user id
@@ -805,11 +829,10 @@ def run_menu_function(stdscr, env, fce, key):
                     # 4. create Dockerfile
                     with open(proj_docker_file, 'w+') as f:
                         f.write(f"FROM {distribution}\n")
-                        f.write(f"RUN adduser -D -u {user_id} -G {group_id} test || useradd -u {user_id} -g {group_id} test\n")
+                        f.write(f"RUN addgroup -g {group_id} test || groupadd -g {group_id} test\n")
+                        f.write(f"RUN adduser -D -u {user_id} -G test test || useradd -u {user_id} -g test test\n")
+                        f.write(f"USER test\n")
                     env.cwd = get_directory_content(env)
-
-                screen, win = env.get_screen_for_current_mode()
-                curses.curs_set(0)
 
                 # open Docker file for edit
                 if os.path.exists(proj_docker_file):
@@ -832,16 +855,8 @@ def run_menu_function(stdscr, env, fce, key):
                     env.bash_action.dont_jump_to_cwd()
                     env.bash_action.add_command(docker_cmd)
                     return env, True
-                    # output = subprocess.run(docker_cmd.split(' '), capture_output=True)
-                    # stdout_str = str(output.stdout.decode('utf-8'))
-                    # stderr_str = str(output.stderr.decode('utf-8'))
-                    # log(f"create docker image | docker build stdout | {stdout_str}")
-                    # log(f"create docker image | docker build stderr | {stderr_str}")
             except Exception as err:
                 log(f"create docker image from Dockerfile | {err}")
-            # else:
-                # if not stderr_str:
-                    # log(f"docker image 'test' created")
 
     env.update_win_for_current_mode(win)
     return env, False

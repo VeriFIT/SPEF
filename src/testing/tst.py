@@ -151,73 +151,50 @@ def prepare_data(env, solution_dir, run_file):
 def run_testsuite_in_docker(solution_dir, fut):
     succ = True
     try:
-        # os.getuid() + os.getgid()
-        # USER = os.getenv('USER')
-        # is_root = False
-        # if USER =='root':
-        #     is_root = True
-        # output = subprocess.run(f"id -u {USER}".split(' '), capture_output=True)
-        # user_id = output.stdout.decode('utf-8').strip()
-
-        # get user id
-        user_id = os.getuid()
-        group_id = os.getgid()
-        is_root = False
-        if user_id == 0:
-            is_root = True
-
         # create container from image `test` (IMAGE_NAME)
-
-        # dat do jedneho commandu (run + bash)
-        # funkcia: vytvor image s uzivatelom xy a uloz tento image pre dalsie pouzivanie (pre rozne alpine, fedora, centos,)
         container_cid_file = '/tmp/docker.cid'
-
         output = subprocess.run(f"docker run --cidfile {container_cid_file} --rm -d --workdir {CONTAINER_DIR} -v {SHARED_DIR}:{CONTAINER_DIR}:z {IMAGE_NAME} bash -c".split(' ')+["while true; do sleep 1; done"],  capture_output=True)
-        log("docker run stdout | "+str(output.stdout.decode('utf-8')))
-        log("docker run stderr | "+str(output.stderr.decode('utf-8')))
+        output_out = str(output.stdout.decode('utf-8'))
+        output_err = str(output.stderr.decode('utf-8'))
+        log(f"docker run stdout | {output_out}")
+        log(f"docker run stderr | {output_err}")
+        if not output_err:
+            with open(container_cid_file, 'r') as f:
+                cid = f.read()
 
-        # add user in docker container (if user is not root)
-        with open(container_cid_file, 'r') as f:
-            cid = f.read()
-        if not is_root:
-            output = subprocess.run(f"docker exec {cid} useradd -u {user_id} test".split(' '), capture_output=True)
-            # output = subprocess.run(f"docker exec {cid} useradd -u {user_id} -g {group_id} test".split(' '), capture_output=True)
-            log("docker exec useradd stdout | "+str(output.stdout.decode('utf-8')))
-            log("docker exec useradd stderr | "+str(output.stderr.decode('utf-8')))
+            # run test script (cd sut; /opt/tests/run.sh)
+            # run_testsuite /opt/tests/src /opt/tests /opt/sut/tests_tags.yaml tests sut {fut}
+            command = f"{CONTAINER_RUN_FILE} /opt/tests/src /opt/tests tests_tags.yaml {RESULTS_SUB_DIR} sut {fut}"
+            output = subprocess.run(f"docker exec --workdir {CONTAINER_SUT_DIR} {cid} bash {command}".split(' '), capture_output=True)
+            result = output.stdout.decode('utf-8')
+            err = output.stderr.decode('utf-8')
 
+            log("docker exec stdout | "+str(result))
+            log("docker exec stderr | "+str(err))
 
-        # useradd alebo adduser
+            # remove container
+            out = subprocess.run(f"docker rm -f {cid}".split(' '), capture_output=True)
 
-        # run test script (cd sut; /opt/tests/run.sh)
-        # run_testsuite /opt/tests/src /opt/tests /opt/sut/tests_tags.yaml tests sut {fut}
-        command = f"{CONTAINER_RUN_FILE} /opt/tests/src /opt/tests tests_tags.yaml {RESULTS_SUB_DIR} sut {fut}"
-        output = subprocess.run(f"docker exec --user {user_id} --workdir {CONTAINER_SUT_DIR} {cid} bash {command}".split(' '), capture_output=True)
-        result = output.stdout.decode('utf-8')
-        err = output.stderr.decode('utf-8')
-
-        log("docker exec stdout | "+str(result))
-        log("docker exec stderr | "+str(err))
-
-        # remove container
-        out = subprocess.run(f"docker rm -f {cid}".split(' '), capture_output=True)
-
-        # get results from test script
-        docker_results = os.path.join(SHARED_SUT_DIR, RESULTS_SUB_DIR)
-        student_results = os.path.join(solution_dir, RESULTS_SUB_DIR)
-        shutil.copytree(docker_results, student_results, dirs_exist_ok=True)
+            # get results from test script
+            docker_results = os.path.join(SHARED_SUT_DIR, RESULTS_SUB_DIR)
+            student_results = os.path.join(solution_dir, RESULTS_SUB_DIR)
+            shutil.copytree(docker_results, student_results, dirs_exist_ok=True)
+        else:
+            log("run testsuite - cannot create docker container | "+str(err)+" | "+str(traceback.format_exc()))
+            succ = False
     except Exception as err:
         log("run testsuite | "+str(err)+" | "+str(traceback.format_exc()))
         succ = False
-    finally:
-        try:
-            # clear temporary files and dirs
-            # rm -rf docker_shared
-            # rm /tmp/docker.cid
-            # docker rm -f {cid}
-            os.remove(container_cid_file)
-            shutil.rmtree(SHARED_DIR)
-        except Exception as err:
-            log("warning | remove shared dir & cid file | "+str(err)+" | "+str(traceback.format_exc()))
+
+    try:
+        # clear temporary files and dirs
+        # rm -rf docker_shared
+        # rm /tmp/docker.cid
+        # docker rm -f {cid}
+        os.remove(container_cid_file)
+        shutil.rmtree(SHARED_DIR)
+    except Exception as err:
+        log("warning | remove shared dir & cid file | "+str(err)+" | "+str(traceback.format_exc()))
 
     return succ
 
@@ -265,27 +242,6 @@ def calculate_score(env, solution):
         return None
 
 
-# bin/s
-def get_sum():
-    pass
-
-
-
-
-# bin/n
-""" /bin/n --> nacita /tests/scoring + spusti /tests/tst sum"""
-def add_note(stdscr, env):
-    pass
-    # from testing import tst
-    # tst_sum()
-
-
-# bin/p
-def make_patch():
-    pass
-
-
-
 def check_bash_functions_for_testing(proj_dir):
     bash_dir = os.path.join(proj_dir, TESTS_DIR, TST_FCE_DIR)
     bash_file = os.path.join(bash_dir, TST_FCE_FILE)
@@ -303,8 +259,6 @@ def check_bash_functions_for_testing(proj_dir):
         except Exception as err:
             log("copy bash functions | "+str(err))
     return bash_file_exists
-
-
 
 
 

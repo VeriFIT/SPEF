@@ -63,7 +63,7 @@ class Control():
             SET_MANAGE_FILE_MODE: "manage file",
             SET_EDIT_FILE_MODE: "edit file",
             EXIT_PROGRAM: "exit"}
-        file_dict_funcions = self.file_edit
+        file_dict_funcions = self.file_edit.copy()
         file_dict_funcions.update(self.file_management)
         data.append(("V", view_main_functions, file_dict_funcions))
 
@@ -138,7 +138,7 @@ class Control():
         elif env.is_view_mode():
             tags_switch = "hide" if env.show_tags else "show"
             lines_switch = "hide" if env.line_numbers else "show"
-            file_dict_funcions = self.file_edit
+            file_dict_funcions = self.file_edit.copy()
             file_dict_funcions.update(self.file_management)
             tag_key, line_key = None, None
             for k, v in file_dict_funcions.items():
