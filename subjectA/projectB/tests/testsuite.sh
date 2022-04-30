@@ -3,7 +3,6 @@
 
 # je tst v ceste?
 type tst &>/dev/null || { echo "chyba: prikaz tst neni v ceste"; exit 1; }
-type n &>/dev/null || { echo "chyba: prikaz n neni v ceste"; exit 1; }
 
 # main
 
@@ -14,7 +13,6 @@ type n &>/dev/null || { echo "chyba: prikaz n neni v ceste"; exit 1; }
 chmod +rx tradelog &>/dev/null
 if file tradelog | grep -q CRLF; then
     dos2unix tradelog
-    n crlf
 fi
 
 # a provedeme jednotlive testy

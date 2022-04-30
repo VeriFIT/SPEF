@@ -109,33 +109,34 @@ TEST_CLEAN_ALL = 718
 # in solution dir
 TEST_STUDENT = 720
 TEST_CLEAN = 721
-RUN_TEST = 722
-GEN_CODE_REVIEW = 723
-GEN_TOTAL_REPORT = 724
-ADD_TEST_NOTE = 725
-ADD_USER_NOTE = 726
-ADD_TEST_NOTE_TO_ALL = 727
-ADD_USER_NOTE_TO_ALL = 728
-ADD_TAG_TO_ALL = 729
+ALL_RUN_TESTS = 722
+RUN_TESTS = 723
+GEN_CODE_REVIEW = 724
+GEN_TOTAL_REPORT = 725
+ADD_TEST_NOTE = 726
+ADD_USER_NOTE = 727
+ADD_TEST_NOTE_TO_ALL = 728
+ADD_USER_NOTE_TO_ALL = 729
+ADD_TAG_TO_ALL = 730
 
-SHOW_CODE_REVIEW = 730
-SHOW_TEST_NOTES = 731
-SHOW_USER_NOTES = 732
-SHOW_TOTAL_REPORT = 733
-SHOW_TEST_RESULTS = 734
+SHOW_CODE_REVIEW = 740
+SHOW_TEST_NOTES = 741
+SHOW_USER_NOTES = 742
+SHOW_TOTAL_REPORT = 743
+SHOW_TEST_RESULTS = 744
 
-SHOW_SCORING_STATS = 735
-SHOW_TST_RES_STATS = 736
+SHOW_SCORING_STATS = 745
+SHOW_TST_RES_STATS = 746
 
 # in tests dir
-ADD_TEST = 740
-EDIT_TESTSUITE = 741
-CHANGE_SCORING = 742
-CHANGE_SUM = 743
+ADD_TEST = 750
+EDIT_TESTSUITE = 751
+CHANGE_SCORING = 752
+CHANGE_SUM = 745
 
 # in tests/test dir
-REMOVE_TEST = 750
-EDIT_TEST = 751
+REMOVE_TEST = 760
+EDIT_TEST = 761
 
 
 #########################################################################
@@ -364,6 +365,7 @@ def get_menu_functions(in_proj_dir=False, in_solution_dir=False, is_test_dir=Fal
         'all students - name solution file correctly for all students': RENAME_ALL_SOLUTIONS,
         'all students - run tests (testsuite)': TEST_ALL_STUDENTS,
         'all students - clean from test results': TEST_CLEAN_ALL,
+        'all students - select and run tests': ALL_RUN_TESTS,
         'all students - add test note related to automatic tests': ADD_TEST_NOTE_TO_ALL,
         'all students - add custom user note related to solution': ADD_USER_NOTE_TO_ALL,
         'all students - add tag to all solutions': ADD_TAG_TO_ALL
@@ -387,7 +389,7 @@ def get_menu_functions(in_proj_dir=False, in_solution_dir=False, is_test_dir=Fal
         'student - expand archive and name solution file correctly': EXPAND_AND_RENAME_SOLUTION,
         'student - run tests (testsuite)': TEST_STUDENT,
         'student - clean from test results': TEST_CLEAN,
-        # 'student - run test':RUN_TEST,
+        'student - select and run tests': RUN_TESTS,
         'student - generate code review from notes': GEN_CODE_REVIEW, # create /reports/code_review
         'student - generate total report': GEN_TOTAL_REPORT, # create /reports/total_report
         'student - add test note related to automatic tests': ADD_TEST_NOTE, # add to /reports/test_notes

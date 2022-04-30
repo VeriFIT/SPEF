@@ -11,7 +11,6 @@ import traceback
 
 from pathlib import Path
 
-
 from utils.logger import *
 from utils.loading import *
 from utils.parsing import parse_sum_equation
@@ -39,34 +38,50 @@ SRC_RUN_TESTSUITE_FILE = os.path.join(DATA_DIR, 'run_testsuite.sh')
 SRC_RUN_TESTS_FILE = os.path.join(DATA_DIR, 'run_tests.sh')
 
 
-def run_testsuite(env, solution, show_results=True):
+def run_testsuite(env, solution, add_to_user_logs, with_logs=True, run_seq_tests=False, tests=None):
     try:
         if not env.cwd.proj or not solution:
             log("run testsuite | run from solution dir in some project dir")
-            return env
+            return env, False
 
-        ############### 1. CLEAN SOLUTION ###############
-        clean_test(solution)
-
-        ############### 2. PREPARE DATA ###############
-        data_ok = prepare_data(env, solution.path, SRC_RUN_TESTSUITE_FILE)
-        if not data_ok:
-            log("run testsuite | problem with testing data")
-            return env
-
-        ############### 3. CHECK IF FUT EXISTS ###############
+        ############### 1. CHECK IF FUT EXISTS ###############
         fut = env.cwd.proj.sut_required
         file_list = os.listdir(solution.path)
         if not fut in file_list:
             # add tag "missing sut file"
-            log("run testsuite | fut file '{fut}' doesnt exists in solution dir")
-            return env
+            log(f"run testsuite | fut file '{fut}' doesnt exists in solution dir")
+            add_to_user_logs(env, 'error', f"FUT '{fut}' doesnt exists in solution directory")
+            return env, False
+        # check if fut is executable
+        fut_path = os.path.join(solution.path, fut)
+        if not os.access(fut_path, os.X_OK):
+            st = os.stat(fut_path)
+            os.chmod(fut_path, st.st_mode | stat.S_IEXEC)
+
+
+        ############### 2. CLEAN SOLUTION ###############
+        if with_logs:
+            add_to_user_logs(env, 'info', f"cleaning tests results...")
+        clean_test(solution)
+
+        ############### 3. PREPARE DATA ###############
+        if with_logs:
+            add_to_user_logs(env, 'info', f"preparing data for testing...")
+        if run_seq_tests and tests:
+            data_ok = prepare_data(env, solution.path, SRC_RUN_TESTS_FILE)       
+        else:
+            data_ok = prepare_data(env, solution.path, SRC_RUN_TESTSUITE_FILE)
+        if not data_ok:
+            log("run testsuite | problem with testing data")
+            add_to_user_logs(env, 'error', f"problem with testing data...")
+            return env, False
 
         ############### 4. RUN TESTSUITE ###############
-        succ = run_testsuite_in_docker(solution.path, fut)
+        f1, f2, f3 = with_logs, run_seq_tests, tests
+        succ = run_testsuite_in_docker(env, solution.path, fut, add_to_user_logs, with_logs=f1, run_seq_tests=f2, tests=f3)
         if not succ:
             log("run testsuite | problem with testsuite run in docker")
-            return env
+            return env, False
         # reload tests tags for solution after testsuite is done
         solution.reload_test_tags()
 
@@ -97,8 +112,9 @@ def run_testsuite(env, solution, show_results=True):
     except Exception as err:
         log("run testsuite | "+str(err)+" | "+str(traceback.format_exc()))
         env.set_exit_mode()
+        return env, False
 
-    return env
+    return env, True
 
 
 def prepare_data(env, solution_dir, run_file):
@@ -146,12 +162,42 @@ def prepare_data(env, solution_dir, run_file):
 
 
 
+def prepare_data_for_static_testing(env, solution_dir):
+    if not env.cwd.proj or not solution_dir:
+        return False
+
+    # 1. check necessary dirs and files
+    tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
+    sum_file = os.path.join(tests_dir, SUM_FILE)
+    scoring_file = os.path.join(tests_dir, SCORING_FILE)
+    if not os.path.exists(tests_dir) or not os.path.isdir(tests_dir):
+        log(f"prepare data | tests_dir '{tests_dir}' doesnt exists or its not a directory")
+        return False
+    if not os.path.exists(scoring_file):
+        log(f"prepare data | scoring file '{scoring_file}' doesnt exist")
+        return False
+    if not os.path.exists(sum_file):
+        log(f"prepare data | sum file '{sum_file}' doesnt exist")
+        return False
+
+    # 2. check if tst fce file is in proj/tests/src/ dir
+    bash_tests_ok = check_bash_functions_for_testing(env.cwd.proj.path)
+    if not bash_tests_ok:
+        log("prepare data | problem with bash functions for tests")
+        return False
+    return True
+
+
+
 # return success
 # ocakavam ze je vytvoreny image s menom `test`
-def run_testsuite_in_docker(solution_dir, fut):
+def run_testsuite_in_docker(env, solution_dir, fut, add_to_user_logs, with_logs=True, run_seq_tests=False, tests=None):
     succ = True
     try:
         # create container from image `test` (IMAGE_NAME)
+        if with_logs:
+            add_to_user_logs(env, 'info', f"creating docker container...")
+
         container_cid_file = '/tmp/docker.cid'
         output = subprocess.run(f"docker run --cidfile {container_cid_file} --rm -d --workdir {CONTAINER_DIR} -v {SHARED_DIR}:{CONTAINER_DIR}:z {IMAGE_NAME} bash -c".split(' ')+["while true; do sleep 1; done"],  capture_output=True)
         output_out = str(output.stdout.decode('utf-8'))
@@ -162,9 +208,17 @@ def run_testsuite_in_docker(solution_dir, fut):
             with open(container_cid_file, 'r') as f:
                 cid = f.read()
 
-            # run test script (cd sut; /opt/tests/run.sh)
-            # run_testsuite /opt/tests/src /opt/tests /opt/sut/tests_tags.yaml tests sut {fut}
-            command = f"{CONTAINER_RUN_FILE} /opt/tests/src /opt/tests tests_tags.yaml {RESULTS_SUB_DIR} sut {fut}"
+            if with_logs:
+                add_to_user_logs(env, 'info', f"running testsuite...")
+
+            if run_seq_tests and tests:
+                # run_tests tst_file tests_dir TESTS_TAGS RESULTS_DIR login fut tests
+                test_list = ' '.join(tests)
+                command = f"{CONTAINER_RUN_FILE} /opt/tests/src/tst /opt/tests tests_tags.yaml {RESULTS_SUB_DIR} sut {fut} {test_list}"
+            else:
+                # run_testsuite /opt/tests/src /opt/tests /opt/sut/tests_tags.yaml tests sut {fut}
+                command = f"{CONTAINER_RUN_FILE} /opt/tests/src /opt/tests tests_tags.yaml {RESULTS_SUB_DIR} sut {fut}"
+
             output = subprocess.run(f"docker exec --workdir {CONTAINER_SUT_DIR} {cid} bash {command}".split(' '), capture_output=True)
             result = output.stdout.decode('utf-8')
             err = output.stderr.decode('utf-8')
@@ -175,12 +229,16 @@ def run_testsuite_in_docker(solution_dir, fut):
             # remove container
             out = subprocess.run(f"docker rm -f {cid}".split(' '), capture_output=True)
 
+            if with_logs:
+                add_to_user_logs(env, 'info', f"getting results from tests...")
+
             # get results from test script
             docker_results = os.path.join(SHARED_SUT_DIR, RESULTS_SUB_DIR)
             student_results = os.path.join(solution_dir, RESULTS_SUB_DIR)
             shutil.copytree(docker_results, student_results, dirs_exist_ok=True)
         else:
             log("run testsuite - cannot create docker container | "+str(err)+" | "+str(traceback.format_exc()))
+            add_to_user_logs(env, 'error', f"cannot create docker container...")
             succ = False
     except Exception as err:
         log("run testsuite | "+str(err)+" | "+str(traceback.format_exc()))
@@ -209,7 +267,6 @@ def clean_test(solution):
             shutil.rmtree(SHARED_DIR)
     except Exception as err:
         log("clean test | "+str(err))
-
 
 
 def calculate_score(env, solution):
@@ -260,126 +317,4 @@ def check_bash_functions_for_testing(proj_dir):
             log("copy bash functions | "+str(err))
     return bash_file_exists
 
-
-
-# bin/t
-""" /bin/t --> spusti /tests/testsuite.sh --- ten spusta /bin/tst run param """
-# return success
-def run_testsuite_in_local(tests_dir, solution_dir, fut):
-    succ = True
-    try:
-        testsuite_file = os.path.join(tests_dir, TESTSUITE_FILE)
-        ############### 3. spusti testsuite ###############
-        # spristupnit bin/tst (run_test), bin/n (add_note) pre testsuite.sh
-        # TODO !!!!!!!
-        # SRC_BASH_DIR = '/testing/tst.py'  --> SRC_BASH_DIR/tst.py run test_name
-        # SRC_BASH_DIR = '/testing/tst'     --> SRC_BASH_DIR/tst run test_name
-        # command += f"export PATH={SRC_BASH_DIR}:$PATH\n"  
-        bash_dir = os.path.join(tests_dir, TST_FCE_DIR)
-        login = os.path.basename(solution_dir)
-        command += f"export PATH={bash_dir}:$PATH\n"
-        command += f"export TESTSDIR={tests_dir}\n"
-        command += f"export TEST_FILE={TEST_FILE}\n"
-        command += f"export TAG_FILE={TESTS_TAGS}\n"
-        command += f"export RESULTS_DIR={RESULTS_SUB_DIR}\n"
-        command += f"export FUT={fut}\n"
-        command += f"export login={login}\n"
-        command += f"cd {solution_dir}\n"
-        command += f"{testsuite_file}\n"
-
-        # command += f"{print_score}\n"
-
-
-        env.bash_active = True
-        env.bash_action = Bash_action()
-        env.bash_action.dont_jump_to_cwd()
-        env.bash_action.add_command(command)
-        return env
-
-        # PRINT SCORE
-        # echo ====================================
-        # grep -m1 "^[0-9].*:celkem" hodnoceni-auto
-        # echo Stiskni enter...; read
-    except Exception as err:
-        log("run testsuite | "+str(err))
-        return env
-
-
-
-
-
-# bin/tst
-""" /bin/tst run param --> spusti /tests/tst run param"""
-def run_tests(env, solution, test_list):
-    try:
-        if not test_list: # no test to run
-            return env
-
-        if not env.cwd.proj or not solution:
-            log("run tests | run from solution dir in some project dir")
-            return
-
-        ############### 1. CLEAN SOLUTION ###############
-        clean_test(solution)
-
-        ############### 2. PREPARE DATA ###############
-        data_ok = prepare_data(env, solution.path, SRC_RUN_TESTS_FILE)
-        if not data_ok:
-            log("run tests | problem with testing data")
-            return env
-        tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
-        if not os.path.exists(tests_dir) or not os.path.isdir(tests_dir):
-            log(f"run test | tests_dir '{tests_dir}' doesnt exists or its not a directory")
-            return env
-        for test_name in test_list:
-            test_dir = os.path.join(tests_dir, test_name)
-            if not is_testcase_dir(test_dir, with_check=True):
-                log(f"run test | '{test_dir}' is not valid test dir with dotest.sh in it")
-                return env
-
-
-        ############### 3. CHECK IF FUT EXISTS ###############
-        fut = env.cwd.proj.sut_required
-        file_list = os.listdir(solution.path)
-        if not fut in file_list:
-            log("run tests | fut file '{fut}' doesnt exists in solution dir")
-            return env
-
-        ############### 4. RUN TESTS ###############
-        env = run_tests_in_docker(env, solution.path, fut, test_list)
-        # shutil.rmtree(SHARED_DIR)
-
-    except Exception as err:
-        log("run tests | "+str(err)+" | "+str(traceback.format_exc()))
-        env.set_exit_mode()
-
-    return env
-
-
-def run_tests_in_docker(env, solution_dir, fut, test_list):
-    try:
-        # get user id
-        user_id = os.getuid()
-        group_id = os.getgid()
-        is_root = False
-        if user_id == 0:
-            is_root = True
-
-        # create container from image `test` (IMAGE_NAME)
-        docker_results = os.path.join(SHARED_SUT_DIR, RESULTS_SUB_DIR)
-        student_results = os.path.join(solution_dir, RESULTS_SUB_DIR)
-        tests = ' '.join(test_list)
-        docker_command = f"{CONTAINER_RUN_FILE} /opt/tests/src/tst /opt/tests tests_tags.yaml {RESULTS_SUB_DIR} sut {fut} {tests}"
-        cmd = f"docker run --rm -d --user {user_id} --workdir {CONTAINER_SUT_DIR} -v {SHARED_DIR}:{CONTAINER_DIR}:z {IMAGE_NAME} bash -c '{docker_command} 2>&1'\n"
-        cmd += f"cp {docker_results} {student_results}\n"
-        cmd += f"rm -rf {SHARED_DIR}\n"
-
-        env.bash_active = True
-        env.bash_action = Bash_action()
-        env.bash_action.dont_jump_to_cwd()
-        env.bash_action.add_command(cmd)
-        return env
-    except Exception as err:
-        log("run tests | "+str(err)+" | "+str(traceback.format_exc()))
-        return env
 

@@ -1,3 +1,4 @@
+import csv
 
 import curses
 import curses.ascii
@@ -120,3 +121,35 @@ def run_function(stdscr, env, fce, key, logs_len):
 
     env.update_win_for_current_mode(win)
     return logs_len, env, False
+
+
+def add_to_user_logs(env, m_type, message):
+    date = datetime.datetime.now().strftime("%d/%m/%y-%H:%M")
+
+    if str(m_type).lower().strip() in ['e', 'error']:
+        m_type = "ERROR  "
+    elif str(m_type).lower().strip() in ['w', 'warning']:
+        m_type = "WARNING"
+    else:
+        m_type = "INFO   "
+
+    user_logs_file = os.path.join(DATA_DIR, USER_LOGS_FILE)
+    with open(user_logs_file, 'a') as f:
+        csv_writer = csv.writer(f, delimiter='|', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        csv_writer.writerow([date, m_type, message])
+
+    env.user_logs.append((date, m_type, message))
+    go_down_in_user_logs(env)
+    show_logs(env)
+
+def go_down_in_user_logs(env):
+    while True:
+        max_cols = env.windows.logs.end_x - env.windows.logs.begin_x - 1
+        max_rows = env.windows.logs.end_y - env.windows.logs.begin_y
+        row_shift = env.windows.logs.row_shift
+        logs_len = calculate_total_len_lines(env.user_logs, 0, max_cols)
+        shifted = calculate_total_len_lines(env.user_logs, 0, max_cols, stop_at=row_shift)
+        if logs_len >= shifted + max_rows:
+            env.windows.logs.row_shift += 1
+        else:
+            break

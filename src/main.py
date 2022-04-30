@@ -24,7 +24,7 @@ from views.filtering import filter_management
 from views.viewing import file_viewing
 from views.tags import tag_management
 from views.notes import notes_management
-from views.user_logs import logs_viewing
+from views.user_logs import logs_viewing, go_down_in_user_logs
 
 from views.help import show_help
 
@@ -45,11 +45,11 @@ INT_BASH = 5
 """
 - set ncurses settings
 - returns env object with
-    * created screens and windwos for ncurese
+    * created screens and windows for ncurses
     * loaded config from file
     * loaded controls from file
     * loaded typical notes from file
-
+    * loaded user logs from file
 """
 def prepare_environment(stdscr):
     curses.set_escdelay(1)
@@ -85,6 +85,7 @@ def prepare_environment(stdscr):
 
     """ load user logs from file """
     env.user_logs = load_user_logs_from_file()
+    go_down_in_user_logs(env)
 
     """ get current files and dirs """
     env.cwd = get_directory_content(env)

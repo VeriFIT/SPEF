@@ -11,6 +11,36 @@ from modules.project import Project
 
 
 
+""" from subjA/proj1/xlogin00/dir/file_name to proj1/xlogin00/dir/file_name """
+def get_path_relative_to_project_dir(dest_path, proj_path=None):
+    # check if its project subdir
+    cur_dir = dest_path if os.path.isdir(dest_path) else os.path.dirname(dest_path)
+    if not proj_path:
+        proj = None
+        while True:
+            file_list = os.listdir(cur_dir)
+            parent_dir = os.path.dirname(cur_dir)
+            if PROJ_CONF_FILE in file_list:
+                proj_data = load_proj_from_conf_file(cur_dir)
+                proj = Project(cur_dir)
+                succ = proj.set_values_from_conf(proj_data)
+                if not succ:
+                    proj = None
+                break
+            else:
+                if cur_dir == parent_dir:
+                    break
+                else:
+                    cur_dir = parent_dir
+        if proj is None:
+            return None
+        proj_path = proj.path
+
+    # return relative path
+    return os.path.relpath(dest_path, os.path.dirname(proj_path))
+
+
+
 """ from subjA/proj1/xlogin00/dir/file_name to xlogin00/dir/file_name """
 def get_path_relative_to_solution_dir(dest_path):
     # check if its project subdir

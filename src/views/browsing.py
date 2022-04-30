@@ -15,6 +15,7 @@ from views.filtering import filter_management
 from views.help import show_help
 from views.menu import brows_menu
 from views.input import get_user_input
+from views.user_logs import add_to_user_logs
 
 from modules.directory import Directory
 from modules.project import Project
@@ -70,16 +71,13 @@ def directory_browsing(stdscr, env):
     while True:
         screen, win = env.get_screen_for_current_mode()
 
-        """ print all screens """
-        rewrite_all_wins(env)
-
         """ try to load buffer and tag for current file in directory structure """
         idx = win.cursor.row
         if env.quick_view and idx < len(env.cwd):
             dirs_and_files = env.cwd.get_all_items()
             # if its file, show its content and tags
-            selected_item = os.path.join(env.cwd.path, dirs_and_files[idx])
             if idx >= len(env.cwd.dirs) and len(dirs_and_files)>idx:
+                selected_item = os.path.join(env.cwd.path, dirs_and_files[idx])
                 # if its archive file, show its content (TODO)
                 if is_archive_file(selected_item):
                     pass
@@ -98,8 +96,12 @@ def directory_browsing(stdscr, env):
             # if its project directory, show project info and test results
             else:
                 if env.cwd.proj is not None and len(dirs_and_files)>idx:
+                    selected_item = os.path.join(env.cwd.path, dirs_and_files[idx])
                     env = load_tags_if_changed(env, selected_item)
             env.update_win_for_current_mode(win)
+
+        """ print all screens """
+        rewrite_all_wins(env)
 
         key = stdscr.getch()
 
@@ -293,6 +295,7 @@ def run_menu_function(stdscr, env, fce, key):
             return env, False
         env = create_project(env)
         env.cwd = get_directory_content(env)
+        add_to_user_logs(env, 'info', f'new project created ({os.path.basename(env.cwd.proj.path)})')
     # ======================= CREATE DIR =======================
     elif fce == CREATE_DIR:
         # get name for new dir
@@ -335,62 +338,69 @@ def run_menu_function(stdscr, env, fce, key):
             return env, True
     # ============================ EXPAND ===========================
     elif fce == EXPAND_ALL_SOLUTIONS: # ALL STUDENTS
-        # <-------------------------------------------------------------------------------------------------------------------------------------
-
         if env.cwd.proj is not None:
             solutions, problem_files = get_solution_archives(env)
+            add_to_user_logs(env, 'info', "extracting all solution archives...")
+            if not solutions:
+                add_to_user_logs(env, 'warning', "no solution archives found in project directory")
             problem_solutions = extract_archives(solutions)
             problem_solutions.update(problem_files)
             if problem_solutions:
-                log("extract | problem archives: "+str(problem_solutions))
+                add_to_user_logs(env, 'warning', f"problematic archives: {problem_solutions}")
+                # log("extract | problem archives: "+str(problem_solutions))
             env.cwd = get_directory_content(env)
             env.cwd.proj.reload_solutions()
     # ============================ RENAME ===========================
     elif fce == RENAME_ALL_SOLUTIONS: # ALL STUDENTS
-        # <-------------------------------------------------------------------------------------------------------------------------------------
-
         if env.cwd.proj is not None:
-            if env.cwd.proj.sut_required == "":
-                log("rename all solutions | there is no defined sut_required in proj config")
+            if not env.cwd.proj.sut_required:
+                add_to_user_logs(env, 'error', "cant rename solutions -- no 'sut_required' in proj config")
+                # log("rename all solutions | there is no defined sut_required in proj config")
             else:
+                add_to_user_logs(env, 'info', "renaming all solutions...")
                 ok, renamed, fail = rename_solutions(env.cwd.proj)
-                add_to_user_logs(env, 'info   ', f'students with correctly named SUT: {ok}')
-                add_to_user_logs(env, 'warning', f'students with wrong named and renamed SUT: {renamed}')
-                add_to_user_logs(env, 'warning', f'students with no supported extention of SUT file: {fail}')
-
-                log("students with correctly named solution file: "+str(ok))
-                log("students with wrong named solution file: "+str(renamed))
-                log("students with no supported extention of solution file: "+str(fail))
+                # add_to_user_logs(env, 'info', f'students with correctly named SUT: {ok}')
+                if renamed:
+                    add_to_user_logs(env, 'info', f"students with wrong named and renamed SUT: {renamed}")
+                if fail:
+                    add_to_user_logs(env, 'warning', f"students with no supported extention of SUT: {fail}")
     # ====================== EXPAND AND RENAME ======================
     elif fce == EXPAND_AND_RENAME_SOLUTION: # on solution dir
-        # <-------------------------------------------------------------------------------------------------------------------------------------
-
         idx = win.cursor.row
         dirs_and_files = env.cwd.get_all_items()
         if env.cwd.proj is not None and len(dirs_and_files)>idx:
-            path = os.path.join(env.cwd.path, dirs_and_files[idx]) # selected item
+            selected_item = dirs_and_files[idx]
+            path = os.path.join(env.cwd.path, selected_item)
             if is_solution_file(env.cwd.proj.solution_id, path):
                 if not is_archive_file(path):
-                    log("expand and rename solution | is solution but not zipfile or tarfile")
+                    # log("expand and rename solution | is solution but not zipfile or tarfile")
+                    add_to_user_logs(env, 'error', f"cannot extract '{selected_item}' -- solution is not zipfile or tarfile")
                 else:
                     # try extract solution archive file 
+                    add_to_user_logs(env, 'info', "extracting solution archive...")
                     problem_solutions = extract_archives([path])
                     env.cwd = get_directory_content(env)
                     env.cwd.proj.reload_solutions()
                     if problem_solutions:
-                        log("extract | problem archives: "+str(problem_solutions))
+                        # log("extract | problem archives: "+str(problem_solutions))
+                        add_to_user_logs(env, 'warning', f"problematic archives: {problem_solutions}")
                     else:
-                        # try rename sut
-                        solution_name = os.path.basename(remove_archive_suffix(path))
-                        solution = None
-                        if solution_name in env.cwd.proj.solutions:
-                            solution = env.cwd.proj.solutions[solution_name]
-                        if solution is not None:
-                            ok, renamed, fail = rename_solutions(env.cwd.proj, solution=solution)
+                        if not env.cwd.proj.sut_required:
+                            add_to_user_logs(env, 'error', "cant rename solution -- no 'sut_required' in proj config")
+                        else:
+                            # try rename sut
+                            solution_name = os.path.basename(remove_archive_suffix(path))
+                            solution = None
+                            if solution_name in env.cwd.proj.solutions:
+                                solution = env.cwd.proj.solutions[solution_name]
+                            if solution is not None:
+                                ok, renamed, fail = rename_solutions(env.cwd.proj, solution=solution)
+                                if renamed:
+                                    add_to_user_logs(env, 'info', f"student renamed: {solution_name}")
+                                if fail:
+                                    add_to_user_logs(env, 'warning', f"no supported extention of SUT: {solution_name}")
     # ======================= CLEAN =======================
     elif fce == TEST_CLEAN_ALL:
-        # <-------------------------------------------------------------------------------------------------------------------------------------
-
         if env.cwd.proj is not None:
             solution_list = []
             for dir_name in env.cwd.dirs:
@@ -400,20 +410,19 @@ def run_menu_function(stdscr, env, fce, key):
 
             # for key, solution in env.cwd.proj.solutions.items():
             for solution in solution_list:
+                add_to_user_logs(env, 'info', f"cleaning tests results for student '{solution.name}'...")
                 clean_test(solution)
+            add_to_user_logs(env, 'info', f"cleaning done !!")
             env.cwd = get_directory_content(env)
     elif fce == TEST_CLEAN: # on solution dir
-        # <-------------------------------------------------------------------------------------------------------------------------------------
-
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)
         if solution is not None:
+            add_to_user_logs(env, 'info', f"cleaning tests results for student '{solution.name}'...")
             clean_test(solution)
             env.cwd = get_directory_content(env)
     # ======================= RUN TESTSUITE =======================
     elif fce == TEST_ALL_STUDENTS: # ALL STUDENTS
-        # <-------------------------------------------------------------------------------------------------------------------------------------
-
         if env.cwd.proj is not None:
             solution_list = []
             for dir_name in env.cwd.dirs:
@@ -423,25 +432,71 @@ def run_menu_function(stdscr, env, fce, key):
 
             # for key, solution in env.cwd.proj.solutions.items():
             for solution in solution_list:
-                env = run_testsuite(env, solution, show_results=False)
+                add_to_user_logs(env, 'info', f"*** testing student '{solution.name}' ***")
+                env, succ = run_testsuite(env, solution, add_to_user_logs, with_logs=False)
+                if succ:
+                    add_to_user_logs(env, 'info', f"testing done")
+                else:
+                    add_to_user_logs(env, 'warning', f"testing failed")
                 if env.is_exit_mode():
                     return env, True
+            add_to_user_logs(env, 'info', f"testing all students done !!")
             env.cwd = get_directory_content(env)
     elif fce == TEST_STUDENT: # on solution dir
-        # <-------------------------------------------------------------------------------------------------------------------------------------
-
         """ run testsuite on student solution directory """
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)
         if solution is not None:
-            env = run_testsuite(env, solution) # run testsuite in docker
+            add_to_user_logs(env, 'info', f"*** testing student '{solution.name}' ***")
+            env, succ = run_testsuite(env, solution, add_to_user_logs)
+            if succ:
+                add_to_user_logs(env, 'info', f"testing successfully done")
+            else:
+                add_to_user_logs(env, 'warning', f"testing failed")
             if env.is_exit_mode():
                 return env, True
             env.cwd = get_directory_content(env)
-    # ======================= RUN TEST (TODO)=======================
-    elif fce == RUN_TEST: # on solution dir
-        # <-------------------------------------------------------------------------------------------------------------------------------------
+    # ======================= RUN TEST =======================
+    elif fce == ALL_RUN_TESTS: # all solutions
+        """ select one or more tests and run this tests"""
+        if env.cwd.proj is not None:
+            # get solution list
+            solution_list = []
+            for dir_name in env.cwd.dirs:
+                solution_name = os.path.basename(dir_name)
+                if solution_name in env.cwd.proj.solutions:
+                    solution_list.append(env.cwd.proj.solutions[solution_name])
 
+            # show menu with tests for selection
+            title = "Select one or more tests and press 'enter' to run them sequentially..."
+            test_names = get_tests_names(env)
+            test_names.sort()
+            env, option_list = brows_menu(stdscr, env, test_names, keys=True, select_multiple=True, title=title)
+            if env.is_exit_mode():
+                return env, True
+            screen, win = env.get_screen_for_current_mode()
+            curses.curs_set(0)
+            rewrite_all_wins(env)
+
+            if option_list is not None:
+                tests = []
+                for option_idx in option_list:
+                    if len(test_names) > option_idx:
+                        test_name = test_names[option_idx]
+                        tests.append(test_name)
+                # run selected tests
+                for solution in solution_list:
+                    add_to_user_logs(env, 'info', f"*** testing student '{solution.name}' ***")
+                    env, succ = run_testsuite(env, solution, add_to_user_logs, with_logs=False, run_seq_tests=True, tests=tests)
+                    if succ:
+                        add_to_user_logs(env, 'info', f"testing done")
+                    else:
+                        add_to_user_logs(env, 'warning', f"testing failed")
+                    if env.is_exit_mode():
+                        return env, True
+                add_to_user_logs(env, 'info', f"testing all students done !!")
+                env.cwd = get_directory_content(env)
+    elif fce == RUN_TESTS: # on solution dir
         """ select one or more tests and run this tests on student solution directory """
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)
@@ -455,6 +510,7 @@ def run_menu_function(stdscr, env, fce, key):
                 return env, True
             screen, win = env.get_screen_for_current_mode()
             curses.curs_set(0)
+            rewrite_all_wins(env)
 
             if option_list is not None:
                 tests = []
@@ -462,28 +518,33 @@ def run_menu_function(stdscr, env, fce, key):
                     if len(test_names) > option_idx:
                         test_name = test_names[option_idx]
                         tests.append(test_name)
+
                 # run selected tests
-                env = run_tests(env, solution, tests)
+                add_to_user_logs(env, 'info', f"*** testing student '{solution.name}' ***")
+                env, succ = run_testsuite(env, solution, add_to_user_logs, with_logs=False, run_seq_tests=True, tests=tests)
+                if succ:
+                    add_to_user_logs(env, 'info', f"testing successfully done")
+                else:
+                    add_to_user_logs(env, 'warning', f"testing failed")
+                if env.is_exit_mode():
+                    return env, True
                 env.cwd = get_directory_content(env)
-                return env, True
     # =================== GENERATE REPORT ===================
     elif fce == GEN_CODE_REVIEW: # on solution dir
-        # <-------------------------------------------------------------------------------------------------------------------------------------
-
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)
         if solution is not None:
+            add_to_user_logs(env, 'info', f"generationg code review for solution '{solution.name}'...")
             generate_code_review(env, solution)
             env.cwd = get_directory_content(env)
     elif fce == GEN_TOTAL_REPORT: # on solution dir
-        # <-------------------------------------------------------------------------------------------------------------------------------------
-
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)
         if solution is not None:
             # check for report dir and report template
             report_dir = os.path.join(env.cwd.proj.path, REPORT_DIR)
             create_report_dir(report_dir)
+            add_to_user_logs(env, 'info', f"generationg total report from template for solution '{solution.name}'...")
             generate_report_from_template(env, solution)
     # ======================= ADD TEST NOTES TO REPORT =======================
     elif fce == ADD_TEST_NOTE_TO_ALL:
@@ -504,6 +565,8 @@ def run_menu_function(stdscr, env, fce, key):
             if note_text is not None:
                 note_text = ''.join(note_text).strip()
                 add_test_note_to_solutions(env, solution_list, note_text)
+                solutions_names = [solution.name for solution in solution_list]
+                add_to_user_logs(env, 'info', f"test note added to solutions: {solutions_names}")
     elif fce == ADD_TEST_NOTE: # on solution
         # add note to auto report from tests
         idx = win.cursor.row
@@ -519,6 +582,7 @@ def run_menu_function(stdscr, env, fce, key):
             if note_text is not None:
                 note_text = ''.join(note_text).strip()
                 add_test_note_to_solutions(env, [solution], note_text)
+                add_to_user_logs(env, 'info', f"test note added to solution: {solution.name}")
     # ======================= ADD USER NOTES TO REPORT =======================
     elif fce == ADD_USER_NOTE_TO_ALL:
         # get list of solutions to which will be added note
@@ -541,6 +605,8 @@ def run_menu_function(stdscr, env, fce, key):
                     # add user note
                     solution.add_user_note(note_text)
                     save_user_notes_for_solution(solution)
+                    solutions_names = [solution.name for solution in solution_list]
+                    add_to_user_logs(env, 'info', f"user note added to solutions: {solutions_names}")
     elif fce == ADD_USER_NOTE: # on solution
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)
@@ -557,6 +623,7 @@ def run_menu_function(stdscr, env, fce, key):
                 # add user note
                 solution.add_user_note(note_text)
                 save_user_notes_for_solution(solution)
+                add_to_user_logs(env, 'info', f"user note added to solution: {solution.name}")
     # ======================= ADD TAG =======================
     elif fce == ADD_TAG_TO_ALL:
         # get list of solutions to which will be added note
@@ -581,13 +648,15 @@ def run_menu_function(stdscr, env, fce, key):
                     for solution in solution_list:
                         solution.tags.set_tag(tag_name, args)
                         save_tags_to_file(solution.tags)
+                        solutions_names = [solution.name for solution in solution_list]
+                        add_to_user_logs(env, 'info', f"tag added to solutions: {solutions_names}")
     # ======================= SHOW INFO =======================
     elif fce == SHOW_OR_HIDE_PROJ_INFO:
         env.show_solution_info = not env.show_solution_info
     elif fce == SHOW_CODE_REVIEW: # on solution dir
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)
-        if solution is not None:
+        if solution is not None and env.cwd.proj:
             # open generated code review
             code_review_file = os.path.join(solution.path, REPORT_DIR, CODE_REVIEW_FILE)
             if os.path.exists(code_review_file):
@@ -596,10 +665,12 @@ def run_menu_function(stdscr, env, fce, key):
                 return env, True
             else:
                 log(f"cant find code review file | '{code_review_file}' doesnt exists")
+                rel_path = get_path_relative_to_project_dir(os.path.dirname(code_review_file), env.cwd.proj.path)
+                add_to_user_logs(env, 'warning', f"cannot find file with code review in '{rel_path}'")
     elif fce == SHOW_TEST_NOTES: # on solution dir
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)
-        if solution is not None:
+        if solution is not None and env.cwd.proj:
             # open file with test notes
             test_notes_file = os.path.join(solution.path, REPORT_DIR, TEST_NOTES_FILE)
             if os.path.exists(test_notes_file):
@@ -608,10 +679,12 @@ def run_menu_function(stdscr, env, fce, key):
                 return env, True
             else:
                 log(f"cant find file with test notes | '{test_notes_file}' doesnt exists")
+                rel_path = get_path_relative_to_project_dir(os.path.dirname(test_notes_file), env.cwd.proj.path)
+                add_to_user_logs(env, 'warning', f"cannot find file with test notes in '{rel_path}'")
     elif fce == SHOW_USER_NOTES: # on solution dir
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)
-        if solution is not None:
+        if solution is not None and env.cwd.proj:
             # open file with user notes
             user_notes_file = os.path.join(solution.path, REPORT_DIR, USER_NOTES_FILE)
             if os.path.exists(user_notes_file):
@@ -620,6 +693,8 @@ def run_menu_function(stdscr, env, fce, key):
                 return env, True
             else:
                 log(f"cant find file with user notes | '{user_notes_file}' doesnt exists")
+                rel_path = get_path_relative_to_project_dir(os.path.dirname(user_notes_file), env.cwd.proj.path)
+                add_to_user_logs(env, 'warning', f"cannot find file with user notes in '{rel_path}'")
     elif fce == SHOW_TOTAL_REPORT: # on solution dir
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)
@@ -632,16 +707,21 @@ def run_menu_function(stdscr, env, fce, key):
                 return env, True
             else:
                 log(f"cant find report file | '{report_file}' doesnt exists")
+                rel_path = get_path_relative_to_project_dir(os.path.dirname(report_file), env.cwd.proj.path)
+                add_to_user_logs(env, 'warning', f"cannot find report file in '{rel_path}'")
     elif fce == SHOW_TEST_RESULTS: # on solution dir
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)
         if solution is not None:
             # go to solution/tests/ dir
             test_dir = os.path.join(solution.path, TESTS_DIR)
-            os.chdir(test_dir)
-            env.cwd = get_directory_content(env)
-            env.reset_brows_wins()
-            win.reset(0,0)
+            if os.path.exists(tests_dir):
+                os.chdir(test_dir)
+                env.cwd = get_directory_content(env)
+                env.reset_brows_wins()
+                win.reset(0,0)
+            else:
+                add_to_user_logs(env, 'warning', f"directory with test results doesnt exists for solution '{solution.name}'")
     # ======================= SHOW STATS =======================
     elif fce == SHOW_SCORING_STATS:
         generate_scoring_stats(env)
@@ -650,6 +730,9 @@ def run_menu_function(stdscr, env, fce, key):
             env.set_file_to_open(stats_file)
             env.set_view_mode()
             return env, True
+        else:
+            rel_path = get_path_relative_to_project_dir(os.path.dirname(stats_file), env.cwd.proj.path)
+            add_to_user_logs(env, 'warning', f"cannot find file with statistics in '{stats_file}'")
     elif fce == SHOW_TST_RES_STATS:
         generate_test_results_hist(env)
         stats_file = os.path.join(env.cwd.proj.path, REPORT_DIR, TESTS_STATS_FILE)
@@ -657,6 +740,9 @@ def run_menu_function(stdscr, env, fce, key):
             env.set_file_to_open(stats_file)
             env.set_view_mode()
             return env, True
+        else:
+            rel_path = get_path_relative_to_project_dir(os.path.dirname(stats_file), env.cwd.proj.path)
+            add_to_user_logs(env, 'warning', f"cannot find file with statistics in '{stats_file}'")
     # =================== ADD TEST ===================
     elif fce == ADD_TEST:
         env.update_win_for_current_mode(win)
@@ -674,6 +760,7 @@ def run_menu_function(stdscr, env, fce, key):
             test_name = re.sub("\s+","_",test_name)
 
             # create dir for new test (and go to new test dir)
+            add_to_user_logs(env, 'info', f"creating new test '{test_name}'...")
             new_test_dir = create_new_test(env.cwd.path, test_name)
             if new_test_dir is not None:
                 os.chdir(new_test_dir)
@@ -692,6 +779,7 @@ def run_menu_function(stdscr, env, fce, key):
             if os.path.exists(tests_dir):
                 # create testsuite file if not exists
                 testsuite_file = os.path.join(tests_dir, TESTSUITE_FILE)
+                add_to_user_logs(env, 'info', f"creating testsuite file...")
                 create_testsuite(testsuite_file)
 
                 # open "testsuite.sh" to implement testing strategy
@@ -700,6 +788,8 @@ def run_menu_function(stdscr, env, fce, key):
                 return env, True
             else:
                 log(f"cant create testsuite file in tests dir | '{tests_dir}' doesnt exists ")
+                rel_path = get_path_relative_to_project_dir(tests_dir, env.cwd.proj.path)
+                add_to_user_logs(env, 'error', f"cant create testsuite file -- '{rel_path}' directory doesnt exists")
     # =================== CHANGE SCORING ===================
     elif fce == CHANGE_SCORING:
         if env.cwd.proj is not None:
@@ -710,6 +800,8 @@ def run_menu_function(stdscr, env, fce, key):
                 return env, True
             else:
                 log(f"cant find scoring file | '{scoring_file}' doesnt exists")
+                rel_path = get_path_relative_to_project_dir(scoring_file, env.cwd.proj.path)
+                add_to_user_logs(env, 'error', f"cannot find file with scoring in '{rel_path}'")
     # =================== CHANGE SUM ===================
     elif fce == CHANGE_SUM:
         if env.cwd.proj is not None:
@@ -720,6 +812,8 @@ def run_menu_function(stdscr, env, fce, key):
                 return env, True
             else:
                 log(f"cant find sum file | '{sum_file}' doesnt exists")
+                rel_path = get_path_relative_to_project_dir(sum_file, env.cwd.proj.path)
+                add_to_user_logs(env, 'error', f"cannot find file with sum equation in '{rel_path}'")
     # =================== EDIT TEST ===================
     elif fce == EDIT_TEST:
         if env.cwd.proj is not None:
@@ -751,6 +845,7 @@ def run_menu_function(stdscr, env, fce, key):
                         return env, True
                     else:
                         log(f"edit test | cant find '{test_file}' file for test")
+                        add_to_user_logs(env, 'error', f"cannot find '{TEST_FILE}' file for test '{test_name}'")
     # =================== REMOVE TEST ===================
     elif fce == REMOVE_TEST:
         idx = win.cursor.row
@@ -766,10 +861,15 @@ def run_menu_function(stdscr, env, fce, key):
             # copy test dir to history
             if test_dir is not None:
                 test_name = os.path.basename(test_dir)
+                add_to_user_logs(env, 'info', f"removing test '{test_name}'...")
                 succ = history_test_removed(env.cwd.proj.path, test_name)
                 if succ:
                     # remove test dir
                     shutil.rmtree(test_dir)
+                    if env.cwd.path == test_dir:
+                        os.chdir('..')
+                        env.reset_brows_wins()
+                        win.reset(0,0)
                     env.cwd = get_directory_content(env)
 
                     # check if test dir is in sum equation -> warning (test in sum equation)
@@ -777,21 +877,24 @@ def run_menu_function(stdscr, env, fce, key):
                     if os.path.exists(sum_file):
                         with open(sum_file, 'r') as f:
                             if test_name in f.read():
-                                log(f"remove test | warning - test '{test_name}' may be included in total sum equation (check '{sum_file}' file)")
+                                rel_sum_file_path = get_path_relative_to_project_dir(sum_file, env.cwd.proj.path)
+                                log(f"remove test | warning - test '{test_name}' may be included in total sum equation (check '{rel_sum_file_path}' file)")
+                                add_to_user_logs(env, 'warning', f"test '{test_name}' may be included in sum equation (check '{rel_sum_file_path}' file)")
 
                     # check if test dir is in testsuite.sh -> warning (test in testsuite.sh)
                     testsuite_file = os.path.join(env.cwd.proj.path, TESTS_DIR, TESTSUITE_FILE)
                     if os.path.exists(testsuite_file):
                         with open(testsuite_file, 'r') as f:
                             if test_name in f.read():
-                                log(f"remove test | warning - test '{test_name}' may be included in testsuite (check '{testsuite_file}' file)")
+                                rel_testsuite_file_path = get_path_relative_to_project_dir(testsuite_file, env.cwd.proj.path)
+                                log(f"remove test | warning - test '{test_name}' may be included in testsuite (check '{rel_testsuite_file_path}' file)")
+                                add_to_user_logs(env, 'warning', f"test '{test_name}' may be included in testsuite (check '{rel_testsuite_file_path}' file)")
 
                     # check if solution has test tag -> warning (test results in solution: {solution})
                     # TODO: warning - this may take some time... (depending on how many solution dirs are in this project) do you want to continue?
 
     # =================== CREATE DOCKER IMAGE ===================
     elif fce == CREATE_DOCKERFILE:
-        # <-------------------------------------------------------------------------------------------------------------------------------------
         if env.cwd.proj is not None:
             proj_docker_file = os.path.join(env.cwd.proj.path, 'Dockerfile')
             try:
@@ -856,8 +959,9 @@ def run_menu_function(stdscr, env, fce, key):
         if env.cwd.proj is not None:
             try:
                 proj_docker_file = os.path.join(env.cwd.proj.path, 'Dockerfile')
+                add_to_user_logs(env, 'info', "creating docker image 'test' from Dockerfile...")
                 if not os.path.exists(proj_docker_file):
-                    log("Dockerfile not found in project root directory (use menu option to create one first)")
+                    add_to_user_logs(env, 'error', "Dockerfile not found in project root dir (use menu option to create one first")
                 else:
                     # create image
                     docker_cmd = f"docker build -f {proj_docker_file} -t test ."

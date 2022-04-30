@@ -955,20 +955,20 @@ def show_logs(env):
                 break
 
             date, m_type, message = item
-            date, m_type, message = str(date), str(m_type).lower(), str(message).strip()
+            date, m_type, message = str(date), str(m_type), str(message).strip()
 
             # set color according to message type
-            if m_type in ['e','error']:
+            if str(m_type).lower().strip() in ['e','error']:
                 m_col = curses.color_pair(HL_RED)
-            elif m_type in ['i','info']:
+            elif str(m_type).lower().strip() in ['i','info']:
                 m_col = curses.A_NORMAL
-            elif m_type in ['w','warning']:
-                m_col = curses.color_pair(HL_BLUE)
+            elif str(m_type).lower().strip() in ['w','warning']:
+                m_col = curses.color_pair(HL_DARK_BLUE)
             else:
                 m_col = curses.A_NORMAL
 
             data_to_print = [str(date), " | ", str(m_type), " | ", str(message)]
-            data_colors = [curses.color_pair(HL_YELLOW), curses.A_NORMAL, m_col, curses.A_NORMAL, curses.A_NORMAL]
+            data_colors = [curses.color_pair(HL_DARK_YELLOW), curses.A_NORMAL, m_col, curses.A_NORMAL, curses.A_NORMAL]
             x=1
             line_added = False
             for i, data in enumerate(data_to_print):

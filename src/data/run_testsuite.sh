@@ -1,12 +1,4 @@
 
-# export PATH=/opt/tests/src:$PATH
-# export TESTSDIR=/opt/tests
-# export TAG_FILE=tests_tags.yaml
-# export login=sut
-# export TEST_FILE=dotest.sh
-# export RESULTS_DIR=tests
-# /opt/tests/testsuite.sh
-
 # $1 = tst fce
 # $2 = tests dir
 # $3 = test file

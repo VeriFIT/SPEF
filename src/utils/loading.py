@@ -74,19 +74,6 @@ def load_user_logs_from_file():
     return logs
 
 
-def add_to_user_logs(env, m_type, message):
-    day = datetime.date.today()
-    time = datetime.datetime.now().strftime("%X")
-    date = f"{day} {time}"
-
-    user_logs_file = os.path.join(DATA_DIR, USER_LOGS_FILE)
-    with open(user_logs_file, 'a') as f:
-        csv_writer = csv.writer(f, delimiter='|', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        csv_writer.writerow([date, m_type, message])
-
-    env.user_logs.append((date, m_type, message))
-    return env
-
 
 """ ************* TYPICAL NOTES ************* """
 def load_typical_notes_from_file():
