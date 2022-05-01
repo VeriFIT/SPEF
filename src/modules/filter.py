@@ -1,13 +1,7 @@
-import os
 import glob
-import fnmatch
-import json
+import os
 import re
 import traceback
-import datetime
-
-from modules.buffer import UserInput
-from modules.tags import Tags
 
 from utils.loading import *
 from utils.logger import *
@@ -43,7 +37,6 @@ class Filter:
 
     """ add filter by tag """
     def add_tag(self, tag):
-        # return parsing_ok, tag_name, tag_param, compare_to = (op, value)
         tag_parsing_ok, _, _, _ = parse_tag(tag)
         if not tag_parsing_ok:
             log("invalid input for tag filter")
@@ -230,17 +223,6 @@ class Filter:
     tag: tag to match, ex: "test1(0,.*,2,[0-5],5)"
     """
     def get_files_by_tag(self, env, files):
-        # TODO !!!!!!!!!
-        # if len(files) > 10:
-        #     upozornenie_moze_to_dlho_trvat
-        #     chces_naozaj_pokracovat??
-        #     if no:
-        #         return files
-
-        # if not is_in_project_dir(self.root):
-        #     log("filter by tag | there is no tags (bcs you are not in proj dir)")
-        #     return files
-
         try:
             succ, tag_name, tag_param_num, compare_to = parse_tag(self.tag)
             if not succ or tag_name is None:

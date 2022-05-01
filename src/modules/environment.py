@@ -1,5 +1,4 @@
 import os
-import yaml
 
 from controls.control import *
 from utils.logger import *
@@ -74,8 +73,6 @@ class Environment:
         self.bash_active = False
         self.bash_action = None
         self.bash_fd = None
-
-        # self.bash_exit_key = '0f' # hex value of key (by default CTRL+O)
 
 
     def set_user_control(self, contr):

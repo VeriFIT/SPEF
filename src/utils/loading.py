@@ -1,16 +1,14 @@
 
 import curses
 import curses.ascii
-import yaml
+import csv
 import os
 import traceback
-import csv
-import datetime
+import yaml
 
 from modules.buffer import Buffer
 from modules.report import Report, Note
 from modules.tags import Tags
-
 from utils.logger import *
 from utils.match import *
 

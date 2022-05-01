@@ -1,11 +1,10 @@
 import os
 import shutil
-
 import traceback
 
 from utils.logger import *
-
 from utils.loading import load_testcase_tags, load_testsuite_tags, save_tags_to_file
+
 
 
 def is_test_history_in_tmp(proj_dir, test_name):
@@ -21,10 +20,9 @@ def is_test_history_in_tmp(proj_dir, test_name):
         return os.path.exists(tmp_test_v_dir) and os.path.isdir(tmp_test_v_dir)
 
 
-def history_test_removed(proj_dir, test_name):
+def history_test_removed(env, proj_dir, test_name, add_to_user_logs):
     try:
         history_dir = os.path.join(proj_dir, HISTORY_DIR)
-        history_file = os.path.join(history_dir, HISTORY_FILE)
 
         testcase_dir = os.path.join(proj_dir, TESTS_DIR, test_name)
         testcase_tags = load_testcase_tags(testcase_dir)
@@ -41,6 +39,8 @@ def history_test_removed(proj_dir, test_name):
             if not os.path.exists(history_test_v_dir):
                 # if actual version of this test do not already exists in history
                 shutil.copytree(testcase_dir, history_test_v_dir)
+                add_to_user_logs(env, 'info', f"test '{test_name}' (version: {version}) is archived in history")
+
 
             # add event to history logs
             history_test_event(proj_dir, test_name, f"remove test (version {version})")
@@ -56,10 +56,9 @@ def history_test_removed(proj_dir, test_name):
 # increment testsuite tag
 # add event to history logs
 # return success
-def history_test_modified(proj_dir, test_name):
+def history_test_modified(env, proj_dir, test_name, add_to_user_logs):
     try:
         history_dir = os.path.join(proj_dir, HISTORY_DIR)
-        history_file = os.path.join(history_dir, HISTORY_FILE)
 
         tests_dir = os.path.join(proj_dir, TESTS_DIR)
         testcase_dir = os.path.join(tests_dir, test_name)
@@ -83,8 +82,7 @@ def history_test_modified(proj_dir, test_name):
             # increment test version
             testcase_tags.set_tag('version', [str(version+1)])
             save_tags_to_file(testcase_tags)
-            # add_tag_to_file(tags_file, {"version": [version+1]})
-            # log("add tag to file: "+str(tags_file)+" version: "+str(version+1))
+
 
             # copy test from tmp dir to history
             history_test_dir = os.path.join(history_dir, test_name)
@@ -95,6 +93,8 @@ def history_test_modified(proj_dir, test_name):
                 log(f"history test modified | test {test_name} with version {version} already exists in history!!")
                 return False
             shutil.copytree(tmp_test_v_dir, history_test_v_dir)
+            add_to_user_logs(env, 'info', f"old version ({version}) of test '{test_name}' is saved in history")
+
 
             # add event to history logs
             history_test_event(proj_dir, test_name, f"modify test (test version {version} -> {version+1})")

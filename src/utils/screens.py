@@ -1,16 +1,13 @@
+import array
 import curses
 import curses.ascii
-import traceback
-
-import array
 import fcntl
 import termios
-
+import traceback
 
 from modules.environment import Environment
 from modules.directory import Directory
 from modules.window import Windows, Screens, Window, Cursor
-
 from utils.printing import *
 from utils.logger import *
 

@@ -1,7 +1,3 @@
-
-
-#!/usr/bin/env python3
-
 import os
 import shutil
 import stat
@@ -9,14 +5,9 @@ import subprocess
 import datetime
 import traceback
 
-from pathlib import Path
-
 from utils.logger import *
 from utils.loading import *
 from utils.parsing import parse_sum_equation
-
-from modules.bash import Bash_action
-
 
 
 CONTAINER_DIR = '/opt'

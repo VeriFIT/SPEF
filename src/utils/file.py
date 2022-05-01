@@ -1,19 +1,18 @@
-import os
-import re
 import glob
+import os
 import shutil
 import traceback
 import tarfile
 import zipfile
 
+from controls.functions import SHOW_SUPPORTED_DATA
+from testing.tst import check_bash_functions_for_testing
+from testing.report import copy_default_report_template
 from utils.loading import *
 from utils.logger import *
 from utils.match import *
 from utils.reporting import *
 from utils.history import history_test_event
-
-from testing.tst import check_bash_functions_for_testing
-from testing.report import copy_default_report_template
 
 
 def remove_archive_suffix(path):
@@ -63,7 +62,7 @@ def rename_solutions(proj, solution=None):
     if solution is not None:
         solutions = [solution]
     else:
-        solutions = [data for key, data in proj.solutions.items()]
+        solutions = [data for _, data in proj.solutions.items()]
     for solution in solutions:
         try:
             solution_dir = solution.path
@@ -260,7 +259,7 @@ def create_testsuite_tags_file(testsuite_tags):
 
 # condition: path is root project dir (or path in proj dir)
 # return path to new test dir if created succesfully (else return None)
-def create_new_test(proj_dir, test_name=None):
+def create_new_test(env, proj_dir, test_name=None):
     try:
         # try get path to root project dir
         if not is_root_project_dir(proj_dir):
@@ -303,7 +302,10 @@ def create_new_test(proj_dir, test_name=None):
         with open(os.path.join(new_test_dir, TEST_FILE), 'w+') as f:
             f.write("#!/bin/bash\n")
             f.write("# ***** write test here *****\n")
-            f.write("# press Fx to see all available functions and variables you can use")
+            for key, fce in env.control.file_edit.items():
+                if fce == SHOW_SUPPORTED_DATA:
+                    f.write(f"# press {key} to see all available functions and variables you can use")
+                    break
 
         ############ TEST_TAGS ############
         # create file for test tags

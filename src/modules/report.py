@@ -1,37 +1,13 @@
-import os
-import json
 import yaml
-import re
 
 from utils.logger import *
 
 
-""" report for current project """
-# class Report:
-#     def __init__(self, code_review=None):
-#         """ data """
-#         self.code_review = code_review # {"file": [notes], "file": [notes]}
-#         self.auto_report = None # TODO
-#         self.auto_notes = None # [notes]
-#         self.other_notes = None # [notes]
-
-#         """ project identification """
-#         self.project_path = None
-
-
-"""
-poznamka nemusi mat line,col ak ide o poznamku mimo code review
-napr "chybajuca dokumentacia" je poznamka nepatriaca k ziadnemu konkretnemu riadku v kode
-- jedine poznamky ktore su ulozene v subore ako dict (yaml) a maju row,col su poznamky z code_review
-- vsetky ostatne poznamky su ulozene v subore ako pole stringov (txt) a nemaju ziaden row,col
-"""
 class Note:
     def __init__(self, text, row=None, col=None):
         self.row = row
         self.col = col
         self.text = text
-
-        # self.score = None # pridanie/odobranie bodoveho hodnotenia z celkoveho skore
 
     def is_typical(self, env):
         for note in env.typical_notes:
@@ -48,33 +24,9 @@ class Note:
                 del env.typical_notes[idx]
 
 
-
-"""
-report by mal byt k celemu studentskemu projektu v podadresari reports
-celkovy report sa sklada zo suborov:
-    * automaticke hodnotenie z automatickych testov
-    * poznamky k automatickym testom
-    * poznamky z code review
-    * dalsie nezavisle poznamky
-tieto casti su ulozene v env ako:
-    * auto_report = ??? # je z nich mozne vygenerovat tagy
-    * auto_notes = Report(path, data)
-    * code_review = Report(path, data)
-    * other_notes = Report(path, data)
--auto_report, auto_notes, other_notes sa nacitava s kazdym novym projektom
--code_review sa nacitava s kazdym novym suborom
-"""
-
-"""
-code_review = { 4: { 5: ['my first note'],
-                     10: ['next note on same line']},
-                7: { 1: ['another line'] },
-                11: { 4: ['velmi dlha', 'poznamka k voziku', 'na viac riadkov'] }}
-data = {line : { row1: ['note1'], row2: ['note2', 'note3']} }
-"""
 class Report:
     def __init__(self, path, data=None):
-        self.path = path # cesta k suboru ktory obsahuje report (typicky fileXYZ_report.yaml)
+        self.path = path # ex: fileXYZ_report.yaml
         self.data = [] if data is None else data # [notes]
 
         self.original_report = data.copy()
@@ -140,9 +92,9 @@ class Report:
                     if note.col in notes[note.row]:
                         notes[note.row][note.col].append(note.text)
                     else:
-                        notes[note.row][note.col] = [text]
+                        notes[note.row][note.col] = [note.text]
                 else:
-                    notes[note.row] = {note.col: [text]}
+                    notes[note.row] = {note.col: [note.text]}
             else:
                 notes[0][0].append(note.text)
         with open(self.path, 'w+', encoding='utf8') as f:

@@ -1,7 +1,5 @@
-import os
-import re
 import curses
-
+import re
 
 from utils.coloring import *
 from utils.logger import *

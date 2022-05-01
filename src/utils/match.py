@@ -1,14 +1,11 @@
 
-import re
 import os
-import glob
+import re
 import traceback
 import tarfile
 import zipfile
 
 from utils.logger import *
-# from utils.loading import *
-
 
 
 def filter_intern_files(path_list):

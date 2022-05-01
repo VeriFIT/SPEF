@@ -1,13 +1,6 @@
 import os
-import glob
-import fnmatch
-import json
-import re
 import traceback
-import datetime
 
-from modules.buffer import UserInput
-from modules.tags import Tags
 from modules.project import Project
 
 from utils.loading import *
@@ -86,10 +79,6 @@ class Directory:
             log("get proj conf | "+str(err)+" | "+str(traceback.format_exc()))
 
     def get_dirs_info(self, env):
-        is_root_proj = False
-        if is_root_project_dir(self.path):
-            is_root_proj = True
-
         result = {}
         for dir_name in self.dirs:
             infos = None

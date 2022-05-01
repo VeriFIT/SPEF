@@ -4,16 +4,10 @@ import curses.ascii
 import traceback
 
 from controls.control import *
-
-from modules.directory import Directory
-from modules.window import Window
-from modules.buffer import UserInput
-
-from views.help import show_help
-
 from utils.printing import *
 from utils.screens import *
 from utils.logger import *
+from views.help import show_help
 
 
 """

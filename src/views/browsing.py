@@ -5,21 +5,13 @@ import os
 import shutil
 import shlex
 import traceback
-import tarfile
-import zipfile
 
 from controls.control import *
 from controls.functions import *
-
-from views.filtering import filter_management
-from views.help import show_help
-from views.menu import brows_menu
-from views.input import get_user_input
-from views.user_logs import add_to_user_logs
-
 from modules.directory import Directory
-from modules.project import Project
 from modules.bash import Bash_action
+from testing.tst import *
+from testing.report import generate_report_from_template
 
 from utils.loading import *
 from utils.screens import *
@@ -30,8 +22,12 @@ from utils.match import *
 from utils.file import *
 from utils.history import history_test_removed
 
-from testing.tst import *
-from testing.report import generate_report_from_template
+from views.filtering import filter_management
+from views.help import show_help
+from views.menu import brows_menu
+from views.input import get_user_input
+from views.user_logs import add_to_user_logs
+
 
 
 def get_directory_content(env):
@@ -534,7 +530,7 @@ def run_menu_function(stdscr, env, fce, key):
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)
         if solution is not None:
-            add_to_user_logs(env, 'info', f"generationg code review for solution '{solution.name}'...")
+            add_to_user_logs(env, 'info', f"generating code review for solution '{solution.name}'...")
             generate_code_review(env, solution)
             env.cwd = get_directory_content(env)
     elif fce == GEN_TOTAL_REPORT: # on solution dir
@@ -544,7 +540,7 @@ def run_menu_function(stdscr, env, fce, key):
             # check for report dir and report template
             report_dir = os.path.join(env.cwd.proj.path, REPORT_DIR)
             create_report_dir(report_dir)
-            add_to_user_logs(env, 'info', f"generationg total report from template for solution '{solution.name}'...")
+            add_to_user_logs(env, 'info', f"generating total report from template for solution '{solution.name}'...")
             generate_report_from_template(env, solution)
     # ======================= ADD TEST NOTES TO REPORT =======================
     elif fce == ADD_TEST_NOTE_TO_ALL:
@@ -760,8 +756,10 @@ def run_menu_function(stdscr, env, fce, key):
             test_name = re.sub("\s+","_",test_name)
 
             # create dir for new test (and go to new test dir)
-            add_to_user_logs(env, 'info', f"creating new test '{test_name}'...")
-            new_test_dir = create_new_test(env.cwd.path, test_name)
+            add_to_user_logs(env, 'info', f"creating new test...")
+            new_test_dir = create_new_test(env, env.cwd.path, test_name)
+            test_name = os.path.basename(new_test_dir)
+            add_to_user_logs(env, 'info', f"test '{test_name}' created with default scoring (ok=1, fail=0)")
             if new_test_dir is not None:
                 os.chdir(new_test_dir)
                 env.cwd = get_directory_content(env)
@@ -862,7 +860,7 @@ def run_menu_function(stdscr, env, fce, key):
             if test_dir is not None:
                 test_name = os.path.basename(test_dir)
                 add_to_user_logs(env, 'info', f"removing test '{test_name}'...")
-                succ = history_test_removed(env.cwd.proj.path, test_name)
+                succ = history_test_removed(env, env.cwd.proj.path, test_name, add_to_user_logs)
                 if succ:
                     # remove test dir
                     shutil.rmtree(test_dir)
@@ -943,8 +941,8 @@ def run_menu_function(stdscr, env, fce, key):
                     # 4. create Dockerfile
                     with open(proj_docker_file, 'w+') as f:
                         f.write(f"FROM {distribution}\n")
-                        f.write(f"RUN addgroup -g {group_id} test || groupadd -g {group_id} test\n")
-                        f.write(f"RUN adduser -D -u {user_id} -G test test || useradd -u {user_id} -g test test\n")
+                        f.write(f"RUN addgroup -g {group_id} test 2>/dev/null || groupadd -g {group_id} test\n")
+                        f.write(f"RUN adduser -D -u {user_id} -G test test 2>/dev/null || useradd -u {user_id} -g test test\n")
                         f.write(f"USER test\n")
                     env.cwd = get_directory_content(env)
 

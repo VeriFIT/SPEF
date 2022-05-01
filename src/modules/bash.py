@@ -1,10 +1,5 @@
 
-
-
 from utils.logger import *
-
-#  hex value of key --> by default CTRL+O == '0f'
-
 
 """
 - init setting:

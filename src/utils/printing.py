@@ -1,19 +1,14 @@
 import curses
 import os
 import re
-import shutil
 import traceback
 
 from controls.functions import *
-
 from modules.buffer import UserInput
-from modules.directory import Directory
-
 from utils.highlighter import parse_code
 from utils.loading import save_buffer_to_file, save_report_to_file, load_testcase_tags
 from utils.coloring import *
 from utils.logger import *
-from utils.match import match_regex, is_root_project_dir, is_testcase_result_dir
 from utils.history import history_test_modified, is_test_history_in_tmp
 from utils.file import actualize_test_history_in_tmp
 
@@ -168,12 +163,12 @@ def parse_line_into_sublines(line, max_cols):
 
 
 """ check if file changes are saved or user want to save or discard them """
-def file_changes_are_saved(stdscr, env, warning=None, exit_key=None):
+def file_changes_are_saved(stdscr, env, add_to_user_logs, warning=None):
     if env.buffer:
         if (env.buffer.is_saved) or (env.buffer.original_buff == env.buffer.lines):
             return True
         else:
-            curses_key, str_key = exit_key if exit_key else (ESC, "ESC")
+            curses_key, str_key = (ESC, "ESC")
             message = warning if warning else EXIT_WITHOUT_SAVING
 
             """ print warning message """
@@ -187,7 +182,7 @@ def file_changes_are_saved(stdscr, env, warning=None, exit_key=None):
             if key == curses_key: # force exit without saving
                 return True
             elif key == curses.KEY_F2: # save and exit
-                save_buffer(stdscr, env)
+                save_buffer(stdscr, env, add_to_user_logs)
                 return True
             else:
                 return False
@@ -195,7 +190,7 @@ def file_changes_are_saved(stdscr, env, warning=None, exit_key=None):
         return True
 
 
-def save_buffer(stdscr, env):
+def save_buffer(stdscr, env, add_to_user_logs):
     if not env.file_to_open or not env.buffer:
         log("save buffer | missing env.file_to_open or mising env.buffer")
         return
@@ -203,6 +198,8 @@ def save_buffer(stdscr, env):
     save_buffer_to_file(env.file_to_open, env.buffer)
     env.buffer.set_save_status(True)
     env.buffer.last_save = env.buffer.lines.copy()
+    file_name = os.path.basename(env.file_to_open)
+    add_to_user_logs(env, 'info', f"file '{file_name}' saved")
     if env.report:
         save_report_to_file(env.report)
 
@@ -219,7 +216,7 @@ def save_buffer(stdscr, env):
 
             key = stdscr.getch()
             if key == curses.KEY_F2: # save to history and actualize tmp
-                history_test_modified(env.cwd.proj.path, test_name)
+                history_test_modified(env, env.cwd.proj.path, test_name, add_to_user_logs)
                 env.tags = load_testcase_tags(os.path.dirname(env.file_to_open))
                 actualize_test_history_in_tmp(env.cwd.proj.path, os.path.dirname(env.file_to_open))
             else: # dont save to history

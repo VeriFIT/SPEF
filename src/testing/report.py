@@ -1,13 +1,13 @@
-
+import glob
 import os
 import shutil
 import traceback
 
 from jinja2 import Environment, FileSystemLoader
 
+from testing.tst import calculate_score
 from utils.loading import *
 from utils.logger import *
-from testing.tst import calculate_score
 
 REPORT_TEMPLATE_FILE = os.path.join(DATA_DIR, REPORT_TEMPLATE)
 

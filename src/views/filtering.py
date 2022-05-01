@@ -3,15 +3,12 @@ import curses.ascii
 import traceback
 
 from controls.control import *
-
-from views.help import show_help
-
 from modules.buffer import UserInput
 from modules.filter import Filter
-
 from utils.screens import *
 from utils.printing import *
 from utils.logger import *
+from views.help import show_help
 
 
 

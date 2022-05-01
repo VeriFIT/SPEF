@@ -1,24 +1,19 @@
 import curses
 import curses.ascii
-import yaml
-import os
-import traceback
 import shlex
+import traceback
 
 from controls.control import *
 
-from views.filtering import filter_management
-from views.help import show_help
-from views.input import get_user_input
-
 from modules.buffer import UserInput
-from modules.tags import Tags
 from modules.bash import Bash_action
-
 from utils.loading import save_tags_to_file
 from utils.screens import *
 from utils.printing import *
 from utils.logger import *
+from views.filtering import filter_management
+from views.help import show_help
+from views.input import get_user_input
 
 
 def tag_management(stdscr, env):

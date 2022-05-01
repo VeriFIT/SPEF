@@ -1,37 +1,27 @@
 
 import curses
 import curses.ascii
-import json
-import yaml
 import os
-import re
-import sys
-import fnmatch
-import glob
 import traceback
-import time
 
 from controls.control import *
-
-from views.filtering import filter_management
-from views.help import show_help
-from views.input import get_user_input
-
-from modules.buffer import UserInput
 from modules.bash import Bash_action
+from testing.tst import TST_FCE_DIR, TST_FCE_FILE
+from testing.report import get_supported_data_for_report
 
 from utils.loading import *
 from utils.screens import *
 from utils.printing import *
 from utils.logger import *
 from utils.match import *
-
 from utils.file import copy_test_history_to_tmp
-from utils.history import history_test_modified
 from utils.reporting import get_path_relative_to_solution_dir
 
-from testing.tst import TST_FCE_DIR, TST_FCE_FILE
-from testing.report import get_supported_data_for_report
+from views.filtering import filter_management
+from views.help import show_help
+from views.input import get_user_input
+from views.user_logs import add_to_user_logs
+
 
 
 def file_viewing(stdscr, env):
@@ -148,7 +138,7 @@ def run_function(stdscr, env, fce, key):
 
     # ======================= EXIT =======================
     if fce == EXIT_PROGRAM:
-        if file_changes_are_saved(stdscr, env):
+        if file_changes_are_saved(stdscr, env, add_to_user_logs):
             env.set_exit_mode()
             return env, rewrite, rewrite_hint, True
         rewrite = True
@@ -165,7 +155,7 @@ def run_function(stdscr, env, fce, key):
             env.switch_to_next_mode()
             return env, rewrite, rewrite_hint, True
         else:
-            if file_changes_are_saved(stdscr, env):
+            if file_changes_are_saved(stdscr, env, add_to_user_logs):
                 env.switch_to_next_mode()
                 return env, rewrite, rewrite_hint, True
             rewrite = True
@@ -203,7 +193,7 @@ def run_function(stdscr, env, fce, key):
         curses.curs_set(1)
     # ======================= SAVE FILE =======================
     elif fce == SAVE_FILE:
-        save_buffer(stdscr, env)
+        save_buffer(stdscr, env, add_to_user_logs)
         rewrite_all_wins(env)
         curses.curs_set(1)
     # ======================= SHOW/HIDE TAGS =======================
@@ -298,7 +288,7 @@ def run_function(stdscr, env, fce, key):
         env.report.data = env.report.original_report.copy()
         rewrite = True
     elif fce == RELOAD_FILE_FROM_LAST_SAVE:
-        if file_changes_are_saved(stdscr, env, RELOAD_FILE_WITHOUT_SAVING):
+        if file_changes_are_saved(stdscr, env, add_to_user_logs, warning=RELOAD_FILE_WITHOUT_SAVING):
             env.buffer.lines = env.buffer.last_save.copy()
             env.report.data = env.report.last_save.copy()
         rewrite = True

@@ -1,6 +1,3 @@
-import os
-import json
-import yaml
 import re
 
 from utils.logger import *
@@ -36,7 +33,6 @@ class Tags:
     def get_tag_by_idx(self, idx):
         for i, key in enumerate(self.data):
             if i == idx:
-                # log(self.data[key])
                 return key, self.data[key]
         return None, None
 

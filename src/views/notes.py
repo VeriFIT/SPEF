@@ -1,25 +1,17 @@
 import curses
 import curses.ascii
-import yaml
-import os
 import traceback
 
 from controls.control import *
-
-from views.menu import brows_menu
-from views.input import get_user_input
-from views.help import show_help
-
 from modules.buffer import UserInput
-from modules.tags import Tags
 from modules.bash import Bash_action
-
 from utils.loading import save_report_to_file
 from utils.screens import *
 from utils.printing import *
 from utils.logger import *
 from utils.coloring import *
-
+from views.input import get_user_input
+from views.help import show_help
 
 
 def notes_management(stdscr, env):

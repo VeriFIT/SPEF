@@ -1,14 +1,12 @@
-import re
-import os
 import glob
+import os
 import traceback
 
+from modules.project import Project
+from testing.tst import calculate_score
 from utils.logger import *
 from utils.loading import *
 from utils.match import *
-
-from modules.project import Project
-
 
 
 """ from subjA/proj1/xlogin00/dir/file_name to proj1/xlogin00/dir/file_name """

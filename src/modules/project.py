@@ -1,24 +1,11 @@
-import os
-import glob
-import fnmatch
-import json
-import re
-import traceback
 import datetime
-
-from modules.buffer import UserInput
-from modules.tags import Tags
+import os
+import re
 
 from utils.loading import *
 from utils.logger import *
 from utils.match import *
 
-"""
-1. ak som v proj root dir
-2. solutions = get_solutions(proj dir)
-3. if env.cwd.proj.solutions.getkeys() != solutions
-4. nacitaj znovu solutions: env.cwd.proj.reload_solutions()
-"""
 
 class Solution:
     def __init__(self, path):
@@ -27,8 +14,8 @@ class Solution:
         self.tags = None
         self.test_tags = None
 
-        self.test_notes = {} # poznamky k automatickym testom
-        self.user_notes = [] # dalsie nezavisle poznamky
+        self.test_notes = {} # notes related to automatic tests
+        self.user_notes = [] # other notes related to solution
 
 
     def add_user_note(self, text):
@@ -148,7 +135,6 @@ class Project:
             'solution_info': self.solution_info,
             'tests_info': self.tests_info
         }
-        #     'test_timeout': self.test_timeout
 
 
     """
@@ -263,7 +249,6 @@ class Project:
     """
     def get_tests_info(self):
         # tests_info
-
         success = {
             'identifier': 1,
             'visualization': "ok",
@@ -334,5 +319,5 @@ class Project:
 
         solution_info = [date, status, group, plagiat]
         # solution_info = [date, status, group, plagiat, test1, test2]
-        return solution_info
 
+        return solution_info

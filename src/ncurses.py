@@ -5,16 +5,8 @@ from pygments.token import Keyword, Name, Comment, String, Error, Text, \
 
 
 """
-styles_dir = /home/naty/.local/lib/python3.9/site-packages/pygments/styles
-pygments_dir=`python -c 'import pygments as _; print(_.__path__[0])'`
-cp src/ncurses.py $pygments_dir/styles/
-
-"""
-
-
-"""
 * style for ncurses (similar to visual code colors)
-* color is represented by number of curses.color_pair defined in coloring.py
+* color is represented by number of curses.color_pair defined in utils/coloring.py
 """
 class NcursesStyle(Style):
 

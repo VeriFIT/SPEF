@@ -1,15 +1,14 @@
 import csv
-
 import curses
 import curses.ascii
 
+
 from controls.control import get_function_for_key
 from controls.functions import *
-
+from modules.bash import Bash_action
 from utils.printing import *
 from utils.screens import *
 from utils.logger import *
-
 from utils.loading import load_user_logs_from_file
 
 

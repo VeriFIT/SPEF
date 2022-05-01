@@ -1,19 +1,9 @@
-import time
 import traceback
 
 from utils.logger import *
 
 
-"""
--Window reprezentuje zobrazovane okno (view win) v obrazovke (screen)
--shift sluzi na zobrazenie spravnej casti obsahu do okna  
-
-vyber riadku    buffer[self.row - win.begin_y]
-koniec riadku   len(buffer[self.row - win.begin_y]) + win.begin_x   
-
-"""
-
-""" zobrazovacie plochy rozdelene podla rozlozenia a polohy na obrazovke """
+""" curses screens (each with its specific size and position on the main screen) """
 class Screens:
     def __init__(self, left, right, down, center, right_up, right_down, left_up, left_down):
         self.left = left
@@ -27,20 +17,21 @@ class Screens:
 
 
 """
-okna rozdelene podla pouzitia (kazde okno ma svoj vlastny cursor a dalsie parametre)
-viac okien moze byt zobrazovanych na tom istom screen (napr brows aj notes sa zobrazuje na screens.left)
-stredne okno center sa vyuziva jednorazovo na viac ucelov, preto ho treba pri kazdom pouziti resetovat (cursor a shift) 
+* each window has its specific dimensions and position corresponding to the needs of its use
+* multiple windows can be printed in the same screen (ex: brows and notes uses screen left)
+* each window has its own cursor and other parameters (see Window object below)
+* 'center' window is the only one which is used for multiple purposes (must be reset for each use)
 """
 class Windows:
     def __init__(self, brows, brows_up, logs, view, view_up, tag, notes, center):
-        self.brows = brows # brows directory
+        self.brows = brows
         self.brows_up = brows_up
         self.logs = logs
-        self.view = view # view file
-        self.view_up = view_up # view_up file
-        self.tag = tag # tag management
+        self.view = view
+        self.view_up = view_up
+        self.tag = tag
         self.notes = notes
-        self.center = center # menu/help/user input/... !!! pozor aby sa toto okno pri kazdom pouziti resetovalo !!!
+        self.center = center
 
 
     def set_win_for_notes(self, win):
@@ -158,7 +149,6 @@ class Window:
 
     @property
     def bottom(self):
-        # return self.end_y - self.begin_y + self.border + self.row_shift - 1
         return self.end_y + self.row_shift - 1
 
     @property
@@ -179,7 +169,6 @@ class Window:
 
         """ window shift """
         self.horizontal_shift()
-        # if (self.cursor.row - self.begin_y - self.top_edge == self.row_shift - 1) and (self.row_shift > 0):
         if (self.cursor.row == self.border + self.top_edge + self.row_shift - 1) and (self.row_shift > 0):
             self.row_shift -= 1
         elif (self.cursor.row == self.border + self.row_shift - 1) and (self.row_shift > 0):
@@ -190,7 +179,6 @@ class Window:
 
         """ window shift """
         self.horizontal_shift()
-        # bottom = self.bottom - (1 if filter_on else 0) - self.bottom_edge
         bottom = self.height - 2 - self.bottom_edge - (1 if filter_on else 0) + self.border + self.row_shift
         if (self.cursor.row == bottom) and (self.cursor.row - self.begin_y + self.bottom_edge < len(buffer)):
             self.row_shift += 1
@@ -204,7 +192,6 @@ class Window:
 
         """ window shift """
         self.horizontal_shift()
-        # if (self.cursor.row == self.row_shift + 1) and (self.row_shift > 0):
         if (self.cursor.row == self.row_shift + self.top_edge) and (self.row_shift > 0) and (self.cursor.row < old_row):
             self.row_shift -= 1
         elif (self.cursor.row == self.row_shift) and (self.row_shift > 0) and (self.cursor.row < old_row):
@@ -222,7 +209,6 @@ class Window:
 
         """ window shift """
         self.horizontal_shift()
-        # bottom = self.bottom - (1 if filter_on else 0) - self.bottom_edge
         bottom = self.height - 2 - self.bottom_edge - (1 if filter_on else 0) + self.border + self.row_shift
         if (self.cursor.row == bottom) and (self.cursor.row - self.begin_y + self.bottom_edge < len(buffer)) and (self.cursor.row > old_row):
             self.row_shift += 1

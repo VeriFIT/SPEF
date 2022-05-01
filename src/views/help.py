@@ -3,11 +3,6 @@ import curses
 import curses.ascii
 
 from controls.functions import *
-
-from modules.directory import Directory
-from modules.window import Window
-from modules.buffer import UserInput
-
 from utils.printing import *
 from utils.screens import *
 from utils.logger import *

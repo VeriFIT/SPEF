@@ -2,40 +2,28 @@
 
 import curses
 import curses.ascii
-import datetime
-import json
-import yaml
 import os
-import re
-import io
-import sys
-import fnmatch
-import glob
-import time
-import threading
 import select
+import shutil
 import signal
+import sys
 import termios
+import threading
+import time
 import tty
 
-
-from views.browsing import get_directory_content, directory_browsing
-from views.filtering import filter_management
-from views.viewing import file_viewing
-from views.tags import tag_management
-from views.notes import notes_management
-from views.user_logs import logs_viewing, go_down_in_user_logs
-
-from views.help import show_help
-
 from modules.environment import Environment
-from modules.bash import Bash_action
-
 from utils.loading import *
 from utils.screens import *
 from utils.coloring import *
 from utils.printing import *
 from utils.logger import *
+
+from views.browsing import get_directory_content, directory_browsing
+from views.viewing import file_viewing
+from views.tags import tag_management
+from views.notes import notes_management
+from views.user_logs import logs_viewing, go_down_in_user_logs
 
 
 global bash_proc
