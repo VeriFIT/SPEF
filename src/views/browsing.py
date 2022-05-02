@@ -425,19 +425,26 @@ def run_menu_function(stdscr, env, fce, key):
                 solution_name = os.path.basename(dir_name)
                 if solution_name in env.cwd.proj.solutions:
                     solution_list.append(env.cwd.proj.solutions[solution_name])
-
-            # for key, solution in env.cwd.proj.solutions.items():
-            for solution in solution_list:
-                add_to_user_logs(env, 'info', f"*** testing student '{solution.name}' ***")
-                env, succ = run_testsuite(env, solution, add_to_user_logs, with_logs=False)
-                if succ:
-                    add_to_user_logs(env, 'info', f"testing done")
                 else:
-                    add_to_user_logs(env, 'warning', f"testing failed")
-                if env.is_exit_mode():
-                    return env, True
-            add_to_user_logs(env, 'info', f"testing all students done !!")
-            env.cwd = get_directory_content(env)
+                    solution_dir = get_parent_regex_match(env.cwd.proj.solution_id, dir_name)
+                    if solution_dir:
+                        solution_name = os.path.basename(solution_dir)
+                        if solution_name in env.cwd.proj.solutions:
+                            solution_list.append(env.cwd.proj.solutions[solution_name])
+
+            if solution_list:
+                # for key, solution in env.cwd.proj.solutions.items():
+                for solution in solution_list:
+                    add_to_user_logs(env, 'info', f"*** testing student '{solution.name}' ***")
+                    env, succ = run_testsuite(env, solution, add_to_user_logs, with_logs=False)
+                    if succ:
+                        add_to_user_logs(env, 'info', f"testing done")
+                    else:
+                        add_to_user_logs(env, 'warning', f"testing failed")
+                    if env.is_exit_mode():
+                        return env, True
+                add_to_user_logs(env, 'info', f"testing all students done !!")
+                env.cwd = get_directory_content(env)
     elif fce == TEST_STUDENT: # on solution dir
         """ run testsuite on student solution directory """
         idx = win.cursor.row

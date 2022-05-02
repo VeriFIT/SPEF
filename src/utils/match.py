@@ -8,15 +8,16 @@ import zipfile
 from utils.logger import *
 
 
-def filter_intern_files(path_list):
+def filter_intern_files(path_list, keep_reports_and_tests=False):
     try:
         if path_list:
             # filter files with repport suffix or tags suffix
             result = list(filter(lambda x: not x.endswith((REPORT_SUFFIX, TAGS_SUFFIX)), path_list))
 
             # filter files from report dir and tests dir
-            result = list(filter(lambda x: not match_regex(os.path.join('.*', REPORT_DIR, '.*'),x), result))
-            result = list(filter(lambda x: not match_regex(os.path.join('.*', TESTS_DIR, '.*'),x), result))
+            if not keep_reports_and_tests:
+                result = list(filter(lambda x: not match_regex(os.path.join('.*', REPORT_DIR, '.*'),x), result))
+                result = list(filter(lambda x: not match_regex(os.path.join('.*', TESTS_DIR, '.*'),x), result))
             return result
     except Exception as err:
         log("filter intern files | "+str(err))

@@ -163,7 +163,10 @@ diffdir [-b] ref test       = diff soubory v ref/ se soubory v test/ (soubory na
 diffdirboth [-b] ref test   = diff soubory v ref/ se soubory v test/
 auto_report "popis testu"   = vypise report o vysledku
 asserterror "popis testu"   = vypise report o vysledku (ocekava nenulovy 'errcode' a 'stderr')
+get_test_version            = vrati cislo verzie aktualne vykonavaneho testu
+add_test_version_tag        = prida tag s verziou aktualneho testu do suboru $TAGS
 add_test_tag "tag" [params] = prida tag do souboru $TAGS (tagy vysledku testu)
+
 EOF
 }
 
@@ -171,11 +174,28 @@ if [[ "$1" == "get_fce" ]]; then
     get_fce_for_dotest; exit 0;
 fi
 
+# type yq &>/dev/null || die "chybi utilita yq"
 
 ##############################################################################
 # PUBLIC funkce (pro dotest.sh)
 ##############################################################################
 
+get_test_version(){
+    [[ -f $TD/test_tags.yaml ]] || return ""
+    # version=`yq -r .version[0] $TD/test_tags.yaml`
+    version=`grep -A3 'version:' $TD/test_tags.yaml | head -n2 | tail -n1 | cut -c 2-`
+    # strip string (remove whitespaces from begin and end of string)
+    version="${version##*( )}"
+    return $version
+}
+
+add_test_version_tag(){
+    [[ -f $TD/test_tags.yaml ]] && {
+        version=`grep -A3 'version:' $TD/test_tags.yaml | head -n2 | tail -n1 | cut -c 2-`;
+        version="${version##*( )}";
+    } || version=""
+    add_test_tag "${test}_version" ${version}
+}
 
 # add_test_tag "scoring_${test}" ${success} $@
 # add_test_tag "scoring_${test}" ${failure} $@ ${d}

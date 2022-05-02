@@ -199,7 +199,7 @@ class Environment:
     def get_supported_test_functions(self, bash_file):
         options = {}
         try:
-            fce_str = os.popen(f'{bash_file} get_fce 2>/dev/null').read()
+            fce_str = os.popen(f'{bash_file} get_fce 2>/dev/null').read().strip()
             for item in fce_str.splitlines():
                 fce, descr = item.split('=')
                 fce, descr = fce.strip(), descr.strip()

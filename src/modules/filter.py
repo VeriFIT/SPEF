@@ -66,7 +66,7 @@ class Filter:
             file_name = os.path.relpath(file_path, self.root)
             filtered_files.append(file_name)
 
-        filtered_files = filter_intern_files(filtered_files)
+        filtered_files = filter_intern_files(filtered_files, keep_reports_and_tests=True)
         filtered_files.sort()
 
         # aggr_files, aggr_dirs = self.group_by_prefix(filtered_files)
@@ -266,7 +266,9 @@ class Filter:
                                     elif op == '=': match = str(param) == str(value)
                                 if match:
                                     tag_matches.add(file_path)
-            return tag_matches
+            res = list(tag_matches)
+            res.sort()
+            return res
         except Exception as err:
             log("Filter by tag | "+str(err)+" | "+str(traceback.format_exc()))
             return files
