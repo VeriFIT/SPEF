@@ -161,7 +161,6 @@ def parse_solution_info_predicate(predicate, solution, info_for_tests=False, tes
     orange = curses.color_pair(HL_ORANGE)
     pink = curses.color_pair(HL_PINK)
 
-    total_match = True
     color = normal
     try:
         if 'predicate' in predicate:
@@ -212,7 +211,6 @@ def parse_solution_info_predicate(predicate, solution, info_for_tests=False, tes
                                     cond = cond.replace("XTEST", test_name)
                                 match = tests_tags.find(cond)
                     if not match:
-                        total_match = False
                         break
 
         if 'color' in predicate:
@@ -243,14 +241,14 @@ length:
     * 1 (if visualization refers to param from tag and 'length' is not defined)
     * len(string) (if visualization is just string and 'length' is not defined)
 """
-def parse_solution_info_visualization(info, solution):
+def parse_solution_info_visualization(info, solution, info_for_tests=False, test_name=None):
     visualization = str(info['visualization']).strip()
     visual, length = None, None
 
     # check if visualization refers to param from tag
     # matches: tag_name.1
     if re.match("^\w+.[0-9]+$", visualization):
-        visual = get_param_from_tag(visualization, solution)
+        visual = get_param_from_tag(visualization, solution, info_for_tests=info_for_tests, test_name=test_name)
         length = info['length'] if 'length' in info else 1
     else:
         visual = str(visualization)

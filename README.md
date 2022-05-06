@@ -1,5 +1,7 @@
 # DP
 
+* install.sh
+* spef
 
 
 * python 3.9
@@ -52,7 +54,7 @@ F1          'show_help': SHOW_HELP,
 F10         'exit_program': EXIT_PROGRAM,
 TAB         'change_focus': CHANGE_FOCUS,
 RESIZE      'resize_win': RESIZE_WIN,
-BACKSLASH   'filter': FILTER,
+SLASH   'filter': FILTER,
 
 CTRL O      'bash_switch': BASH_SWITCH,
 

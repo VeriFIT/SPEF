@@ -145,7 +145,7 @@ class Project:
 
     * identifier = id informacie (int)
                 -- urcuje poradie v akom sa informacie zobrazuju zprava
-                -- ak sa do okna nezmestia vsetky info, ako prve sa schovaju tie s najvacsim identifier
+                -- ak sa do okna nezmestia vsetky info, ako prve sa schovaju tie s najmensim identifier
     * visualization = ako sa ma informacia zobrazit
                 -- idealne pouzit len jeden znak
                 -- cim menej miesta to zaberie, tym viac roznych info viem zobrazit
@@ -166,7 +166,6 @@ class Project:
                     -- ak pre dane riesenie nenajdem #scoring tak bude namiesto cisla zobrazena medzera o velkosti 2
     * description = strucny popis informacie
                 -- lubovolny retazec (idealne nie moc dlhy)
-                -- zobrazi sa v nahlade informacii (po zadani "show details about project solution informations" v menu)
     * predicates = zoznam predikatov vo forme predikat + farba
                 -- urcuju za akych podniemok sa informacia zobrazi a s akou farbou
                 -- na zobrazenie informacie sa musi aspon jedna podniemka z predikatov [...] vyhodnotit ako True
@@ -182,10 +181,7 @@ class Project:
                         -- ak sa podmienka v danom predikate vyhodnoti na True
                         -- potom sa pouzije tato definovana farba na vyzobrazenie informacie
                         -- ak farba nie je definovana, pouzije sa Normal (biela)
-                        -- farba sa zadava pomocou
-                                ??? preddefinovanych hodnot: normal, red, green, blue  (cyan, yellow, orange, pink)
-                                ??? GRB hodnot
-                                ??? #hex hodnot
+                        -- farba sa zadava pomocou preddefinovanych hodnot: normal, red, green, blue  (cyan, yellow, orange, pink)
     -- tagy mozno pouzit u visualization a predicate
     -- ak ma nejake info rovnaky indentifier, porovnaju sa jeho predikaty... --> idealne sa tomuto vyhnut !!!
         -- mozu s tym byt problemy ked je rozne dlha vizualizacia informacii s rovnakym identifikatorom

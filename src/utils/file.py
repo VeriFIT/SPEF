@@ -236,7 +236,7 @@ def create_sum_file(sum_file):
 def create_scoring_file(scoring_file):
     if not os.path.exists(scoring_file):
         with open(scoring_file, 'w+') as f:
-            f.write("MAX_POINT=0\n")
+            f.write("# definition of score for each test (ex: test1_ok=2)\n")
 
 
 ############ TESTSUITE.SH ############

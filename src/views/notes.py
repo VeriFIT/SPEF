@@ -126,6 +126,7 @@ def run_function(stdscr, env, fce, key, line):
 
             """ add note to report """
             env.report.add_note(note_row, note_col, ''.join(text))
+            save_report_to_file(env.report)
     # ================ INSERT TYPICAL NOTE ================
     elif fce == ADD_TYPICAL_NOTE:
         options = env.get_typical_notes_dict()
@@ -191,6 +192,7 @@ def run_function(stdscr, env, fce, key, line):
             del env.report.data[win.cursor.row]
             if len(env.report.data) <= win.cursor.row:
                 win.up(env.report, use_restrictions=False)
+                save_report_to_file(env.report)
 
 
     env.update_win_for_current_mode(win)

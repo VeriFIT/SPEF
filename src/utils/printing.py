@@ -572,7 +572,7 @@ def show_file_content(env):
                     text_color = curses.color_pair(style)
                     if env.specific_line_highlight is not None:
                         highlight_line, highlight_color = env.specific_line_highlight
-                        if (y == highlight_line):
+                        if (y+win.row_shift == highlight_line):
                             text_color = highlight_color
 
                     """ print line number """

@@ -436,7 +436,7 @@ def get_function_for_key(env, key):
         function = None
         # try to find some function for specitic ascii symbols
         if char_key == '/':
-            function = env.control.get_function(env, 'BACKSLASH')
+            function = env.control.get_function(env, 'SLASH')
         elif char_key in [str(i) for i in range(0,10)]:
             function = env.control.get_function(env, char_key) # number 0..9
         elif char_key in "abcdefghijklmnopqrstuvwxyz":

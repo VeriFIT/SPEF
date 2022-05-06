@@ -320,12 +320,13 @@ def run_menu_function(stdscr, env, fce, key):
         curses.curs_set(0)
         if file_name is not None:
             file_name = ''.join(file_name).strip()
-            new_file = os.path.join(env.cwd.path, file_name)
-            if os.path.exists(new_file) and os.path.isfile(new_file):
-                log(f"create file | file {new_file} already exists")
-            else:
-                with open(new_file, 'w+'): pass
-                env.cwd = get_directory_content(env)
+            if file_name:
+                new_file = os.path.join(env.cwd.path, file_name)
+                if os.path.exists(new_file) and os.path.isfile(new_file):
+                    log(f"create file | file {new_file} already exists")
+                else:
+                    with open(new_file, 'w+'): pass
+                    env.cwd = get_directory_content(env)
     # ====================== EDIT PROJ CONFIG ======================
     elif fce == EDIT_PROJ_CONF:
         if env.cwd.proj is not None:

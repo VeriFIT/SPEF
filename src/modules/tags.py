@@ -45,7 +45,10 @@ class Tags:
         return None
 
     def set_tag(self, tag_name, args):
-        self.data[tag_name] = [*args]
+        if len([*args]) <= 10:
+            self.data[tag_name] = [*args]
+            return True
+        return False
 
     # return arguments for tag_name if exists (else returns None)
     def get_args_for_tag(self, tag_name):

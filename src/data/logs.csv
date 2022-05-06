@@ -1,3 +1,14 @@
-2022-04-30 00:53:38|info   |students with correctly named SUT: ['xxxxxs01', 'xmkolk01', 'xlogin00', 'xahojk12', 'xlogin25', 'xsmfke14', 'xlogin26', 'xasssd12', 'xlogin11', 'xsmakd03', 'xlogin27', 'xndnhj01', 'xlogin28', 'xlogin22', 'xlogin30', 'xskfne52', 'xlogin55', 'xlogin21', 'xlogin29', 'xlogin07', 'xaaaaa52', 'xabcde53', 'xsdjef02', 'xlrger22', 'xabcde00', 'xlogin23']
-2022-04-30 00:53:38|warning|students with wrong named and renamed SUT: []
-2022-04-30 00:53:38|warning|students with no supported extention of SUT file: ['xlogin99', 'xlogin04', 'xlogin01']
+02/05/22-19:57|INFO   |new project created (proj1)
+02/05/22-20:04|INFO   |file 'proj_conf.yaml' saved
+04/05/22-10:58|INFO   |new project created (proj2)
+05/05/22-14:42|INFO   |file 'Dockerfile' saved
+05/05/22-16:18|INFO   |file 'Dockerfile' saved
+05/05/22-16:18|INFO   |file 'Dockerfile' saved
+05/05/22-17:16|INFO   |file 'scoring' saved
+05/05/22-21:13|INFO   |file 'dns.c' saved
+05/05/22-21:16|INFO   |file 'dns.c' saved
+05/05/22-21:24|INFO   |file 'dns.c' saved
+05/05/22-22:06|INFO   |file 'dns.c' saved
+06/05/22-14:17|INFO   |file 'proj_conf.yaml' saved
+06/05/22-15:09|INFO   |file 'proj_conf.yaml' saved
+06/05/22-15:13|INFO   |file 'proj_conf.yaml' saved

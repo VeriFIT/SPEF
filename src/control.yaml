@@ -1,8 +1,8 @@
-# You can use these supported implemented keys:
+# You can use these supported implemented key representations:
 #   * F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12
 #   * ESC, TAB, DELETE, BACKSPACE, ENTER
 #   * UP, DOWN, LEFT, RIGHT
-#   * BACKSLASH, A..Z
+#   * SLASH, A..Z
 #   * ASCII
 #   * 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 #   * CTRL+UP, CTRL+DOWN, CTRL+LEFT, CTRL+RIGHT
@@ -48,7 +48,7 @@ edit_file_functions:
   print_new_line: 'ENTER'
 manage_file_functions:
   set_edit_file_mode: 'a'
-  filter: 'BACKSLASH'
+  filter: 'SLASH'
   add_custom_note: '0'
   add_typical_note: ['1','2','3','4','5','6','7','8','9','A..Z']
 # brows functions
@@ -60,14 +60,14 @@ brows_functions:
   show_or_hide_cached_files: 'F6'
   show_or_hide_logs: 'F7'
   delete_file: 'F8'
-  filter: 'BACKSLASH'
+  filter: 'SLASH'
 # tags functions
 tags_functions:
   edit_tag: 'F2'
   add_tag: 'F3'
   open_tag_file: 'F4'
   delete_tag: 'F8'
-  filter: 'BACKSLASH'
+  filter: 'SLASH'
 # notes functions
 notes_functions:
   edit_note: 'F2'

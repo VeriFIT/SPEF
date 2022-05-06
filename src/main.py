@@ -86,7 +86,7 @@ def main(stdscr, env=None):
     global bash_proc
     log("START")
 
-    """ prepare env from configuration files """
+    """ prepare env from configuration file """
     if env is None:
         env = prepare_environment(stdscr)
         if env is None:

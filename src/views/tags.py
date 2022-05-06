@@ -83,11 +83,11 @@ def run_function(stdscr, env, fce, key):
     # ======================= EDIT TAG =======================
     elif fce == EDIT_TAG:
         # get current tag
-        tag_name, args = env.tags.get_tag_by_idx(win.cursor.row)
+        tag_name, old_args = env.tags.get_tag_by_idx(win.cursor.row)
 
         if tag_name is not None:
             user_input = UserInput()
-            args = [f"'{arg}'" for arg in args]
+            args = [f"'{arg}'" for arg in old_args]
             user_input.text = list(f"{tag_name} {' '.join(args)}")
 
             # get new tag (edited)
@@ -108,8 +108,10 @@ def run_function(stdscr, env, fce, key):
                     # remove old tag
                     env.tags.remove_tag_by_idx(win.cursor.row)
                     # add new tag
-                    tag_name, *args = tag_parts
-                    env.tags.set_tag(tag_name, args)
+                    new_tag_name, *new_args = tag_parts
+                    succ = env.tags.set_tag(new_tag_name, new_args)
+                    if not succ:
+                        env.tags.set_tag(tag_name, old_args)
                     save_tags_to_file(env.tags)
     # ======================= ADD TAG =======================
     elif fce == ADD_TAG:

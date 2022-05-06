@@ -5,9 +5,7 @@ import fcntl
 import termios
 import traceback
 
-from modules.environment import Environment
-from modules.directory import Directory
-from modules.window import Windows, Screens, Window, Cursor
+from modules.window import Windows, Screens, Window
 from utils.printing import *
 from utils.logger import *
 
@@ -196,15 +194,12 @@ def create_screens_and_windows(height, width, line_numbers=None):
     brows_up_win = Window(right_up_h, r_win_w, l_win_y, l_win_x)
     logs_win = Window(right_down_h, r_win_w, l_win_y + right_up_h, l_win_x)
 
-    # log("b :"+str(l_win_h))
-    # log("v :"+str(right_up_h))
-    # log("t :"+str(right_down_h))
     #  OPTION A : note highlight on full line
-    # shift = 0 if line_numbers is None else len(line_numbers)+1 # +1 stands for a space between line number and text
+    # shift = 0 if line_numbers is None else len(line_numbers)+1
     #  OPTION B : note highlight on line number
     #  OPTION C : note highlight on symbol '|' before line
     shift = 1 if line_numbers is None else len(line_numbers)+1 # +1 stands for a space between line number and text
-    view_vin = Window(r_win_h, max(r_win_w-shift, 0), r_win_y, r_win_x+shift, border=1, line_num_shift=shift) # +1 stands for bordes at first line and col
+    view_vin = Window(r_win_h, max(r_win_w-shift, 0), r_win_y, r_win_x+shift, border=1, line_num_shift=shift)
     view_up_win = Window(right_up_h, max(r_win_w-shift, 0), r_win_y, r_win_x+shift, border=1, line_num_shift=shift)
 
 

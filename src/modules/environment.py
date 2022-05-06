@@ -19,24 +19,24 @@ class Environment:
         self.screens = screens
         self.windows = windows
 
-        self.win_center_pos = conf['window']['position']
-        self.win_left_edge, self.win_right_edge = conf['window']['left_edge'], conf['window']['right_edge']
+        self.win_center_pos = 2 # 1 = left, 2 = center, 3 = right
+        self.win_left_edge, self.win_right_edge = 2, 2
         self.win_top_edge, self.win_bottom_edge = conf['window']['top_edge'], conf['window']['bottom_edge']
         self.windows.set_edges(self.win_left_edge, self.win_right_edge, self.win_top_edge, self.win_bottom_edge)
         self.windows.center.set_position(self.win_center_pos)
 
 
         """ environment """
-        self.mode = conf['env']['mode']
         self.quick_view = conf['env']['quick_view']
         self.show_tags = conf['env']['show_tags']
         self.show_logs = conf['env']['show_logs']
         self.show_solution_info = conf['env']['show_solution_info']
         self.note_highlight = conf['env']['note_highlight']
-        self.show_cached_files = conf['env']['show_cached_files'] # *_tags.yaml and *_report.yaml
         self.start_with_line_numbers = conf['env']['start_with_line_numbers']
-
         self.tab_size = conf['editor']['tab_size']
+
+        self.show_cached_files = False # *_tags.yaml and *_report.yaml
+
 
         """ file view/edit """
         self.file_edit_mode = True # file edit or file management
@@ -60,6 +60,7 @@ class Environment:
         self.editing_test_file = False # True while editing test (if file_to_open is TEST_FILE)
         self.editing_report_template = False # True if editing report template (if file_to_open is REPORT_TEMPLATE)
 
+        self.mode = BROWS
         self.cwd = None # Directory(path, dirs, files)
         self.buffer = None # Buffer(path, lines)
         self.tags = None # Tags(path, data)

@@ -53,6 +53,8 @@ def show_help(stdscr, env, custom_help=None, exit_key=None):
     max_rows = win.end_y - win.begin_y
     actions_len = calculate_buff_len_lines(actions, 3, max_cols)
 
+    rewrite_all_wins(env)
+
     while True:
         max_cols = win.end_x - win.begin_x
         max_rows = win.end_y - win.begin_y
@@ -117,7 +119,7 @@ def get_help(env):
         elif function in [DELETE_CHAR, BACKSPACE_CHAR]:
             key = "Delete, backspace"
             function = "Del"
-        elif key == 'BACKSLASH':
+        elif key == 'SLASH':
             key = "/"
         description = get_description_for_fce(env, function)
         if description is not None:

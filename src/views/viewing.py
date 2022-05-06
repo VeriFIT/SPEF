@@ -56,17 +56,6 @@ def file_viewing(stdscr, env):
         env.editing_report_template = False
 
 
-    # check if file is from some project directory
-    # buffer_dir = Directory(os.path.dirname(buffer.path))
-    # if buffer_dir.proj is not None: # if is_root_project_dir(env, buffer.path)
-        # proj = load_proj_from_conf_file(buffer_dir.proj_conf_path)
-
-    # check if file is from student solution directory (match solution id)
-    # file_login = os.path.relpath(buffer.path, project_path).split(os.sep)[0]
-    # report_file = get_report_file_name(buffer.path)
-    # login_match = bool(re.match(SOLUTION_IDENTIFIER, file_login))
-    # if login_match:
-
     """ try load code review to report  """
     report_already_loaded = False
     report = None
@@ -221,11 +210,17 @@ def run_function(stdscr, env, fce, key):
         env.set_notes_mode()
         return env, rewrite, rewrite_hint, True
     elif fce == SHOW_TYPICAL_NOTES:
+        # define specific highlight for current line which is related to the new note
+        note_row, note_col = win.cursor.row, win.cursor.col - win.begin_x
+        env.specific_line_highlight = (note_row, curses.color_pair(COL_NOTE_LIGHT))
+
         # show list of typical notes with indexes
         options = env.get_typical_notes_dict()
         custom_help = (None, "Typical notes:", options)
         env, key = show_help(stdscr, env, custom_help=custom_help, exit_key=[])
         curses.curs_set(1)
+        env.specific_line_highlight = None
+
         # if key represents index of typical note, add this note to current line in file
         if curses.ascii.isprint(key):
             char_key = chr(key)
@@ -286,11 +281,21 @@ def run_function(stdscr, env, fce, key):
     elif fce == RELOAD_ORIGINAL_BUFF:
         env.buffer.lines = env.buffer.original_buff.copy()
         env.report.data = env.report.original_report.copy()
+        while win.cursor.row > len(env.buffer):
+            win.up(env.buffer, use_restrictions=False)
+        win.calculate_tab_shift(env.buffer, env.tab_size)
+        if win.cursor.col > len(env.buffer[win.cursor.row - win.begin_y])+win.begin_x:
+            win.cursor.col = win.begin_x
         rewrite = True
     elif fce == RELOAD_FILE_FROM_LAST_SAVE:
         if file_changes_are_saved(stdscr, env, add_to_user_logs, warning=RELOAD_FILE_WITHOUT_SAVING):
             env.buffer.lines = env.buffer.last_save.copy()
             env.report.data = env.report.last_save.copy()
+            while win.cursor.row > len(env.buffer):
+                win.up(env.buffer, use_restrictions=False)
+            win.calculate_tab_shift(env.buffer, env.tab_size)
+            if win.cursor.col > len(env.buffer[win.cursor.row - win.begin_y])+win.begin_x:
+                win.cursor.col = win.begin_x
         rewrite = True
     else:
         # ======================= EDIT FILE =======================

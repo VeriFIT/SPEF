@@ -117,7 +117,7 @@ class Directory:
                 predicates = info['predicates']
 
                 # parse visualization and length
-                visualization, length = parse_solution_info_visualization(info, solution)
+                visualization, length = parse_solution_info_visualization(info, solution, info_for_tests=info_for_tests, test_name=test_name)
 
                 # check predicates and get color
                 if length is not None:
