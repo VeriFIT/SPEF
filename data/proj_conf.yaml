@@ -1,0 +1,241 @@
+name: proj1
+created: 2022-05-11
+solution_id: x[a-z]{5}[0-9]{2}
+max_score: 15
+sut_required: tradelog
+sut_ext_variants:
+- '*sut*'
+- tradelog.sh
+- sut.sh
+- sut.bash
+solution_info:
+- identifier: 1
+  visualization: last_testing.1
+  length: 15
+  description: datetime of last test
+  predicates: []
+- identifier: 2
+  visualization: T
+  description: was tested -- tag added at the end of testsuite.sh
+  predicates:
+  - predicate:
+    - last_testing
+    color: cyan
+- identifier: 3
+  visualization: G
+  description: is group project
+  predicates:
+  - predicate:
+    - group
+    color: ''
+- identifier: 4
+  visualization: '!!'
+  description: is plagiat
+  predicates:
+  - predicate:
+    - plag
+    color: red
+- identifier: 5
+  visualization: score.1
+  length: 2
+  description: total score for project
+  predicates:
+  - predicate:
+    - score
+    color: blue
+- identifier: 6
+  visualization: '.'
+  description: result of test cat1
+  predicates:
+  - predicate:
+    - cat1_ok
+    color: green
+  - predicate:
+    - cat1_fail
+    color: red
+- identifier: 7
+  visualization: '.'
+  description: result of test cat2
+  predicates:
+  - predicate:
+    - cat2_ok
+    color: green
+  - predicate:
+    - cat2_fail
+    color: red
+- identifier: 8
+  visualization: '.'
+  description: result of test cat3
+  predicates:
+  - predicate:
+    - cat3_ok
+    color: green
+  - predicate:
+    - cat3_fail
+    color: red
+- identifier: 9
+  visualization: '.'
+  description: result of test cat4
+  predicates:
+  - predicate:
+    - cat4_ok
+    color: green
+  - predicate:
+    - cat4_fail
+    color: red
+- identifier: 10
+  visualization: '.'
+  description: result of test cmd-graph-pos
+  predicates:
+  - predicate:
+    - cmd-graph-pos_ok
+    color: green
+  - predicate:
+    - cmd-graph-pos_fail
+    color: red
+- identifier: 11
+  visualization: '.'
+  description: result of test cmd-hist-ord
+  predicates:
+  - predicate:
+    - cmd-hist-ord_ok
+    color: green
+  - predicate:
+    - cmd-hist-ord_fail
+    color: red
+- identifier: 12
+  visualization: '.'
+  description: result of test cmd-last-price
+  predicates:
+  - predicate:
+    - cmd-last-price_ok
+    color: green
+  - predicate:
+    - cmd-last-price_fail
+    color: red
+- identifier: 13
+  visualization: '.'
+  description: result of test cmd-list-tick
+  predicates:
+  - predicate:
+    - cmd-list-tick_ok
+    color: green
+  - predicate:
+    - cmd-list-tick_fail
+    color: red
+- identifier: 14
+  visualization: '.'
+  description: result of test cmd-pos
+  predicates:
+  - predicate:
+    - cmd-pos_ok
+    color: green
+  - predicate:
+    - cmd-pos_fail
+    color: red
+- identifier: 15
+  visualization: '.'
+  description: result of test cmd-profit
+  predicates:
+  - predicate:
+    - cmd-profit_ok
+    color: green
+  - predicate:
+    - cmd-profit_fail
+    color: red
+- identifier: 16
+  visualization: '.'
+  description: result of test filter-a
+  predicates:
+  - predicate:
+    - filter-a_ok
+    color: green
+  - predicate:
+    - filter-a_fail
+    color: red
+- identifier: 17
+  visualization: '.'
+  description: result of test filter-ab
+  predicates:
+  - predicate:
+    - filter-ab_ok
+    color: green
+  - predicate:
+    - filter-ab_fail
+    color: red
+- identifier: 18
+  visualization: '.'
+  description: result of test filter-b
+  predicates:
+  - predicate:
+    - filter-b_ok
+    color: green
+  - predicate:
+    - filter-b_fail
+    color: red
+- identifier: 19
+  visualization: '.'
+  description: result of test filter-tick-cat
+  predicates:
+  - predicate:
+    - filter-tick-cat_ok
+    color: green
+  - predicate:
+    - filter-tick-cat_fail
+    color: red
+- identifier: 20
+  visualization: '.'
+  description: result of test filter-tick-cat2
+  predicates:
+  - predicate:
+    - filter-tick-cat2_ok
+    color: green
+  - predicate:
+    - filter-tick-cat2_fail
+    color: red
+- identifier: 21
+  visualization: '.'
+  description: result of test filter-tick-pos
+  predicates:
+  - predicate:
+    - filter-tick-pos_ok
+    color: green
+  - predicate:
+    - filter-tick-pos_fail
+    color: red
+- identifier: 22
+  visualization: '.'
+  description: result of test filter-tick-profit
+  predicates:
+  - predicate:
+    - filter-tick-profit_ok
+    color: green
+  - predicate:
+    - filter-tick-profit_fail
+    color: red
+- identifier: 23
+  visualization: '.'
+  description: result of test notmpfiles
+  predicates:
+  - predicate:
+    - notmpfiles_ok
+    color: green
+  - predicate:
+    - notmpfiles_fail
+    color: red
+tests_info:
+- identifier: 1
+  visualization: ok
+  length: 4
+  description: test passsed
+  predicates:
+  - predicate:
+    - XTEST_ok
+    color: green
+- identifier: 1
+  visualization: fail
+  description: test failed
+  predicates:
+  - predicate:
+    - XTEST_fail
+    color: red

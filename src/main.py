@@ -50,35 +50,54 @@ def prepare_environment(stdscr):
     bkgd_color = curses.color_pair(COL_BKGD)
     stdscr.bkgd(' ', bkgd_color)
 
+
     """ create screens and windows for TUI """
+    print_prepare_message(stdscr, 0, "preparing screens...")
     screens, windows = create_screens_and_windows(curses.LINES, curses.COLS)
     windows.brows.set_cursor(0,0)
     windows.notes.set_cursor(0,0)
     windows.tag.set_cursor(0,0)
 
+
     """ load config from file and create framework environment """
+    print_prepare_message(stdscr, 1, "preparing system environment...")
     config = load_config_from_file()
     if config is None:
         return None
     env = Environment(screens, windows, config)
 
+
     """ load control from file """
+    print_prepare_message(stdscr, 2, "loading system controls...")
     control = load_control_from_file()
     if control is None:
         return None
     env.set_user_control(control)
 
+
     """ load saved typical notes from file """
+    print_prepare_message(stdscr, 3, "loading typical notes...")
     env.typical_notes = load_typical_notes_from_file()
 
+
     """ load user logs from file """
+    print_prepare_message(stdscr, 4, "loading user logs...")
     env.user_logs = load_user_logs_from_file()
     go_down_in_user_logs(env)
 
+
     """ get current files and dirs """
     env.cwd = get_directory_content(env)
+
+
+    print_prepare_message(stdscr, 5, "preparing done !")
     return env
 
+
+def print_prepare_message(stdscr, i, mess):
+    if curses.LINES > i and curses.COLS > 0:
+        stdscr.addstr(i,0,mess[:curses.COLS])
+        stdscr.refresh()
 
 
 """ ======================= START MAIN ========================= """

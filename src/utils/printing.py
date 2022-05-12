@@ -584,9 +584,9 @@ def show_file_content(env):
                     #  OPTION C : note highlight on symbol '|' before line
                     # """ set color for line numbers and for line text """
                     # if (y + win.row_shift in colored_lines):
-                    #     line_num_color = curses.color_pair(HL_DARK_YELLOW)
+                    #     line_num_color = curses.color_pair(COL_NOTE)
                     # else:
-                    #     line_num_color = curses.color_pair(HL_DARK_GRAY)
+                    #     line_num_color = curses.color_pair(COL_LINE_NUM)
 
                     # text_color = curses.color_pair(style)
                     # if env.specific_line_highlight is not None:
@@ -678,9 +678,9 @@ def show_file_content(env):
                     #  OPTION C : note highlight on symbol '|' before line
                     # """ set color for line numbers and for line text """
                     # if (row+1+win.row_shift in colored_lines):
-                    #     line_num_color = curses.color_pair(HL_DARK_YELLOW)
+                    #     line_num_color = curses.color_pair(COL_NOTE)
                     # else:
-                    #     line_num_color = curses.color_pair(HL_DARK_GRAY)
+                    #     line_num_color = curses.color_pair(COL_LINE_NUM)
 
                     # text_color = curses.A_NORMAL
                     # if env.specific_line_highlight is not None:
@@ -722,9 +722,9 @@ def show_file_content(env):
             #  OPTION C : note highlight on symbol '|' before line
             # """ set color for line numbers and for line text """
             # if (1 in colored_lines):
-            #     line_num_color = curses.color_pair(HL_DARK_YELLOW)
+            #     line_num_color = curses.color_pair(COL_NOTE)
             # else:
-            #     line_num_color = curses.color_pair(HL_DARK_GRAY)
+            #     line_num_color = curses.color_pair(COL_LINE_NUM)
 
             # """ print line number """
             # if env.line_numbers:
@@ -956,16 +956,16 @@ def show_logs(env):
 
             # set color according to message type
             if str(m_type).lower().strip() in ['e','error']:
-                m_col = curses.color_pair(HL_RED)
+                m_col = curses.color_pair(COL_RED)
             elif str(m_type).lower().strip() in ['i','info']:
                 m_col = curses.A_NORMAL
             elif str(m_type).lower().strip() in ['w','warning']:
-                m_col = curses.color_pair(HL_DARK_BLUE)
+                m_col = curses.color_pair(COL_BLUE)
             else:
                 m_col = curses.A_NORMAL
 
             data_to_print = [str(date), " | ", str(m_type), " | ", str(message)]
-            data_colors = [curses.color_pair(HL_DARK_YELLOW), curses.A_NORMAL, m_col, curses.A_NORMAL, curses.A_NORMAL]
+            data_colors = [curses.color_pair(COL_YELLOW), curses.A_NORMAL, m_col, curses.A_NORMAL, curses.A_NORMAL]
             x=1
             line_added = False
             for i, data in enumerate(data_to_print):

@@ -36,58 +36,62 @@ def run_testsuite(env, solution, add_to_user_logs, with_logs=True, run_seq_tests
             return env, False
 
         ############### 1. CHECK IF FUT EXISTS ###############
+        fut_ready = False
         fut = env.cwd.proj.sut_required
         file_list = os.listdir(solution.path)
-        if not fut in file_list:
+        if fut in file_list:
+            # check if fut is executable
+            fut_path = os.path.join(solution.path, fut)
+            if not os.access(fut_path, os.X_OK):
+                st = os.stat(fut_path)
+                os.chmod(fut_path, st.st_mode | stat.S_IEXEC)
+            fut_ready = True
+        else:
             # add tag "missing sut file"
             log(f"run testsuite | fut file '{fut}' doesnt exists in solution dir")
             add_to_user_logs(env, 'error', f"FUT '{fut}' doesnt exists in solution directory")
-            return env, False
-        # check if fut is executable
-        fut_path = os.path.join(solution.path, fut)
-        if not os.access(fut_path, os.X_OK):
-            st = os.stat(fut_path)
-            os.chmod(fut_path, st.st_mode | stat.S_IEXEC)
+            solution.tags.set_tag("scoring_missing_fut", [0])
 
 
-        ############### 2. CLEAN SOLUTION ###############
-        if with_logs:
-            add_to_user_logs(env, 'info', f"cleaning tests results...")
-        clean_test(solution)
+        if fut_ready:
+            ############### 2. CLEAN SOLUTION ###############
+            if with_logs:
+                add_to_user_logs(env, 'info', f"cleaning tests results...")
+            clean_test(solution)
 
-        ############### 3. PREPARE DATA ###############
-        if with_logs:
-            add_to_user_logs(env, 'info', f"preparing data for testing...")
-        if run_seq_tests and tests:
-            data_ok = prepare_data(env, solution.path, SRC_RUN_TESTS_FILE)       
-        else:
-            data_ok = prepare_data(env, solution.path, SRC_RUN_TESTSUITE_FILE)
-        if not data_ok:
-            log("run testsuite | problem with testing data")
-            add_to_user_logs(env, 'error', f"problem with testing data...")
-            return env, False
+            ############### 3. PREPARE DATA ###############
+            if with_logs:
+                add_to_user_logs(env, 'info', f"preparing data for testing...")
+            if run_seq_tests and tests:
+                data_ok = prepare_data(env, solution.path, SRC_RUN_TESTS_FILE)
+            else:
+                data_ok = prepare_data(env, solution.path, SRC_RUN_TESTSUITE_FILE)
+            if not data_ok:
+                log("run testsuite | problem with testing data")
+                add_to_user_logs(env, 'error', f"problem with testing data...")
+                return env, False
 
-        ############### 4. RUN TESTSUITE ###############
-        f1, f2, f3 = with_logs, run_seq_tests, tests
-        succ = run_testsuite_in_docker(env, solution.path, fut, add_to_user_logs, with_logs=f1, run_seq_tests=f2, tests=f3)
-        if not succ:
-            log("run testsuite | problem with testsuite run in docker")
-            return env, False
-        # reload tests tags for solution after testsuite is done
-        solution.reload_test_tags()
+            ############### 4. RUN TESTSUITE ###############
+            f1, f2, f3 = with_logs, run_seq_tests, tests
+            succ = run_testsuite_in_docker(env, solution.path, fut, add_to_user_logs, with_logs=f1, run_seq_tests=f2, tests=f3)
+            if not succ:
+                log("run testsuite | problem with testsuite run in docker")
+                return env, False
+            # reload tests tags for solution after testsuite is done
+            solution.reload_test_tags()
+
+            # get testsuite version and add tag "testsuite_version" to solution tags
+            tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
+            tests_tags = load_testsuite_tags(tests_dir)
+            if tests_tags is not None and len(tests_tags)>0:
+                version_args = tests_tags.get_args_for_tag("version")
+                if version_args is not None:
+                    tst_version = list(version_args)[0]
+                    solution.tags.set_tag("testsuite_version", [tst_version])
 
         # get datetime and add tag "last_testing" to solution tags
         date_time = datetime.datetime.now().strftime("%d/%m/%y-%H:%M")
         solution.tags.set_tag("last_testing", [date_time])
-
-        # get testsuite version and add tag "testsuite_version" to solution tags
-        tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
-        tests_tags = load_testsuite_tags(tests_dir)
-        if tests_tags is not None and len(tests_tags)>0:
-            version_args = tests_tags.get_args_for_tag("version")
-            if version_args is not None:
-                tst_version = list(version_args)[0]
-                solution.tags.set_tag("testsuite_version", [tst_version])
 
         ############### 5. CALCULATE SCORE ###############
         total_score = calculate_score(env, solution)
@@ -130,8 +134,10 @@ def prepare_data(env, solution_dir, run_file):
         log(f"prepare data | testsuite '{testsuite_file}' doesnt exist")
         return False
     if not os.access(testsuite_file, os.X_OK):
-        log(f"prepare data | testsuite '{testsuite_file}' is not executable (try: chmod +x testsuite.sh)")
-        return False
+        st = os.stat(testsuite_file)
+        os.chmod(testsuite_file, st.st_mode | stat.S_IEXEC)
+        # log(f"prepare data | testsuite '{testsuite_file}' is not executable (try: chmod +x testsuite.sh)")
+        # return False
 
     # 2. check if tst fce file is in proj/tests/src/ dir
     bash_tests_ok = check_bash_functions_for_testing(env.cwd.proj.path)

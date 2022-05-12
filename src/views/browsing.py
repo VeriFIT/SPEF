@@ -533,6 +533,27 @@ def run_menu_function(stdscr, env, fce, key):
                 if env.is_exit_mode():
                     return env, True
                 env.cwd = get_directory_content(env)
+    # ======================= SUM =======================
+    elif fce == CALCULATE_SUM_ALL:
+        if env.cwd.proj is not None:
+            solution_list = []
+            for dir_name in env.cwd.dirs:
+                solution_name = os.path.basename(dir_name)
+                if solution_name in env.cwd.proj.solutions:
+                    solution_list.append(env.cwd.proj.solutions[solution_name])
+
+            # for key, solution in env.cwd.proj.solutions.items():
+            add_to_user_logs(env, 'info', f"recalculating score for students...")
+            for solution in solution_list:
+                total_score = calculate_score(env, solution)
+                if total_score is not None:
+                    score, bonus = total_score
+                    solution.tags.set_tag("score", [score])
+                    if bonus > 0:
+                        solution.tags.set_tag("score_bonus", [bonus])
+                    save_tags_to_file(solution.tags)
+            add_to_user_logs(env, 'info', f"score calculated !!")
+            env.cwd = get_directory_content(env)
     # =================== GENERATE REPORT ===================
     elif fce == GEN_CODE_REVIEW: # on solution dir
         idx = win.cursor.row
@@ -767,7 +788,7 @@ def run_menu_function(stdscr, env, fce, key):
             add_to_user_logs(env, 'info', f"creating new test...")
             new_test_dir = create_new_test(env, env.cwd.path, test_name)
             test_name = os.path.basename(new_test_dir)
-            add_to_user_logs(env, 'info', f"test '{test_name}' created with default scoring (ok=1, fail=0)")
+            add_to_user_logs(env, 'info', f"test '{test_name}' created (scoring ok=1,fail=0)")
             if new_test_dir is not None:
                 os.chdir(new_test_dir)
                 env.cwd = get_directory_content(env)

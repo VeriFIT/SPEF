@@ -20,7 +20,7 @@ def brows_menu(stdscr, env, menu_options, keys=False, select_multiple=False, col
     env.menu_mode = True
 
     if color is None:
-        color = curses.color_pair(COL_TITLE)
+        color = curses.color_pair(COL_GREEN)
 
     screen, win = env.get_center_win(reset=True, row=0, col=0)
     win.set_border(0)

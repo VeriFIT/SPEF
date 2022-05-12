@@ -6,7 +6,7 @@ import traceback
 
 from controls.control import *
 from modules.bash import Bash_action
-from testing.tst import TST_FCE_DIR, TST_FCE_FILE
+from testing.tst import TST_FCE_DIR, TST_FCE_FILE, check_bash_functions_for_testing
 from testing.report import get_supported_data_for_report
 
 from utils.loading import *
@@ -238,6 +238,7 @@ def run_function(stdscr, env, fce, key):
             # show supported functions for 'dotest.sh' while user is writing/editing some test
             # show list of implemented functions for testing
             try:
+                check_bash_functions_for_testing(env.cwd.proj.path)
                 bash_file = os.path.join(env.cwd.proj.path, TESTS_DIR, TST_FCE_DIR, TST_FCE_FILE)
                 options = env.get_supported_test_functions(bash_file)
                 custom_help = (None, "Supported functions:", options)

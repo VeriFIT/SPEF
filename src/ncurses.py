@@ -20,20 +20,18 @@ class NcursesStyle(Style):
     HL_PASTEL_GREEN = "#000046"
     HL_ORANGE = "#000047"
     HL_RED = "#000048"
-    HL_LIGHT_GRAY = "#000049"
-    HL_DARK_GRAY = "#000050"
-    HL_GRAY = "#000051"
-    HL_OLIVE = "#000052"
-    HL_PINK = "#000053"
+    HL_OLIVE = "#000049"
+    HL_PINK = "#000050"
 
+    HL_NORMAL = "#000055"
 
-    default_style = HL_GRAY
+    default_style = HL_NORMAL
 
     # https://svn.python.org/projects/external/Pygments-1.3.1/docs/build/tokens.html
     styles = {
         Comment:                   HL_GREEN,
-        Comment.Preproc:           HL_PURPLE, # ??
-        Comment.Special:           HL_LIGHT_GRAY, # ??
+        Comment.Preproc:           HL_PURPLE,
+        Comment.Special:           HL_NORMAL,
 
         Keyword:                   HL_BLUE,
         # Keyword.Constant:          "",
@@ -43,7 +41,7 @@ class NcursesStyle(Style):
         # Keyword.Reserved:          "",
         # Keyword.Type:              "", # int, char
 
-        Name:                      HL_LIGHT_GRAY, # ??
+        Name:                      HL_NORMAL,
         Name.Attribute:            HL_YELLOW,
         Name.Builtin:              HL_LIGHT_BLUE, # self, this
         # Name.Builtin.Pseudo:       "",
@@ -59,17 +57,17 @@ class NcursesStyle(Style):
         Name.Tag:                  HL_PURPLE,
         Name.Variable:             HL_LIGHT_BLUE,
 
-        Number:                    HL_PASTEL_GREEN,
-        Literal:                   HL_PASTEL_GREEN,
+        Number:                    HL_PASTEL_GREEN, # HL_PINK
+        Literal:                   HL_PASTEL_GREEN, # HL_PINK
         Literal.Date:              HL_ORANGE,
         String:                    HL_ORANGE,
-        String.Escape:             HL_PASTEL_GREEN,
-        String.Interpol:           HL_BLUE, # ??
-        Text:                      HL_LIGHT_GRAY, # ??
+        String.Escape:             HL_PASTEL_GREEN, # HL_PINK
+        String.Interpol:           HL_BLUE,
+        Text:                      HL_NORMAL,
 
-        Operator:                  HL_LIGHT_GRAY, # ??
-        Operator.Word:             HL_BLUE, # ??
-        Punctuation:               HL_LIGHT_GRAY, # ??
+        Operator:                  HL_NORMAL,
+        Operator.Word:             HL_BLUE,
+        Punctuation:               HL_NORMAL,
         Error:                     HL_RED,
 
         Generic.Deleted:           HL_PURPLE,

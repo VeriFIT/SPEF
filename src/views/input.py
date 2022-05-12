@@ -31,7 +31,7 @@ def get_user_input(stdscr, env, title=None, user_input=None):
         """ show user input """
         max_cols = win.end_x - win.begin_x - 1
         max_rows = win.end_y - win.begin_y - 1
-        color = curses.color_pair(COL_TITLE)
+        color = curses.color_pair(COL_GREEN)
 
         """ move cursor to correct position """
         row, col = show_user_input(screen, user_input, max_rows, max_cols, env, color=color, title=title)

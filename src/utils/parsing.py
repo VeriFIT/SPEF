@@ -152,16 +152,17 @@ def parse_tag(tag):
 
 def parse_solution_info_predicate(predicate, solution, info_for_tests=False, test_name=None):
     # defined colors
-    red = curses.color_pair(HL_RED)
-    green = curses.color_pair(HL_GREEN)
-    blue = curses.color_pair(HL_BLUE)
+    red = curses.color_pair(COL_RED)
+    green = curses.color_pair(COL_GREEN)
+    blue = curses.color_pair(COL_BLUE)
     normal = curses.A_NORMAL
-    cyan = curses.color_pair(HL_CYAN)
-    yellow = curses.color_pair(HL_YELLOW)
-    orange = curses.color_pair(HL_ORANGE)
-    pink = curses.color_pair(HL_PINK)
+    cyan = curses.color_pair(COL_CYAN)
+    yellow = curses.color_pair(COL_YELLOW)
+    orange = curses.color_pair(COL_ORANGE)
+    pink = curses.color_pair(COL_PINK)
 
     color = normal
+    match = False
     try:
         if 'predicate' in predicate:
             conditions = predicate['predicate']

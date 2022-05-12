@@ -248,10 +248,18 @@ class Project:
         success = {
             'identifier': 1,
             'visualization': "ok",
+            'length': 4,
             'description': "test passsed",
             'predicates': [{'predicate': ["XTEST_ok"], 'color': 'green'}]
         }
-        tests_info = [success]
+        fail = {
+            'identifier': 1,
+            'visualization': "fail",
+            'length': 4,
+            'description': "test failed",
+            'predicates': [{'predicate': ["XTEST_fail"], 'color': 'red'}]
+        }
+        tests_info = [success, fail]
         return tests_info
 
 
@@ -269,7 +277,7 @@ class Project:
         status = {
             'identifier': 2,
             'visualization': 'T',
-            'description': "was tested -- tag added at the end of testsuite.sh",
+            'description': "project was tested",
             'predicates': [
                 {'predicate': ['last_testing'], 'color': ''} # tag: last_testing sa prida na konci testovania
             ]

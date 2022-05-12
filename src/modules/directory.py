@@ -149,6 +149,6 @@ class Directory:
 
             return result
         except Exception as err:
-            log("get info for solution | "+str(err))
+            log("get info for solution | "+str(err)+" | "+str(traceback.format_exc()))
             return []
 

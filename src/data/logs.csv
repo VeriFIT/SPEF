@@ -1,14 +1,152 @@
-02/05/22-19:57|INFO   |new project created (proj1)
-02/05/22-20:04|INFO   |file 'proj_conf.yaml' saved
-04/05/22-10:58|INFO   |new project created (proj2)
-05/05/22-14:42|INFO   |file 'Dockerfile' saved
-05/05/22-16:18|INFO   |file 'Dockerfile' saved
-05/05/22-16:18|INFO   |file 'Dockerfile' saved
-05/05/22-17:16|INFO   |file 'scoring' saved
-05/05/22-21:13|INFO   |file 'dns.c' saved
-05/05/22-21:16|INFO   |file 'dns.c' saved
-05/05/22-21:24|INFO   |file 'dns.c' saved
-05/05/22-22:06|INFO   |file 'dns.c' saved
-06/05/22-14:17|INFO   |file 'proj_conf.yaml' saved
-06/05/22-15:09|INFO   |file 'proj_conf.yaml' saved
-06/05/22-15:13|INFO   |file 'proj_conf.yaml' saved
+11/05/22-14:42|INFO   |new project created (tmp)
+11/05/22-14:42|INFO   |creating new test...
+11/05/22-14:42|INFO   |test 'test_1' created with default scoring (ok=1, fail=0)
+11/05/22-14:49|INFO   |creating new test...
+11/05/22-14:49|INFO   |test 'test_2' created (scoring set to ok=1,fail=0)
+11/05/22-14:50|INFO   |extracting all solution archives...
+11/05/22-14:50|WARNING|no solution archives found in project directory
+11/05/22-14:50|WARNING|problematic archives: {'xlogin01.zip', 'xlogin03.tz', 'xlogin00.zip'}
+11/05/22-14:51|INFO   |creating new test...
+11/05/22-14:51|INFO   |test 'test_3' created (default scoring ok=1,fail=0)
+11/05/22-14:52|INFO   |extracting all solution archives...
+11/05/22-14:52|INFO   |extracting all solution archives...
+11/05/22-14:52|INFO   |extracting all solution archives...
+11/05/22-14:52|WARNING|no solution archives found in project directory
+11/05/22-14:52|INFO   |extracting all solution archives...
+11/05/22-14:52|WARNING|problematic archives: {'xlogin02.7z'}
+11/05/22-15:19|INFO   |*** testing student 'xaaaaa52' ***
+11/05/22-15:19|INFO   |testing done
+11/05/22-15:19|INFO   |*** testing student 'xabcde00' ***
+11/05/22-15:19|INFO   |testing done
+11/05/22-15:19|INFO   |*** testing student 'xabcde53' ***
+11/05/22-15:19|INFO   |testing done
+11/05/22-15:19|INFO   |*** testing student 'xahojk12' ***
+11/05/22-15:19|INFO   |testing done
+11/05/22-15:19|INFO   |*** testing student 'xasssd12' ***
+11/05/22-15:19|INFO   |testing done
+11/05/22-15:19|INFO   |*** testing student 'xlogin00' ***
+11/05/22-15:19|INFO   |testing done
+11/05/22-15:19|INFO   |*** testing student 'xlogin01' ***
+11/05/22-15:19|ERROR  |FUT 'tradelog' doesnt exists in solution directory
+11/05/22-15:19|INFO   |testing done
+11/05/22-15:19|INFO   |*** testing student 'xlogin04' ***
+11/05/22-15:19|ERROR  |FUT 'tradelog' doesnt exists in solution directory
+11/05/22-15:19|INFO   |testing done
+11/05/22-15:19|INFO   |*** testing student 'xlogin07' ***
+11/05/22-15:19|INFO   |testing done
+11/05/22-15:19|INFO   |*** testing student 'xlogin11' ***
+11/05/22-15:19|INFO   |testing done
+11/05/22-15:19|INFO   |*** testing student 'xlogin21' ***
+11/05/22-15:19|INFO   |testing done
+11/05/22-15:19|INFO   |*** testing student 'xlogin22' ***
+11/05/22-15:19|INFO   |testing done
+11/05/22-15:19|INFO   |*** testing student 'xlogin23' ***
+11/05/22-15:19|INFO   |testing done
+11/05/22-15:19|INFO   |*** testing student 'xlogin25' ***
+11/05/22-15:20|INFO   |testing done
+11/05/22-15:20|INFO   |*** testing student 'xlogin26' ***
+11/05/22-15:20|INFO   |testing done
+11/05/22-15:20|INFO   |*** testing student 'xlogin27' ***
+11/05/22-15:20|INFO   |testing done
+11/05/22-15:20|INFO   |*** testing student 'xlogin28' ***
+11/05/22-15:20|INFO   |testing done
+11/05/22-15:20|INFO   |*** testing student 'xlogin29' ***
+11/05/22-15:20|INFO   |testing done
+11/05/22-15:20|INFO   |*** testing student 'xlogin30' ***
+11/05/22-15:20|INFO   |testing done
+11/05/22-15:20|INFO   |*** testing student 'xlogin55' ***
+11/05/22-15:20|INFO   |testing done
+11/05/22-15:20|INFO   |*** testing student 'xlogin99' ***
+11/05/22-15:20|ERROR  |FUT 'tradelog' doesnt exists in solution directory
+11/05/22-15:20|INFO   |testing done
+11/05/22-15:20|INFO   |*** testing student 'xlrger22' ***
+11/05/22-15:20|INFO   |testing done
+11/05/22-15:20|INFO   |*** testing student 'xmkolk01' ***
+11/05/22-15:20|INFO   |testing done
+11/05/22-15:20|INFO   |*** testing student 'xndnhj01' ***
+11/05/22-15:20|INFO   |testing done
+11/05/22-15:20|INFO   |*** testing student 'xsdjef02' ***
+11/05/22-15:20|INFO   |testing done
+11/05/22-15:20|INFO   |*** testing student 'xskfne52' ***
+11/05/22-15:20|INFO   |testing done
+11/05/22-15:20|INFO   |*** testing student 'xsmakd03' ***
+11/05/22-15:20|INFO   |testing done
+11/05/22-15:20|INFO   |*** testing student 'xsmfke14' ***
+11/05/22-15:21|INFO   |testing done
+11/05/22-15:21|INFO   |*** testing student 'xxxxxs01' ***
+11/05/22-15:21|INFO   |testing done
+11/05/22-15:21|INFO   |testing all students done !!
+11/05/22-22:42|INFO   |*** testing student 'xakfjq00' ***
+11/05/22-22:42|INFO   |testing done
+11/05/22-22:42|INFO   |*** testing student 'xaserw00' ***
+11/05/22-22:42|INFO   |testing done
+11/05/22-22:42|INFO   |*** testing student 'xatpok01' ***
+11/05/22-22:42|INFO   |testing done
+11/05/22-22:42|INFO   |*** testing student 'xawdrt01' ***
+11/05/22-22:42|INFO   |testing done
+11/05/22-22:42|INFO   |*** testing student 'xbeqrk05' ***
+11/05/22-22:42|INFO   |testing done
+11/05/22-22:42|INFO   |*** testing student 'xfjhky00' ***
+11/05/22-22:42|INFO   |testing done
+11/05/22-22:42|INFO   |*** testing student 'xgjtjr00' ***
+11/05/22-22:42|INFO   |testing done
+11/05/22-22:42|INFO   |*** testing student 'xjgrek00' ***
+11/05/22-22:42|INFO   |testing done
+11/05/22-22:42|INFO   |*** testing student 'xjhrke01' ***
+11/05/22-22:42|INFO   |testing done
+11/05/22-22:42|INFO   |*** testing student 'xkdqjw00' ***
+11/05/22-22:42|INFO   |testing done
+11/05/22-22:42|INFO   |*** testing student 'xkflsk01' ***
+11/05/22-22:42|INFO   |testing done
+11/05/22-22:42|INFO   |*** testing student 'xkgrej01' ***
+11/05/22-22:43|INFO   |testing done
+11/05/22-22:43|INFO   |*** testing student 'xkqirr01' ***
+11/05/22-22:43|INFO   |testing done
+11/05/22-22:43|INFO   |*** testing student 'xkqmsj04' ***
+11/05/22-22:43|INFO   |testing done
+11/05/22-22:43|INFO   |*** testing student 'xktejw01' ***
+11/05/22-22:43|INFO   |testing done
+11/05/22-22:43|INFO   |*** testing student 'xlfska11' ***
+11/05/22-22:43|INFO   |testing done
+11/05/22-22:43|INFO   |*** testing student 'xlweok01' ***
+11/05/22-22:43|INFO   |testing done
+11/05/22-22:43|INFO   |*** testing student 'xmgwks00' ***
+11/05/22-22:43|INFO   |testing done
+11/05/22-22:43|INFO   |*** testing student 'xotrke01' ***
+11/05/22-22:43|INFO   |testing done
+11/05/22-22:43|INFO   |*** testing student 'xpakfw02' ***
+11/05/22-22:43|INFO   |testing done
+11/05/22-22:43|INFO   |*** testing student 'xrkweu03' ***
+11/05/22-22:43|INFO   |testing done
+11/05/22-22:43|INFO   |*** testing student 'xrutif01' ***
+11/05/22-22:43|INFO   |testing done
+11/05/22-22:43|INFO   |*** testing student 'xtertk02' ***
+11/05/22-22:43|INFO   |testing done
+11/05/22-22:43|INFO   |*** testing student 'xvefal02' ***
+11/05/22-22:43|INFO   |testing done
+11/05/22-22:43|INFO   |*** testing student 'xyfhtr00' ***
+11/05/22-22:43|INFO   |testing done
+11/05/22-22:43|INFO   |testing all students done !!
+12/05/22-00:05|INFO   |*** testing student 'xkdqjw00' ***
+12/05/22-00:05|INFO   |cleaning tests results...
+12/05/22-00:05|INFO   |preparing data for testing...
+12/05/22-00:05|INFO   |creating docker container...
+12/05/22-00:05|INFO   |running testsuite...
+12/05/22-00:05|INFO   |getting results from tests...
+12/05/22-00:05|INFO   |testing successfully done
+12/05/22-00:06|INFO   |file 'scoring' saved
+12/05/22-00:06|INFO   |*** testing student 'xkdqjw00' ***
+12/05/22-00:06|INFO   |cleaning tests results...
+12/05/22-00:06|INFO   |preparing data for testing...
+12/05/22-00:06|INFO   |creating docker container...
+12/05/22-00:06|INFO   |running testsuite...
+12/05/22-00:06|INFO   |getting results from tests...
+12/05/22-00:06|INFO   |testing successfully done
+12/05/22-00:07|INFO   |file 'scoring' saved
+12/05/22-00:07|INFO   |*** testing student 'xkdqjw00' ***
+12/05/22-00:07|INFO   |cleaning tests results...
+12/05/22-00:07|INFO   |preparing data for testing...
+12/05/22-00:07|INFO   |creating docker container...
+12/05/22-00:07|INFO   |running testsuite...
+12/05/22-00:07|INFO   |getting results from tests...
+12/05/22-00:07|INFO   |testing successfully done

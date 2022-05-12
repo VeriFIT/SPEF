@@ -210,22 +210,9 @@ def create_tests_dir(tests_dir):
 
 ############ SUM ############
 def create_sum_file(sum_file):
-    mess = """# POZOR:
-#   * mozno pouzivat len tagy s prefixom 'scoring_'
-#       - prefix sa pri parsovani rovnice pre vypocet SUM prida automaticky
-#       - ak teda existuje tag 'scoring_test_x', v rovnici ho pouzi ako 'test_x'
-#   * mozno pouzivat len tagy ktore maju presne jeden parameter
-#       - tag s viacerymi parametrami --> do rovnice sa berie hodnota prveho parametra
-#       - tag bez parametra --> v rovnici sa ignoruje (a vypise sa upozornenie)
-#       - tag, ktory neexistuje --> v rovnici sa ignoruje (a vypise sa upozornenie)
-#   * v rovnici mozno pouzit len znamienka: + - *
-#   * zatvorky nie su podporovane
-#       - pre zlozitejsie vypocty je potreba vytvorit extra tag pre medzivypocet
-#       - napr. vytvorim manualne tag 'scoring_medzihodnota(body)' ktory sa pouzije v SUM ako 'medzihodnota'
-#   * okrem tagov mozno pouzit specialnu funkciu SUM_ALL_TESTS
-#       - tato funkcia scita hodnoty tagov z platnych testov
-#       - moze sa pouzit v kombinacii s dalsimi tagmi
-#       - napr: SUM=SUM_ALL_TESTS + documentation - renamed_solution
+    mess = """# WARNING:
+# use only tags with 'scoring_' prefix, with a numeric value of the first parameter
+# use only + - or *
 """
     if not os.path.exists(sum_file):
         with open(sum_file, 'w+') as f:
@@ -236,7 +223,7 @@ def create_sum_file(sum_file):
 def create_scoring_file(scoring_file):
     if not os.path.exists(scoring_file):
         with open(scoring_file, 'w+') as f:
-            f.write("# definition of score for each test (ex: test1_ok=2)\n")
+            f.write("# definition of score for each test (ex: test1_ok=1, test1_fail=0)\n")
 
 
 ############ TESTSUITE.SH ############
