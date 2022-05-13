@@ -59,6 +59,11 @@ class Project:
     def reload_solutions(self):
         self.solutions = self.load_solutions()
 
+    def get_solutions_list(self):
+        res = [solution for _,solution in self.solutions.items()]
+        return res
+
+
     def load_solutions(self):
         res = {}
         # get solution dirs
@@ -279,7 +284,7 @@ class Project:
             'visualization': 'T',
             'description': "project was tested",
             'predicates': [
-                {'predicate': ['last_testing'], 'color': ''} # tag: last_testing sa prida na konci testovania
+                {'predicate': ['last_testing'], 'color': 'yellow'} # tag: last_testing sa prida na konci testovania
             ]
         }
         group = {
@@ -287,7 +292,7 @@ class Project:
             'visualization': 'G',
             'description': "is group project",
             'predicates': [
-                {'predicate': ['group'], 'color': ''}
+                {'predicate': ['group'], 'color': 'blue'}
             ]
         }
         plagiat = {

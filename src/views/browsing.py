@@ -265,6 +265,23 @@ def run_function(stdscr, env, fce, key):
     return env, False
 
 
+def get_solutions_list(env):
+    solution_list = []
+    if env.filter_not_empty():
+        for dir_name in env.cwd.dirs:
+            solution_name = os.path.basename(dir_name)
+            if solution_name in env.cwd.proj.solutions:
+                solution_list.append(env.cwd.proj.solutions[solution_name])
+            else:
+                solution_dir = get_parent_regex_match(env.cwd.proj.solution_id, dir_name)
+                if solution_dir:
+                    solution_name = os.path.basename(solution_dir)
+                    if solution_name in env.cwd.proj.solutions:
+                        solution_list.append(env.cwd.proj.solutions[solution_name])
+    else:
+        solution_list = env.cwd.proj.get_solutions_list()
+    return solution_list
+
 
 def try_get_solution_from_selected_item(env, idx):
     solution = None
@@ -399,12 +416,7 @@ def run_menu_function(stdscr, env, fce, key):
     # ======================= CLEAN =======================
     elif fce == TEST_CLEAN_ALL:
         if env.cwd.proj is not None:
-            solution_list = []
-            for dir_name in env.cwd.dirs:
-                solution_name = os.path.basename(dir_name)
-                if solution_name in env.cwd.proj.solutions:
-                    solution_list.append(env.cwd.proj.solutions[solution_name])
-
+            solution_list = get_solutions_list(env)
             # for key, solution in env.cwd.proj.solutions.items():
             for solution in solution_list:
                 add_to_user_logs(env, 'info', f"cleaning tests results for student '{solution.name}'...")
@@ -421,18 +433,7 @@ def run_menu_function(stdscr, env, fce, key):
     # ======================= RUN TESTSUITE =======================
     elif fce == TEST_ALL_STUDENTS: # ALL STUDENTS
         if env.cwd.proj is not None:
-            solution_list = []
-            for dir_name in env.cwd.dirs:
-                solution_name = os.path.basename(dir_name)
-                if solution_name in env.cwd.proj.solutions:
-                    solution_list.append(env.cwd.proj.solutions[solution_name])
-                else:
-                    solution_dir = get_parent_regex_match(env.cwd.proj.solution_id, dir_name)
-                    if solution_dir:
-                        solution_name = os.path.basename(solution_dir)
-                        if solution_name in env.cwd.proj.solutions:
-                            solution_list.append(env.cwd.proj.solutions[solution_name])
-
+            solution_list = get_solutions_list(env)
             if solution_list:
                 # for key, solution in env.cwd.proj.solutions.items():
                 for solution in solution_list:
@@ -464,12 +465,7 @@ def run_menu_function(stdscr, env, fce, key):
     elif fce == ALL_RUN_TESTS: # all solutions
         """ select one or more tests and run this tests"""
         if env.cwd.proj is not None:
-            # get solution list
-            solution_list = []
-            for dir_name in env.cwd.dirs:
-                solution_name = os.path.basename(dir_name)
-                if solution_name in env.cwd.proj.solutions:
-                    solution_list.append(env.cwd.proj.solutions[solution_name])
+            solution_list = get_solutions_list(env)
 
             # show menu with tests for selection
             title = "Select one or more tests and press 'enter' to run them sequentially..."
@@ -536,11 +532,7 @@ def run_menu_function(stdscr, env, fce, key):
     # ======================= SUM =======================
     elif fce == CALCULATE_SUM_ALL:
         if env.cwd.proj is not None:
-            solution_list = []
-            for dir_name in env.cwd.dirs:
-                solution_name = os.path.basename(dir_name)
-                if solution_name in env.cwd.proj.solutions:
-                    solution_list.append(env.cwd.proj.solutions[solution_name])
+            solution_list = get_solutions_list(env)
 
             # for key, solution in env.cwd.proj.solutions.items():
             add_to_user_logs(env, 'info', f"recalculating score for students...")
@@ -574,11 +566,7 @@ def run_menu_function(stdscr, env, fce, key):
     # ======================= ADD TEST NOTES TO REPORT =======================
     elif fce == ADD_TEST_NOTE_TO_ALL:
         # get list of solutions to which will be added note
-        solution_list = []
-        for dir_name in env.cwd.dirs:
-            solution_name = os.path.basename(dir_name)
-            if solution_name in env.cwd.proj.solutions:
-                solution_list.append(env.cwd.proj.solutions[solution_name])
+        solution_list = get_solutions_list(env)
         if solution_list:
             # get text from user input
             title = "Enter a test note (related to current version of testsuite):"
@@ -611,11 +599,7 @@ def run_menu_function(stdscr, env, fce, key):
     # ======================= ADD USER NOTES TO REPORT =======================
     elif fce == ADD_USER_NOTE_TO_ALL:
         # get list of solutions to which will be added note
-        solution_list = []
-        for dir_name in env.cwd.dirs:
-            solution_name = os.path.basename(dir_name)
-            if solution_name in env.cwd.proj.solutions:
-                solution_list.append(env.cwd.proj.solutions[solution_name])
+        solution_list = get_solutions_list(env)
         if solution_list:
             # get text from user input
             title = "Enter a note for project solution:"
@@ -631,7 +615,7 @@ def run_menu_function(stdscr, env, fce, key):
                     solution.add_user_note(note_text)
                     save_user_notes_for_solution(solution)
                     solutions_names = [solution.name for solution in solution_list]
-                    add_to_user_logs(env, 'info', f"user note added to solutions: {solutions_names}")
+                add_to_user_logs(env, 'info', f"user note added to solutions: {solutions_names}")
     elif fce == ADD_USER_NOTE: # on solution
         idx = win.cursor.row
         solution = try_get_solution_from_selected_item(env, idx)
@@ -652,11 +636,7 @@ def run_menu_function(stdscr, env, fce, key):
     # ======================= ADD TAG =======================
     elif fce == ADD_TAG_TO_ALL:
         # get list of solutions to which will be added note
-        solution_list = []
-        for dir_name in env.cwd.dirs:
-            solution_name = os.path.basename(dir_name)
-            if solution_name in env.cwd.proj.solutions:
-                solution_list.append(env.cwd.proj.solutions[solution_name])
+        solution_list = get_solutions_list(env)
         if solution_list:
             # get tag from user input
             title = "Enter new tag in format: tag_name param1 param2 ..."
@@ -674,7 +654,7 @@ def run_menu_function(stdscr, env, fce, key):
                         solution.tags.set_tag(tag_name, args)
                         save_tags_to_file(solution.tags)
                         solutions_names = [solution.name for solution in solution_list]
-                        add_to_user_logs(env, 'info', f"tag added to solutions: {solutions_names}")
+                    add_to_user_logs(env, 'info', f"tag added to solutions: {solutions_names}")
     # ======================= SHOW INFO =======================
     elif fce == SHOW_OR_HIDE_PROJ_INFO:
         env.show_solution_info = not env.show_solution_info
@@ -797,6 +777,7 @@ def run_menu_function(stdscr, env, fce, key):
 
                 # open shell script "dotest.sh" to implement the test
                 env.set_file_to_open(os.path.join(new_test_dir, TEST_FILE), is_test_file=True)
+                env.change_to_file_edit_mode()
                 env.set_view_mode()
                 return env, True
     # =================== EDIT TESTSUITE ===================
@@ -811,6 +792,7 @@ def run_menu_function(stdscr, env, fce, key):
 
                 # open "testsuite.sh" to implement testing strategy
                 env.set_file_to_open(testsuite_file)
+                env.change_to_file_edit_mode()
                 env.set_view_mode()
                 return env, True
             else:
@@ -823,6 +805,7 @@ def run_menu_function(stdscr, env, fce, key):
             scoring_file = os.path.join(env.cwd.proj.path, TESTS_DIR, SCORING_FILE)
             if os.path.exists(scoring_file):
                 env.set_file_to_open(scoring_file)
+                env.change_to_file_edit_mode()
                 env.set_view_mode()
                 return env, True
             else:
@@ -835,6 +818,7 @@ def run_menu_function(stdscr, env, fce, key):
             sum_file = os.path.join(env.cwd.proj.path, TESTS_DIR, SUM_FILE)
             if os.path.exists(sum_file):
                 env.set_file_to_open(sum_file)
+                env.change_to_file_edit_mode()
                 env.set_view_mode()
                 return env, True
             else:
@@ -868,6 +852,7 @@ def run_menu_function(stdscr, env, fce, key):
                     test_file = os.path.join(test_dir, TEST_FILE)
                     if os.path.exists(test_file):
                         env.set_file_to_open(test_file)
+                        env.change_to_file_edit_mode()
                         env.set_view_mode()
                         return env, True
                     else:

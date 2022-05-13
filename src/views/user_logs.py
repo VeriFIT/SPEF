@@ -116,6 +116,10 @@ def run_function(stdscr, env, fce, key, logs_len):
         user_logs_file = os.path.join(DATA_DIR, USER_LOGS_FILE)
         with open(user_logs_file, 'w+'): pass
         env.user_logs = load_user_logs_from_file()
+        env.user_logs_printed = []
+        env.user_logs_printed_shift = 0
+        go_down_in_user_logs(env)
+        env.windows.logs.reset()
         logs_len = calculate_total_len_lines(env.user_logs, 1, max_cols)
 
     env.update_win_for_current_mode(win)

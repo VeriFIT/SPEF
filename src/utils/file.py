@@ -1,5 +1,6 @@
 import glob
 import os
+import stat
 import shutil
 import traceback
 import tarfile
@@ -232,6 +233,9 @@ def create_testsuite(testsuite_file):
         with open(testsuite_file, 'w+') as f:
             f.write("#!/usr/bin/env bash\n")
             f.write("# ***** write test strategy here *****\n")
+        if not os.access(testsuite_file, os.X_OK):
+            st = os.stat(testsuite_file)
+            os.chmod(testsuite_file, st.st_mode | stat.S_IEXEC)
 
 
 ############ TESTSUITE_TAGS ############

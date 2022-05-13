@@ -127,7 +127,8 @@ def main(stdscr, env=None):
         else:
             print_hint(env)
             if env.is_exit_mode():
-                shutil.rmtree(TMP_DIR)
+                if os.path.exists(TMP_DIR):
+                    shutil.rmtree(TMP_DIR)
                 bash_proc.set_reader(False)
                 break
             elif env.is_brows_mode():
@@ -233,7 +234,6 @@ def executing_bash(stdscr, env):
         hex_c = c.encode("utf-8").hex()
 
         # exit bash
-        # if hex_c == 'a':
         if hex_c == exit_key:
             # set bash as inactive
             bash_proc.set_active(False)

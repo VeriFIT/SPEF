@@ -75,5 +75,8 @@ def init_color_pairs():
     curses.init_pair(HL_OLIVE, 94, -1)
     curses.init_pair(HL_PINK, 218, -1)
 
+    # curses.init_pair(HL_YELLOW, 11, -1) # 11
+    # curses.init_pair(HL_PASTEL_GREEN, 142, -1)
+
     curses.init_pair(HL_NORMAL, -1, -1)
 

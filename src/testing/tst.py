@@ -151,6 +151,7 @@ def prepare_data(env, solution_dir, run_file):
         shutil.copytree(tests_dir, SHARED_TESTS_DIR) # proj/tests/ -> /docker_shared/tests/
         shutil.copytree(solution_dir, SHARED_SUT_DIR) # proj/xlogin/ -> /docker_shared/sut/
         shutil.copyfile(run_file, SHARED_RUN_FILE)
+        os.mkdir(os.path.join(SHARED_SUT_DIR, RESULTS_SUB_DIR))
     except Exception as err:
         log("prepare data | copy data | "+str(err))
         return False
@@ -196,6 +197,8 @@ def run_testsuite_in_docker(env, solution_dir, fut, add_to_user_logs, with_logs=
             add_to_user_logs(env, 'info', f"creating docker container...")
 
         container_cid_file = '/tmp/docker.cid'
+        if os.path.exists(container_cid_file):
+            os.remove(container_cid_file)
         output = subprocess.run(f"docker run --cidfile {container_cid_file} --rm -d --workdir {CONTAINER_DIR} -v {SHARED_DIR}:{CONTAINER_DIR}:z {IMAGE_NAME} bash -c".split(' ')+["while true; do sleep 1; done"],  capture_output=True)
         output_out = str(output.stdout.decode('utf-8'))
         output_err = str(output.stderr.decode('utf-8'))
@@ -234,7 +237,6 @@ def run_testsuite_in_docker(env, solution_dir, fut, add_to_user_logs, with_logs=
             student_results = os.path.join(solution_dir, RESULTS_SUB_DIR)
             shutil.copytree(docker_results, student_results, dirs_exist_ok=True)
         else:
-            log("run testsuite - cannot create docker container | "+str(err)+" | "+str(traceback.format_exc()))
             add_to_user_logs(env, 'error', f"cannot create docker container...")
             succ = False
     except Exception as err:

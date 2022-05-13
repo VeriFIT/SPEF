@@ -1,6 +1,6 @@
 
-
-key_to_hex = {
+# key to hex
+kth = {
     'TAB': "\x09", # 9
     'ENTER': "\x0a", # 10
 
@@ -136,10 +136,16 @@ key_to_hex = {
 
     'BACKSPACE': "\x7f", # 263 (127)
 
-    'UP': "\x1b\x5b\x41", # 259
-    'DOWN': "\x1b\x5b\x42", # 258
-    'RIGHT': "\x1b\x5b\x43", # 261
-    'LEFT': "\x1b\x5b\x44", # 260
+    # 'UP': "\x1b\x5b\x41", # 259
+    # 'DOWN': "\x1b\x5b\x42", # 258
+    # 'RIGHT': "\x1b\x5b\x43", # 261
+    # 'LEFT': "\x1b\x5b\x44", # 260
+
+    'UP': "\x1b\x4f\x41", # 259
+    'DOWN': "\x1b\x4f\x42", # 258
+    'RIGHT': "\x1b\x4f\x43", # 261
+    'LEFT': "\x1b\x4f\x44", # 260
+
 
     'F1': "\x1b\x4f\x50", # 265
     'F2': "\x1b\x4f\x51", # 266
@@ -154,7 +160,7 @@ key_to_hex = {
     'F11': "\x1b\x5b\x32\x33\x7e", # 275
     'F12': "\x1b\x5b\x32\x34\x7e", # 276
 
-    'DELETE': "\x1b\x5b\x33\x7e", # 330
+    'DEL': "\x1b\x5b\x33\x7e", # 330
 
     'CTRL+UP': "\x1b\x5b\x31\x3b\x35\x41", # 567
     'CTRL+DOWN': "\x1b\x5b\x31\x3b\x35\x42", # 526
