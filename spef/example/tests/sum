@@ -1,0 +1,4 @@
+# WARNING:
+# use only tags with 'scoring_' prefix, with a numeric value of the first parameter
+# use only + - or *
+SUM=SUM_ALL_TESTS
