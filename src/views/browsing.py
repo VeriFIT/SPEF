@@ -237,6 +237,7 @@ def run_function(stdscr, env, fce, key):
             selected_item = os.path.join(env.cwd.path, dirs_and_files[idx])
             if os.path.isfile(selected_item):
                 env.set_file_to_open(os.path.join(env.cwd.path, dirs_and_files[idx]))
+                env.reload_buff = True
                 env.set_view_mode()
                 return env, True
     # ======================= DELETE FILE =======================
@@ -348,6 +349,7 @@ def run_menu_function(stdscr, env, fce, key):
     elif fce == EDIT_PROJ_CONF:
         if env.cwd.proj is not None:
             env.set_file_to_open(os.path.join(env.cwd.proj.path, PROJ_CONF_FILE))
+            env.reload_buff = True
             env.set_view_mode()
             return env, True
     # ============================ EXPAND ===========================
@@ -666,6 +668,7 @@ def run_menu_function(stdscr, env, fce, key):
             code_review_file = os.path.join(solution.path, REPORT_DIR, CODE_REVIEW_FILE)
             if os.path.exists(code_review_file):
                 env.set_file_to_open(code_review_file)
+                env.reload_buff = True
                 env.set_view_mode()
                 return env, True
             else:
@@ -680,6 +683,7 @@ def run_menu_function(stdscr, env, fce, key):
             test_notes_file = os.path.join(solution.path, REPORT_DIR, TEST_NOTES_FILE)
             if os.path.exists(test_notes_file):
                 env.set_file_to_open(test_notes_file)
+                env.reload_buff = True
                 env.set_view_mode()
                 return env, True
             else:
@@ -694,6 +698,7 @@ def run_menu_function(stdscr, env, fce, key):
             user_notes_file = os.path.join(solution.path, REPORT_DIR, USER_NOTES_FILE)
             if os.path.exists(user_notes_file):
                 env.set_file_to_open(user_notes_file)
+                env.reload_buff = True
                 env.set_view_mode()
                 return env, True
             else:
@@ -708,6 +713,7 @@ def run_menu_function(stdscr, env, fce, key):
             report_file = os.path.join(solution.path, REPORT_DIR, TOTAL_REPORT_FILE)
             if os.path.exists(report_file):
                 env.set_file_to_open(report_file)
+                env.reload_buff = True
                 env.set_view_mode()
                 return env, True
             else:
@@ -733,6 +739,7 @@ def run_menu_function(stdscr, env, fce, key):
         stats_file = os.path.join(env.cwd.proj.path, REPORT_DIR, SCORING_STATS_FILE)
         if os.path.exists(stats_file):
             env.set_file_to_open(stats_file)
+            env.reload_buff = True
             env.set_view_mode()
             return env, True
         else:
@@ -743,6 +750,7 @@ def run_menu_function(stdscr, env, fce, key):
         stats_file = os.path.join(env.cwd.proj.path, REPORT_DIR, TESTS_STATS_FILE)
         if os.path.exists(stats_file):
             env.set_file_to_open(stats_file)
+            env.reload_buff = True
             env.set_view_mode()
             return env, True
         else:
@@ -778,6 +786,7 @@ def run_menu_function(stdscr, env, fce, key):
                 # open shell script "dotest.sh" to implement the test
                 env.set_file_to_open(os.path.join(new_test_dir, TEST_FILE), is_test_file=True)
                 env.change_to_file_edit_mode()
+                env.reload_buff = True
                 env.set_view_mode()
                 return env, True
     # =================== EDIT TESTSUITE ===================
@@ -793,6 +802,7 @@ def run_menu_function(stdscr, env, fce, key):
                 # open "testsuite.sh" to implement testing strategy
                 env.set_file_to_open(testsuite_file)
                 env.change_to_file_edit_mode()
+                env.reload_buff = True
                 env.set_view_mode()
                 return env, True
             else:
@@ -806,6 +816,7 @@ def run_menu_function(stdscr, env, fce, key):
             if os.path.exists(scoring_file):
                 env.set_file_to_open(scoring_file)
                 env.change_to_file_edit_mode()
+                env.reload_buff = True
                 env.set_view_mode()
                 return env, True
             else:
@@ -819,6 +830,7 @@ def run_menu_function(stdscr, env, fce, key):
             if os.path.exists(sum_file):
                 env.set_file_to_open(sum_file)
                 env.change_to_file_edit_mode()
+                env.reload_buff = True
                 env.set_view_mode()
                 return env, True
             else:
@@ -853,6 +865,7 @@ def run_menu_function(stdscr, env, fce, key):
                     if os.path.exists(test_file):
                         env.set_file_to_open(test_file)
                         env.change_to_file_edit_mode()
+                        env.reload_buff = True
                         env.set_view_mode()
                         return env, True
                     else:
@@ -963,6 +976,7 @@ def run_menu_function(stdscr, env, fce, key):
                 # open Docker file for edit
                 if os.path.exists(proj_docker_file):
                     env.set_file_to_open(proj_docker_file)
+                    env.reload_buff = True
                     env.set_view_mode()
                     return env, True
             except Exception as err:

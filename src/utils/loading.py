@@ -322,10 +322,11 @@ def add_tag_to_file(file_path, tags_dir):
 def load_buffer_and_tags(env):
     """ try load file content to buffer """
     file_already_loaded = False
-    if env.buffer and env.buffer.path == env.file_to_open:
+    if not env.reload_buff and env.buffer and env.buffer.path == env.file_to_open:
         buffer = env.buffer
     else:
         try:
+            env.reload_buff = False
             if os.path.isfile(env.file_to_open):
                 with open(env.file_to_open, 'r') as f:
                     lines = f.read().splitlines()

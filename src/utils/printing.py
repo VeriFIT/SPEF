@@ -919,6 +919,9 @@ def show_menu(screen, win, menu_options, env, keys=None, selected=None, color=No
 
 
 def show_logs(env):
+    if not env.show_logs:
+        return
+
     screen, win = env.screens.left_down, env.windows.logs
 
     # if env.user_logs_printed == env.user_logs and env.user_logs_printed_shift == win.row_shift:

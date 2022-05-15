@@ -2,13 +2,13 @@
 
 import os
 import shutil
-import traceback
 import threading
-from subprocess import Popen, PIPE
-
-from pathlib import Path
-
+import time
+import traceback
 import yaml
+
+from subprocess import Popen, PIPE
+from pathlib import Path
 
 from key_values import kth
 
@@ -36,6 +36,7 @@ class Command(object):
         if thread.is_alive():
             self.process.kill()
             thread.join()
+            print("process killed bcs of timeout")
 
 
 """
@@ -56,6 +57,7 @@ def test1():
     os.chdir(work_dir)
 
     try:
+        start = time.time()
         ######## E X E R C I S E ######## 
         data = ""
         data += kth['F2'] # open menu
@@ -75,7 +77,8 @@ def test1():
         data += kth['F2'] # save file
         data += kth['F10']
         command = Command(f"{MAIN}")
-        command.run(timeout=5, data=data)
+        command.run(timeout=200, data=data)
+        end = time.time()
 
         ########## V E R I F Y ########## 
         test_pass = False
@@ -88,7 +91,8 @@ def test1():
         if len(os.listdir(work_dir)) != 1:
             test_pass = False
 
-        print("Test1........"+("ok" if test_pass else "fail"))
+        time_passed = str(round(end-start,2))
+        print("Test1........"+("ok  " if test_pass else "fail")+" ("+time_passed+"s)")
 
         ######### T E A R D O W N ######### 
         shutil.rmtree(work_dir)
@@ -122,6 +126,7 @@ def test2():
     with open(TYPICAL_NOTES_FILE, 'w+'): pass
 
     try:
+        start = time.time()
         ######## E X E R C I S E ######## 
         data = ""
         data += kth['DOWN'] # select file test2
@@ -134,7 +139,8 @@ def test2():
         data += kth['F6'] # save note "note" as typical
         data += kth['F10']
         command = Command(f"{MAIN}")
-        command.run(timeout=5, data=data)
+        command.run(timeout=200, data=data)
+        end = time.time()
 
         ########## V E R I F Y ########## 
         test_pass = False
@@ -149,7 +155,9 @@ def test2():
             if new_typical_notes != 'note':
                 test_pass = False
 
-        print("Test2........"+("ok" if test_pass else "fail"))
+
+        time_passed = str(round(end-start,2))
+        print("Test2........"+("ok  " if test_pass else "fail")+" ("+time_passed+"s)")
 
         ######### T E A R D O W N ######### 
         shutil.rmtree(work_dir)
@@ -177,6 +185,7 @@ def test3():
     os.chdir(work_dir)
 
     try:
+        start = time.time()
         ######## E X E R C I S E ######## 
         data = ""
         data += kth['F2'] # open menu
@@ -192,8 +201,8 @@ def test3():
         data += kth['ENTER']
         data += kth['F10']
         command = Command(f"{MAIN}")
-        command.run(timeout=5, data=data)
-
+        command.run(timeout=200, data=data)
+        end = time.time()
 
         ########## V E R I F Y ########## 
         test_pass = False
@@ -231,7 +240,8 @@ def test3():
             test_pass = False
 
 
-        print("Test3........"+("ok" if test_pass else "fail"))
+        time_passed = str(round(end-start,2))
+        print("Test3........"+("ok  " if test_pass else "fail")+" ("+time_passed+"s)")
 
         ######### T E A R D O W N ######### 
         shutil.rmtree(work_dir)
@@ -260,6 +270,7 @@ def test4():
     os.chdir(work_dir)
 
     try:
+        start = time.time()
         ######## E X E R C I S E ######## 
         data = ""
         data += kth['F2'] # open menu
@@ -289,7 +300,8 @@ def test4():
         data += kth['F2'] # save test to history
         data += kth['F10']
         command = Command(f"{MAIN}")
-        command.run(timeout=10, data=data)
+        command.run(timeout=200, data=data)
+        end = time.time()
 
         ########## V E R I F Y ########## 
         test_pass = False
@@ -342,7 +354,8 @@ def test4():
         tags_ok = test1_tag_ok and test2_tag_ok and ts_tag_ok
         test_pass = content_ok and tags_ok and history_ok
 
-        print("Test4........"+("ok" if test_pass else "fail"))
+        time_passed = str(round(end-start,2))
+        print("Test4........"+("ok  " if test_pass else "fail")+" ("+time_passed+"s)")
 
         ######### T E A R D O W N ######### 
         shutil.rmtree(work_dir)
@@ -369,6 +382,7 @@ def test5():
     os.chdir(work_dir)
 
     try:
+        start = time.time()
         ######## E X E R C I S E ######## 
         data = ""
         data += kth['F2'] # open menu
@@ -384,7 +398,8 @@ def test5():
         data += kth['ENTER']
         data += kth['F10']
         command = Command(f"{MAIN}")
-        command.run(timeout=10, data=data)
+        command.run(timeout=200, data=data)
+        end = time.time()
 
         ########## V E R I F Y ########## 
         test_pass = False
@@ -400,7 +415,8 @@ USER test\n"""
                 if file_content == requested_content:
                     test_pass = True
 
-        print("Test5........"+("ok" if test_pass else "fail"))
+        time_passed = str(round(end-start,2))
+        print("Test5........"+("ok  " if test_pass else "fail")+" ("+time_passed+"s)")
 
         ######### T E A R D O W N ######### 
         shutil.rmtree(work_dir)
@@ -430,6 +446,7 @@ def test6():
     os.chdir(work_dir)
 
     try:
+        start = time.time()
         ######## E X E R C I S E ######## 
         data = ""
         data += kth['TAB'] # go to logs
@@ -467,7 +484,8 @@ def test6():
         data += kth['J'] # remove test
         data += kth['F10']
         command = Command(f"{MAIN}")
-        command.run(timeout=10, data=data)
+        command.run(timeout=200, data=data)
+        end = time.time()
 
         ########## V E R I F Y ########## 
         test_pass = False
@@ -493,7 +511,8 @@ def test6():
                     if not line.endswith(req[idx]):
                         test_pass = False
 
-        print("Test6........"+("ok" if test_pass else "fail"))
+        time_passed = str(round(end-start,2))
+        print("Test6........"+("ok  " if test_pass else "fail")+" ("+time_passed+"s)")
 
         ######### T E A R D O W N ######### 
         shutil.rmtree(work_dir)
@@ -544,6 +563,7 @@ def test7():
         f.write("This is test\n...")
 
     try:
+        start = time.time()
         ######## E X E R C I S E ######## 
         data = ""
         data += kth['F2'] # open menu
@@ -564,7 +584,8 @@ def test7():
         data += kth['ENTER']
         data += kth['F10']
         command = Command(f"{MAIN}")
-        command.run(timeout=5, data=data)
+        command.run(timeout=200, data=data)
+        end = time.time()
 
         ########## V E R I F Y ########## 
         test_pass = False
@@ -588,7 +609,8 @@ def test7():
         if os.path.exists(notes00_file) or os.path.exists(notes02_file) or os.path.exists(notes03_file):
             test_pass = False
 
-        print("Test7........"+("ok" if test_pass else "fail"))
+        time_passed = str(round(end-start,2))
+        print("Test7........"+("ok  " if test_pass else "fail")+" ("+time_passed+"s)")
 
         ######### T E A R D O W N ######### 
         shutil.rmtree(work_dir)
@@ -617,6 +639,7 @@ def test8():
     os.mkdir(os.path.join(work_dir, 'xlogin01'))
 
     try:
+        start = time.time()
         ######## E X E R C I S E ######## 
         data = ""
         data += kth['F2'] # open menu
@@ -641,7 +664,7 @@ def test8():
         data += kth['TAB'] # to go brows
         data += kth['TAB']
         data += kth['UP'] # go to xlogin00
-        data += kth['F5']
+        data += kth['F5'] # edit tag
         data += kth['F2']
         data += kth['RIGHT']
         data += kth['RIGHT']
@@ -658,7 +681,8 @@ def test8():
         data += kth['F8'] # remove tag test2
         data += kth['F10']
         command = Command(f"{MAIN}")
-        command.run(timeout=5, data=data)
+        command.run(timeout=200, data=data)
+        end = time.time()
 
         ########## V E R I F Y ########## 
         test_pass = False
@@ -677,7 +701,8 @@ def test8():
                     log01_ok = True
         test_pass = log00_ok and log01_ok
 
-        print("Test8........"+("ok" if test_pass else "fail"))
+        time_passed = str(round(end-start,2))
+        print("Test8........"+("ok  " if test_pass else "fail")+" ("+time_passed+"s)")
 
         ######### T E A R D O W N ######### 
         shutil.rmtree(work_dir)
@@ -709,6 +734,7 @@ def test9():
     with open(os.path.join(work_dir, 'xlogin00', 'sut'), 'w+'): pass
 
     try:
+        start = time.time()
         ######## E X E R C I S E ######## 
         data = ""
         data += kth['F2'] # open menu
@@ -773,7 +799,8 @@ def test9():
         data += kth['J'] # generate report
         data += kth['F10']
         command = Command(f"{MAIN}")
-        command.run(timeout=20, data=data)
+        command.run(timeout=200, data=data)
+        end = time.time()
 
         ########## V E R I F Y ########## 
         test_pass = False
@@ -803,7 +830,8 @@ ok
                 if data == req_report:
                     test_pass = True
 
-        print("Test9........"+("ok" if test_pass else "fail"))
+        time_passed = str(round(end-start,2))
+        print("Test9........"+("ok  " if test_pass else "fail")+" ("+time_passed+"s)")
 
         ######### T E A R D O W N ######### 
         shutil.rmtree(work_dir)
@@ -853,6 +881,7 @@ def test10():
     with open(os.path.join(work_dir, 'xlogin05', 'sut'), 'w+') as f: f.write("test")
 
     try:
+        start = time.time()
         ######## E X E R C I S E ########
         data = ""
         data += kth['F2'] # open menu
@@ -939,7 +968,8 @@ def test10():
         data += kth['K']
         data += kth['F10']
         command = Command(f"{MAIN}")
-        command.run(timeout=60, data=data)
+        command.run(timeout=200, data=data)
+        end = time.time()
 
         ########## V E R I F Y ########## 
         test_pass = False
@@ -970,7 +1000,8 @@ Scoring severity:
                 if data == req_content:
                     test_pass = True
 
-        print("Test10......."+("ok" if test_pass else "fail"))
+        time_passed = str(round(end-start,2))
+        print("Test10......."+("ok  " if test_pass else "fail")+" ("+time_passed+"s)")
 
         ######### T E A R D O W N ######### 
         shutil.rmtree(work_dir)
@@ -986,6 +1017,7 @@ if __name__ == "__main__":
     with open(USER_LOGS_FILE, 'r') as f:
         old_user_logs = f.read()
 
+    start = time.time()
     test1() # vytvorenie a uprava suboru
     test2() # pridavanie poznamok
     test3() # zalozenie projektu a tvorba testov
@@ -998,6 +1030,10 @@ if __name__ == "__main__":
     test8() # vtrvaranie a mazanie tagov
     test9() # spustenie testu a vytvorenie reportu
     test10() # bash a mazanie suboru
+    end = time.time()
+
+    process_time = str(round(end-start,2))
+    print("*** total: "+process_time+"s ***")
 
     with open(USER_LOGS_FILE, 'w+') as f:
         f.write(old_user_logs)
