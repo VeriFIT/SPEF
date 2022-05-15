@@ -7,9 +7,15 @@
 * jinja2 3.1.2+
 
 Pred spustením je potreba vložiť štýl do pygments (kvôli správnemu zvýrazneniu syntaxe):
-
-* pygments_dir=`python -c 'import pygments as _; print(_.__path__[0])'`
-* cp src/ncurses.py $pygments_dir/styles/
+```
+pygments_dir=`python -c 'import pygments as _; print(_.__path__[0])'`
+cp src/ncurses.py $pygments_dir/styles/
+```
 
 ### Spustenie frameworku
-* run.sh
+* `run.sh`
+
+### Spustenie testov
+* je potreba mať vytvorený Docker image test
+* `tests/run.py`
+
