@@ -222,7 +222,6 @@ def run_testsuite_in_docker(env, solution_dir, fut, add_to_user_logs, with_logs=
             output = subprocess.run(f"docker exec --workdir {CONTAINER_SUT_DIR} {cid} bash {command}".split(' '), capture_output=True)
             result = output.stdout.decode('utf-8')
             err = output.stderr.decode('utf-8')
-
             log("docker exec stdout | "+str(result))
             log("docker exec stderr | "+str(err))
 
@@ -248,8 +247,10 @@ def run_testsuite_in_docker(env, solution_dir, fut, add_to_user_logs, with_logs=
         # rm -rf docker_shared
         # rm /tmp/docker.cid
         # docker rm -f {cid}
-        os.remove(container_cid_file)
-        shutil.rmtree(SHARED_DIR)
+        if os.path.exists(container_cid_file):
+            os.remove(container_cid_file)
+        if os.path.exists(SHARED_DIR):
+            shutil.rmtree(SHARED_DIR)
     except Exception as err:
         log("warning | remove shared dir & cid file | "+str(err)+" | "+str(traceback.format_exc()))
 

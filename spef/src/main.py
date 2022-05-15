@@ -127,8 +127,11 @@ def main(stdscr, env=None):
         else:
             print_hint(env)
             if env.is_exit_mode():
-                if os.path.exists(TMP_DIR):
-                    shutil.rmtree(TMP_DIR)
+                try:
+                    if os.path.exists(TMP_DIR):
+                        shutil.rmtree(TMP_DIR)
+                except Exception as err:
+                    log(f"{TMP_DIR} cannot be removed | {err}")
                 bash_proc.set_reader(False)
                 break
             elif env.is_brows_mode():

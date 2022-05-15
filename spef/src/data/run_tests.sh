@@ -1,4 +1,3 @@
-
 # run_tests tst_file tests_dir TESTS_TAGS RESULTS_DIR login fut
 tst_script=$1
 export TESTSDIR=$2

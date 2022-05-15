@@ -13,8 +13,8 @@ from pathlib import Path
 from key_values import kth
 
 
-HOME = str(Path(__file__).parents[0]) # testing
-SRC = os.path.join(os.path.dirname(HOME), 'src')
+HOME = Path(os.path.join(os.getcwd(), Path(__file__))).parents[1]
+SRC = os.path.join(HOME, 'src')
 MAIN = os.path.join(SRC, 'main.py')
 TYPICAL_NOTES_FILE = os.path.join(SRC, 'data', 'typical_notes.txt')
 USER_LOGS_FILE = os.path.join(SRC, 'data', 'logs.csv')
@@ -849,12 +849,12 @@ xlogin03/sut s obsahom "def"
 xlogin04/sut s obsahom "ahoj"
 xlogin05/sut s obsahom "test"
 1. vytvor novy projekt
-2. vytvor test test_1, ktory prida tag scoring_test_1(1) a test_1_ok()
+2. vytvor test test_1, ktory prida tag scoring_test_1(0) a test_1_ok()
 3. filtruj subory s obsahom "a"
 4. pridaj rieseniam tag scoring_bonus(3)
 5. filtruj subory s obsahom "e"
 6. pridaj rieseniam tag scoring_bonus(9)
-7. uprav subor sum aby pocital aj + bonus + extra
+7. uprav subor sum aby pocital aj + bonus
 8. spusti test_1 nad vsetkymi rieseniami
 9. prepocitaj skore
 10. generuj statistiky
@@ -1014,7 +1014,7 @@ Scoring severity:
 if __name__ == "__main__":
 
     old_user_logs =""
-    with open(USER_LOGS_FILE, 'r') as f:
+    with open(USER_LOGS_FILE, 'r+') as f:
         old_user_logs = f.read()
 
     start = time.time()

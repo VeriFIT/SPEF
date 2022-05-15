@@ -1,10 +1,3 @@
-
-# $1 = tst fce
-# $2 = tests dir
-# $3 = test file
-# $4 = tests results dir
-# $5 = sut
-# $6 = fut
 # run_testsuite /opt/tests/src /opt/tests tests_tags.yaml tests sut {fut}
 export PATH=$1:$PATH
 export TESTSDIR=$2
