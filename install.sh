@@ -13,5 +13,5 @@ echo "installing Pygments..."
 pip install Pygments &>/dev/null
 
 pygments_dir=`python -c 'import pygments as _; print(_.__path__[0])'`
-cp $cwd/$src/ncurses.py $pygments_dir/styles/
+cp $cwd/$src/src/ncurses.py $pygments_dir/styles/
 
