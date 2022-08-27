@@ -46,6 +46,8 @@ DELETE_FILE = 103
 SHOW_OR_HIDE_CACHED_FILES = 104
 SHOW_OR_HIDE_LOGS = 105
 GO_TO_TAGS = 106
+ENTER_DIRECTORY = 107
+EXIT_DIRECTORY = 108
 
 """ tag management control """
 EDIT_TAG = 200
@@ -198,8 +200,8 @@ def map_brows_function(str_fce):
         'resize_win': RESIZE_WIN,
         'cursor_up': CURSOR_UP,
         'cursor_down': CURSOR_DOWN,
-        'cursor_left': CURSOR_LEFT,
-        'cursor_right': CURSOR_RIGHT,
+        'enter_directory': ENTER_DIRECTORY,
+        'exit_directory': EXIT_DIRECTORY,
         'filter': FILTER}
     if str_fce in functions:
         return functions[str_fce]

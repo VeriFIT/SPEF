@@ -148,7 +148,7 @@ def run_function(stdscr, env, fce, key):
         win.up(env.cwd, use_restrictions=False)
     elif fce == CURSOR_DOWN:
         win.down(env.cwd, filter_on=env.path_filter_on(), use_restrictions=False)
-    elif fce == CURSOR_RIGHT:
+    elif fce == ENTER_DIRECTORY:
         idx = win.cursor.row
         if not env.filter_not_empty() and idx < len(env.cwd.dirs):
             """ go to subdirectory """
@@ -156,7 +156,7 @@ def run_function(stdscr, env, fce, key):
             env.cwd = get_directory_content(env)
             env.reset_brows_wins()
             win.reset(0,0) # set cursor on first position (first item)
-    elif fce == CURSOR_LEFT:
+    elif fce == EXIT_DIRECTORY:
         current_dir = os.path.basename(env.cwd.path) # get directory name
         if not env.filter_not_empty() and current_dir: # if its not root
             """ go to parent directory """
