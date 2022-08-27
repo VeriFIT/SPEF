@@ -60,6 +60,8 @@ brows_functions:
   show_or_hide_cached_files: 'F6'
   show_or_hide_logs: 'F7'
   delete_file: 'F8'
+  enter_directory: ['RIGHT', 'ENTER']
+  exit_directory: 'LEFT'
   filter: 'SLASH'
 # tags functions
 tags_functions:
