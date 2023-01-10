@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spef"
+description = "Student Project Evaluation Framework"
+version = "0.0.1"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Natália Dižová", email = "ndizova2@gmail.com" },
+]
+maintainers = [
+    { name = "Viktor Malík", email = "imalik@fit.vut.cz" },
+    { name = "Jiří Pavela", email = "ipavela@fit.vut.cz" },
+]
+readme = "README.md"
+dependencies = [
+    "jinja2",
+    "Pygments",
+    "pyyaml"
+]
