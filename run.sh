@@ -1,1 +1,1 @@
-./src/main.py
+python -m spef
