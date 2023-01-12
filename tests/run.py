@@ -2,6 +2,7 @@
 
 import os
 import shutil
+import tempfile
 import threading
 import time
 import traceback
@@ -12,13 +13,13 @@ from pathlib import Path
 
 from key_values import kth
 
+import spef.utils.logger
 
-HOME = Path(os.path.join(os.getcwd(), Path(__file__))).parents[1]
-SRC = os.path.join(HOME, 'src')
-MAIN = os.path.join(SRC, 'main.py')
-TYPICAL_NOTES_FILE = os.path.join(SRC, 'data', 'typical_notes.txt')
-USER_LOGS_FILE = os.path.join(SRC, 'data', 'logs.csv')
-
+TMP = tempfile.mkdtemp()
+USER_LOGS_FILE = os.path.join(spef.utils.logger.DATA_DIR,
+                              spef.utils.logger.USER_LOGS_FILE)
+TYPICAL_NOTES_FILE = os.path.join(spef.utils.logger.DATA_DIR,
+                                  spef.utils.logger.TYPICAL_NOTES_FILE)
 
 class Command(object):
     def __init__(self, cmd):
@@ -49,8 +50,8 @@ Vytvorenie a uprava suboru
 5. skontroluj existenciu suboru "test" a jeho obsah
 """
 def test1():
-    ########## S E T U P ########## 
-    work_dir = os.path.join(HOME, 'test1')
+    ########## S E T U P ##########
+    work_dir = os.path.join(TMP, 'test1')
     if os.path.exists(work_dir):
         shutil.rmtree(work_dir)
     os.mkdir(work_dir)
@@ -58,7 +59,7 @@ def test1():
 
     try:
         start = time.time()
-        ######## E X E R C I S E ######## 
+        ######## E X E R C I S E ########
         data = ""
         data += kth['F2'] # open menu
         data += kth['3'] # select option "create new file"
@@ -76,11 +77,11 @@ def test1():
         data += kth['t']+kth['e']+kth['s']+kth['t']
         data += kth['F2'] # save file
         data += kth['F10']
-        command = Command(f"{MAIN}")
+        command = Command("spef")
         command.run(timeout=200, data=data)
         end = time.time()
 
-        ########## V E R I F Y ########## 
+        ########## V E R I F Y ##########
         test_pass = False
         test_file = os.path.join(work_dir, 'test')
         if os.path.exists(test_file):
@@ -94,7 +95,7 @@ def test1():
         time_passed = str(round(end-start,2))
         print("Test1........"+("ok  " if test_pass else "fail")+" ("+time_passed+"s)")
 
-        ######### T E A R D O W N ######### 
+        ######### T E A R D O W N #########
         shutil.rmtree(work_dir)
     except Exception as err:
         print(f"test1 | {err} | "+str(traceback.format_exc()))
@@ -111,8 +112,8 @@ Pridavanie poznamok
 6. skontroluj existenciu suboru s poznamkami k suboru "test"
 """
 def test2():
-    ########## S E T U P ########## 
-    work_dir = os.path.join(HOME, 'test2')
+    ########## S E T U P ##########
+    work_dir = os.path.join(TMP, 'test2')
     if os.path.exists(work_dir):
         shutil.rmtree(work_dir)
     os.mkdir(work_dir)
@@ -127,7 +128,7 @@ def test2():
 
     try:
         start = time.time()
-        ######## E X E R C I S E ######## 
+        ######## E X E R C I S E ########
         data = ""
         data += kth['DOWN'] # select file test2
         data += kth['TAB'] # open file for edit
@@ -138,11 +139,11 @@ def test2():
         data += kth['F7'] # open note management
         data += kth['F6'] # save note "note" as typical
         data += kth['F10']
-        command = Command(f"{MAIN}")
+        command = Command("spef")
         command.run(timeout=200, data=data)
         end = time.time()
 
-        ########## V E R I F Y ########## 
+        ########## V E R I F Y ##########
         test_pass = False
         notes_file = os.path.join(work_dir, 'test2_report.yaml')
         if os.path.exists(notes_file):
@@ -159,7 +160,7 @@ def test2():
         time_passed = str(round(end-start,2))
         print("Test2........"+("ok  " if test_pass else "fail")+" ("+time_passed+"s)")
 
-        ######### T E A R D O W N ######### 
+        ######### T E A R D O W N #########
         shutil.rmtree(work_dir)
     except Exception as err:
         print(f"test2 | {err} | "+str(traceback.format_exc()))
@@ -177,8 +178,8 @@ Zalozenie projektu a tvorba testov
 7. skontroluj existenciu adresarov "tests", "history" a "reports" v "proj"
 """
 def test3():
-    ########## S E T U P ########## 
-    work_dir = os.path.join(HOME, 'test3')
+    ########## S E T U P ##########
+    work_dir = os.path.join(TMP, 'test3')
     if os.path.exists(work_dir):
         shutil.rmtree(work_dir)
     os.mkdir(work_dir)
@@ -186,7 +187,7 @@ def test3():
 
     try:
         start = time.time()
-        ######## E X E R C I S E ######## 
+        ######## E X E R C I S E ########
         data = ""
         data += kth['F2'] # open menu
         data += kth['2'] # select option for create new dir
@@ -200,11 +201,11 @@ def test3():
         data += kth['t']+kth['e']+kth['s']+kth['t']+kth['A']
         data += kth['ENTER']
         data += kth['F10']
-        command = Command(f"{MAIN}")
+        command = Command("spef")
         command.run(timeout=200, data=data)
         end = time.time()
 
-        ########## V E R I F Y ########## 
+        ########## V E R I F Y ##########
         test_pass = False
         tests_dir = os.path.join(work_dir, 'proj', 'tests')
         history_dir = os.path.join(work_dir, 'proj', 'history')
@@ -243,7 +244,7 @@ def test3():
         time_passed = str(round(end-start,2))
         print("Test3........"+("ok  " if test_pass else "fail")+" ("+time_passed+"s)")
 
-        ######### T E A R D O W N ######### 
+        ######### T E A R D O W N #########
         shutil.rmtree(work_dir)
     except Exception as err:
         print(f"test3 | {err} | "+str(traceback.format_exc()))
@@ -262,8 +263,8 @@ Modifikacia testu (verzovanie a historia)
 8. skontroluj inkrementovanu verziu testu a inkrementovanu verziu testsuitu
 """
 def test4():
-    ########## S E T U P ########## 
-    work_dir = os.path.join(HOME, 'test4')
+    ########## S E T U P ##########
+    work_dir = os.path.join(TMP, 'test4')
     if os.path.exists(work_dir):
         shutil.rmtree(work_dir)
     os.mkdir(work_dir)
@@ -271,7 +272,7 @@ def test4():
 
     try:
         start = time.time()
-        ######## E X E R C I S E ######## 
+        ######## E X E R C I S E ########
         data = ""
         data += kth['F2'] # open menu
         data += kth['ENTER'] # select first option (create proj)
@@ -299,11 +300,11 @@ def test4():
         data += kth['F2'] # save file
         data += kth['F2'] # save test to history
         data += kth['F10']
-        command = Command(f"{MAIN}")
+        command = Command("spef")
         command.run(timeout=200, data=data)
         end = time.time()
 
-        ########## V E R I F Y ########## 
+        ########## V E R I F Y ##########
         test_pass = False
         content_ok = False
         test1_file = os.path.join(work_dir, 'tests', 'test_1', 'dotest.sh')
@@ -345,7 +346,7 @@ def test4():
 2:test_1:create new test
 3:test_2:create new test
 4:test_1:modify test (test version 1 -> 2)\n"""
-                if history_data == requested_data: 
+                if history_data == requested_data:
                     history_ok = True
 
         if not os.path.exists(history_test1_file):
@@ -357,7 +358,7 @@ def test4():
         time_passed = str(round(end-start,2))
         print("Test4........"+("ok  " if test_pass else "fail")+" ("+time_passed+"s)")
 
-        ######### T E A R D O W N ######### 
+        ######### T E A R D O W N #########
         shutil.rmtree(work_dir)
     except Exception as err:
         print(f"test4 | {err} | "+str(traceback.format_exc()))
@@ -374,8 +375,8 @@ Vytvorenie Dockerfilu
 5. skontroluj vytvoreny adresar Dockerfile
 """
 def test5():
-    ########## S E T U P ########## 
-    work_dir = os.path.join(HOME, 'test5')
+    ########## S E T U P ##########
+    work_dir = os.path.join(TMP, 'test5')
     if os.path.exists(work_dir):
         shutil.rmtree(work_dir)
     os.mkdir(work_dir)
@@ -383,7 +384,7 @@ def test5():
 
     try:
         start = time.time()
-        ######## E X E R C I S E ######## 
+        ######## E X E R C I S E ########
         data = ""
         data += kth['F2'] # open menu
         data += kth['ENTER'] # select first option (create proj)
@@ -397,11 +398,11 @@ def test5():
         data += kth['1']+kth['0']+kth['0']+kth['0'] # set gid
         data += kth['ENTER']
         data += kth['F10']
-        command = Command(f"{MAIN}")
+        command = Command("spef")
         command.run(timeout=200, data=data)
         end = time.time()
 
-        ########## V E R I F Y ########## 
+        ########## V E R I F Y ##########
         test_pass = False
         docker_file = os.path.join(work_dir, 'Dockerfile')
         if os.path.exists(docker_file):
@@ -418,7 +419,7 @@ USER test\n"""
         time_passed = str(round(end-start,2))
         print("Test5........"+("ok  " if test_pass else "fail")+" ("+time_passed+"s)")
 
-        ######### T E A R D O W N ######### 
+        ######### T E A R D O W N #########
         shutil.rmtree(work_dir)
     except Exception as err:
         print(f"test5 | {err} | "+str(traceback.format_exc()))
@@ -438,8 +439,8 @@ Vytaranie logov
 9. skontroluj subor s logmi
 """
 def test6():
-    ########## S E T U P ########## 
-    work_dir = os.path.join(HOME, 'test6')
+    ########## S E T U P ##########
+    work_dir = os.path.join(TMP, 'test6')
     if os.path.exists(work_dir):
         shutil.rmtree(work_dir)
     os.mkdir(work_dir)
@@ -447,7 +448,7 @@ def test6():
 
     try:
         start = time.time()
-        ######## E X E R C I S E ######## 
+        ######## E X E R C I S E ########
         data = ""
         data += kth['TAB'] # go to logs
         data += kth['F9'] # clear logs
@@ -483,11 +484,11 @@ def test6():
         data += kth['F2'] # open menu
         data += kth['J'] # remove test
         data += kth['F10']
-        command = Command(f"{MAIN}")
+        command = Command("spef")
         command.run(timeout=200, data=data)
         end = time.time()
 
-        ########## V E R I F Y ########## 
+        ########## V E R I F Y ##########
         test_pass = False
         if os.path.exists(USER_LOGS_FILE):
             with open(USER_LOGS_FILE, 'r') as f:
@@ -514,7 +515,7 @@ def test6():
         time_passed = str(round(end-start,2))
         print("Test6........"+("ok  " if test_pass else "fail")+" ("+time_passed+"s)")
 
-        ######### T E A R D O W N ######### 
+        ######### T E A R D O W N #########
         shutil.rmtree(work_dir)
     except Exception as err:
         print(f"test6 | {err} | "+str(traceback.format_exc()))
@@ -523,12 +524,12 @@ def test6():
 """
 Filtrovanie suborov a hromadne pridanie poznamky
 * som adresari so subormi:
-xlogin00/file1, 
-xlogin01/file2, 
-xlogin02/file3, 
-xlogin03/test1, 
-xlogin04/test2, 
-xlogin05/tmp1, 
+xlogin00/file1,
+xlogin01/file2,
+xlogin02/file3,
+xlogin03/test1,
+xlogin04/test2,
+xlogin05/tmp1,
 xlogin06/tmp2
 * subory xlogin01/file2, xlogin05/test2 a xlogin07/tmp2 obsahuju retazec "test"
 1. zaloz projekt
@@ -538,8 +539,8 @@ xlogin06/tmp2
 5. skontroluj pridanie poznamky suborom file2 a test2
 """
 def test7():
-    ########## S E T U P ########## 
-    work_dir = os.path.join(HOME, 'test7')
+    ########## S E T U P ##########
+    work_dir = os.path.join(TMP, 'test7')
     if os.path.exists(work_dir):
         shutil.rmtree(work_dir)
     os.mkdir(work_dir)
@@ -564,7 +565,7 @@ def test7():
 
     try:
         start = time.time()
-        ######## E X E R C I S E ######## 
+        ######## E X E R C I S E ########
         data = ""
         data += kth['F2'] # open menu
         data += kth['ENTER'] # select first option (create proj)
@@ -583,11 +584,11 @@ def test7():
         data += kth['o']+kth['k']
         data += kth['ENTER']
         data += kth['F10']
-        command = Command(f"{MAIN}")
+        command = Command("spef")
         command.run(timeout=200, data=data)
         end = time.time()
 
-        ########## V E R I F Y ########## 
+        ########## V E R I F Y ##########
         test_pass = False
         note1_ok, note4_ok = False, False
         notes_file = os.path.join(work_dir, 'xlogin01', 'reports', 'user_notes')
@@ -612,7 +613,7 @@ def test7():
         time_passed = str(round(end-start,2))
         print("Test7........"+("ok  " if test_pass else "fail")+" ("+time_passed+"s)")
 
-        ######### T E A R D O W N ######### 
+        ######### T E A R D O W N #########
         shutil.rmtree(work_dir)
     except Exception as err:
         print(f"test7 | {err} | "+str(traceback.format_exc()))
@@ -629,8 +630,8 @@ Vytvaranie a mazanie tagov
 6. skontroluj tagy oboch rieseni
 """
 def test8():
-    ########## S E T U P ########## 
-    work_dir = os.path.join(HOME, 'test8')
+    ########## S E T U P ##########
+    work_dir = os.path.join(TMP, 'test8')
     if os.path.exists(work_dir):
         shutil.rmtree(work_dir)
     os.mkdir(work_dir)
@@ -640,7 +641,7 @@ def test8():
 
     try:
         start = time.time()
-        ######## E X E R C I S E ######## 
+        ######## E X E R C I S E ########
         data = ""
         data += kth['F2'] # open menu
         data += kth['ENTER'] # select first option (create proj)
@@ -680,11 +681,11 @@ def test8():
         data += kth['DOWN']
         data += kth['F8'] # remove tag test2
         data += kth['F10']
-        command = Command(f"{MAIN}")
+        command = Command("spef")
         command.run(timeout=200, data=data)
         end = time.time()
 
-        ########## V E R I F Y ########## 
+        ########## V E R I F Y ##########
         test_pass = False
         log00_ok, log01_ok = False, False
         login00_tags = os.path.join(work_dir, 'xlogin00', 'solution_tags.yaml')
@@ -704,7 +705,7 @@ def test8():
         time_passed = str(round(end-start,2))
         print("Test8........"+("ok  " if test_pass else "fail")+" ("+time_passed+"s)")
 
-        ######### T E A R D O W N ######### 
+        ######### T E A R D O W N #########
         shutil.rmtree(work_dir)
     except Exception as err:
         print(f"test8 | {err} | "+str(traceback.format_exc()))
@@ -724,8 +725,8 @@ Spustenie testu a vytvorenie reportu
 8. skontroluj vygenerovany report
 """
 def test9():
-    ########## S E T U P ########## 
-    work_dir = os.path.join(HOME, 'test9')
+    ########## S E T U P ##########
+    work_dir = os.path.join(TMP, 'test9')
     if os.path.exists(work_dir):
         shutil.rmtree(work_dir)
     os.mkdir(work_dir)
@@ -735,7 +736,7 @@ def test9():
 
     try:
         start = time.time()
-        ######## E X E R C I S E ######## 
+        ######## E X E R C I S E ########
         data = ""
         data += kth['F2'] # open menu
         data += kth['ENTER'] # select first option (create proj)
@@ -798,11 +799,11 @@ def test9():
         data += kth['F2'] # open menu
         data += kth['J'] # generate report
         data += kth['F10']
-        command = Command(f"{MAIN}")
+        command = Command("spef")
         command.run(timeout=200, data=data)
         end = time.time()
 
-        ########## V E R I F Y ########## 
+        ########## V E R I F Y ##########
         test_pass = False
         report_file = os.path.join(work_dir, 'xlogin00', 'reports', 'total_report')
         req_report = """\
@@ -833,7 +834,7 @@ ok
         time_passed = str(round(end-start,2))
         print("Test9........"+("ok  " if test_pass else "fail")+" ("+time_passed+"s)")
 
-        ######### T E A R D O W N ######### 
+        ######### T E A R D O W N #########
         shutil.rmtree(work_dir)
     except Exception as err:
         print(f"test9 | {err} | "+str(traceback.format_exc()))
@@ -861,8 +862,8 @@ xlogin05/sut s obsahom "test"
 11. skontroluj vytvorene statistiky (1x 1b, 2x 4b, 3x 10b)
 """
 def test10():
-    ########## S E T U P ########## 
-    work_dir = os.path.join(HOME, 'test10')
+    ########## S E T U P ##########
+    work_dir = os.path.join(TMP, 'test10')
     if os.path.exists(work_dir):
         shutil.rmtree(work_dir)
     os.mkdir(work_dir)
@@ -967,11 +968,11 @@ def test10():
         data += kth['F2'] # generate stats
         data += kth['K']
         data += kth['F10']
-        command = Command(f"{MAIN}")
+        command = Command("spef")
         command.run(timeout=200, data=data)
         end = time.time()
 
-        ########## V E R I F Y ########## 
+        ########## V E R I F Y ##########
         test_pass = False
         stats_file = os.path.join(work_dir, 'reports', 'scoring_stats')
         req_content = """\
@@ -1003,7 +1004,7 @@ Scoring severity:
         time_passed = str(round(end-start,2))
         print("Test10......."+("ok  " if test_pass else "fail")+" ("+time_passed+"s)")
 
-        ######### T E A R D O W N ######### 
+        ######### T E A R D O W N #########
         shutil.rmtree(work_dir)
     except Exception as err:
         print(f"test10 | {err} | "+str(traceback.format_exc()))
@@ -1012,10 +1013,6 @@ Scoring severity:
 
 
 if __name__ == "__main__":
-
-    old_user_logs =""
-    with open(USER_LOGS_FILE, 'r+') as f:
-        old_user_logs = f.read()
 
     start = time.time()
     test1() # vytvorenie a uprava suboru
@@ -1034,6 +1031,3 @@ if __name__ == "__main__":
 
     process_time = str(round(end-start,2))
     print("*** total: "+process_time+"s ***")
-
-    with open(USER_LOGS_FILE, 'w+') as f:
-        f.write(old_user_logs)
