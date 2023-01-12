@@ -1,0 +1,2 @@
+include spef/*.yaml
+include spef/data/*

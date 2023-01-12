@@ -21,3 +21,6 @@ dependencies = [
     "Pygments",
     "pyyaml"
 ]
+
+[project.scripts]
+spef = "spef.main:run"
