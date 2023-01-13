@@ -7,14 +7,14 @@
 * jinja2 3.1.2+
 * docker
 
-Pred spustením je potreba vložiť nový štýl pre zvýraznenie syntaxe do pygments:
-```
-pygments_dir=`python -c 'import pygments as _; print(_.__path__[0])'`
-cp src/ncurses.py $pygments_dir/styles/
-```
-
 ### Spustenie frameworku
-* `run.sh`
+Pred spustením je projekt nutné nainštalovať (napr. vo virtualenv)
+* `pip install .`
+* alebo `pip install -e .` pre tzv. "editable" inštaláciu
+
+Spustenie je následne možné pomocou jedného z príkazov:
+* `spef`
+* `python -m spef`
 
 ### Spustenie testov
 * `prepare_tests.sh` (ak nie je vytvorený Docker image 'test')
@@ -22,10 +22,9 @@ cp src/ncurses.py $pygments_dir/styles/
 
 ### Adresárová štruktúra zdrojových kódov
 * `example/` obsahuje ukážkový adresár projektu
-* `src/` obsahuje zdrojové kódy systému
+* `spef/` obsahuje zdrojové kódy systému
 * `tests/` obsahuje integračné testy systému
 * `prepare_tests.sh` vytvorí Docker image 'test' potrebný pre spustenie integračných testov
-* `run.sh` spustí framework
 * `run_tests.sh` spustí integračné testy
 
 
