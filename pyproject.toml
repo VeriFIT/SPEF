@@ -24,3 +24,6 @@ dependencies = [
 
 [project.scripts]
 spef = "spef.main:run"
+
+[project.entry-points."pygments.styles"]
+ncurses = "spef.styles.ncurses:NcursesStyle"
