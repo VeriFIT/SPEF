@@ -22,8 +22,17 @@ dependencies = [
     "pyyaml"
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest"
+]
+
 [project.scripts]
 spef = "spef.main:run"
 
 [project.entry-points."pygments.styles"]
 ncurses = "spef.styles.ncurses:NcursesStyle"
+
+[tool.pytest.ini_options]
+addopts = "-s"
+testpaths = ["tests"]
