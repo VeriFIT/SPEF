@@ -1,4 +1,3 @@
-
 import os
 import re
 import traceback
@@ -12,22 +11,42 @@ def filter_intern_files(path_list, keep_reports_and_tests=False):
     try:
         if path_list:
             # filter files with repport suffix or tags suffix
-            result = list(filter(lambda x: not x.endswith((REPORT_SUFFIX, TAGS_SUFFIX)), path_list))
+            result = list(
+                filter(
+                    lambda x: not x.endswith((REPORT_SUFFIX, TAGS_SUFFIX)), path_list
+                )
+            )
 
             # filter files from report dir and tests dir
             if not keep_reports_and_tests:
-                result = list(filter(lambda x: not match_regex(os.path.join('.*', REPORT_DIR, '.*'),x), result))
-                result = list(filter(lambda x: not match_regex(os.path.join('.*', TESTS_DIR, '.*'),x), result))
+                result = list(
+                    filter(
+                        lambda x: not match_regex(
+                            os.path.join(".*", REPORT_DIR, ".*"), x
+                        ),
+                        result,
+                    )
+                )
+                result = list(
+                    filter(
+                        lambda x: not match_regex(
+                            os.path.join(".*", TESTS_DIR, ".*"), x
+                        ),
+                        result,
+                    )
+                )
             return result
     except Exception as err:
-        log("filter intern files | "+str(err))
+        log("filter intern files | " + str(err))
     return path_list
 
+
 def match_report_dir(path):
-    return match_regex(os.path.join('.*', REPORT_DIR, '.*'), path)
+    return match_regex(os.path.join(".*", REPORT_DIR, ".*"), path)
+
 
 def match_tests_dir(path):
-    return match_regex(os.path.join('.*', TESTS_DIR, '.*'), path)
+    return match_regex(os.path.join(".*", TESTS_DIR, ".*"), path)
 
 
 ############################ CHECK PATH ############################
@@ -56,7 +75,7 @@ def is_root_project_dir(path):
                 return True
         return False
     except Exception as err:
-        log("is root proj dir | "+str(err))
+        log("is root proj dir | " + str(err))
         return False
 
 
@@ -140,6 +159,7 @@ def is_root_reports_dir(path):
     except:
         return False
 
+
 def is_in_reports_dir(path):
     try:
         if path is None:
@@ -172,6 +192,7 @@ def is_root_tests_dir(path):
     except:
         return False
 
+
 def is_in_tests_dir(path):
     try:
         if path is None:
@@ -189,6 +210,7 @@ def is_in_tests_dir(path):
                     cur_dir = parent_dir
     except:
         return False
+
 
 # pre-condition: check if is_in_project_dir(path)
 # return True if path is dir in root tests dir
@@ -222,7 +244,9 @@ def is_testcase_result_dir(solution_id, path):
     except:
         return False
 
+
 ########################## GET DIRS/FILES ##########################
+
 
 # dst: regex for match
 # src: dir path which is tested to regex
@@ -248,20 +272,20 @@ def get_parent_regex_match(reg, dir_path):
                 else:
                     cur_dir = parent_dir
     except Exception as err:
-        log("get parent regex match | "+str(err)+" | "+str(traceback.format_exc()))
+        log(
+            "get parent regex match | " + str(err) + " | " + str(traceback.format_exc())
+        )
         return None
 
 
-"""
-proj_path = get_proj_path(path)
-if proj_path is not None:
-    proj_data = load_proj_from_conf_file(proj_path)
-
-    # create Project obj from proj data
-    proj = Project(proj_path)
-    proj.set_values_from_conf(proj_data)
-"""
-
+# proj_path = get_proj_path(path)
+# if proj_path is not None:
+#     proj_data = load_proj_from_conf_file(proj_path)
+#
+#     # create Project obj from proj data
+#     proj = Project(proj_path)
+#     proj.set_values_from_conf(proj_data)
+#
 # return path to proj conf file if given path is in proj dir
 def get_proj_path(path):
     try:
@@ -279,7 +303,7 @@ def get_proj_path(path):
                 else:
                     cur_dir = parent_dir
     except Exception as err:
-        log("get proj path | "+str(err))
+        log("get proj path | " + str(err))
         return None
 
 
@@ -303,7 +327,7 @@ def get_root_solution_dir(solution_id, path):
                 else:
                     cur_dir = parent_dir
     except Exception as err:
-        log("get root solution dir | "+str(err))
+        log("get root solution dir | " + str(err))
         return None
 
 
@@ -323,7 +347,7 @@ def get_root_tests_dir(path):
                 else:
                     cur_dir = parent_dir
     except Exception as err:
-        log("get root tests dir | "+str(err))
+        log("get root tests dir | " + str(err))
         return None
 
 
@@ -343,7 +367,7 @@ def get_root_testcase_dir(path):
                 else:
                     cur_dir = parent_dir
     except Exception as err:
-        log("get root testcase dir | "+str(err))
+        log("get root testcase dir | " + str(err))
         return None
 
 
@@ -352,9 +376,10 @@ def get_solution_files(env):
     result = set()
     if env.cwd.proj is not None:
         solution_id = env.cwd.proj.solution_id
-        items = os.listdir(env.cwd.proj.path) # list all dirs and files in proj dir
+        items = os.listdir(env.cwd.proj.path)  # list all dirs and files in proj dir
         for item in items:
-            path = os.path.join(env.cwd.proj.path, item) # path ex: subj1/projA/xlogin00.*
+            # path ex: subj1/projA/xlogin00.*
+            path = os.path.join(env.cwd.proj.path, item)
             if is_solution_file(solution_id, path):
                 result.add(path)
     else:
@@ -366,13 +391,16 @@ def get_solution_files(env):
 # solution_archives = list of *paths* to valid solution archives
 # solution_files = list of *file names* to some solution files
 def get_solution_archives(env):
-    solution_archives = set() # zipfile or tarfile
-    solution_files = set() # other solution matched file
+    solution_archives = set()  # zipfile or tarfile
+    solution_files = set()  # other solution matched file
     for file_name in get_solution_files(env):
         if is_archive_file(file_name):
             solution_archives.add(file_name)
         else:
-            log("solution file but not zipfile or tarfile: "+str(os.path.basename(file_name)))
+            log(
+                "solution file but not zipfile or tarfile: "
+                + str(os.path.basename(file_name))
+            )
             solution_files.add(os.path.basename(file_name))
     # log(str(solution_archives))
     # log(str(solution_files))
@@ -385,7 +413,7 @@ def get_tests_names(env, with_check=True):
     result_names = set()
     if env.cwd.proj is not None:
         tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
-        items = os.listdir(tests_dir) # list all dirs and files in tests dir
+        items = os.listdir(tests_dir)  # list all dirs and files in tests dir
         for item in items:
             path = os.path.join(tests_dir, item)
             if is_testcase_dir(path, with_check=with_check):
@@ -393,4 +421,3 @@ def get_tests_names(env, with_check=True):
     else:
         log("get tests names | cwd is not project root directory")
     return list(result_names)
-

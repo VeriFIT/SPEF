@@ -8,9 +8,9 @@ ESC = 27
 
 
 HOME = str(Path(__file__).parents[1])
-LOG_FILE = os.path.join(HOME,"debug.log")
-TMP_DIR = os.path.join(HOME,'tmp')
-DATA_DIR = os.path.join(HOME, 'data')
+LOG_FILE = os.path.join(HOME, "debug.log")
+TMP_DIR = os.path.join(HOME, "tmp")
+DATA_DIR = os.path.join(HOME, "data")
 
 REPORT_SUFFIX = "_report.yaml"
 TAGS_SUFFIX = "_tags.yaml"
@@ -41,14 +41,14 @@ SUM_FILE = "sum"
 SCORING_FILE = "scoring"
 TESTSUITE_FILE = "testsuite.sh"
 TEST_FILE = "dotest.sh"
-TESTSUITE_TAGS = "testsuite"+TAGS_SUFFIX
-TESTCASE_TAGS = "test"+TAGS_SUFFIX
+TESTSUITE_TAGS = "testsuite" + TAGS_SUFFIX
+TESTCASE_TAGS = "test" + TAGS_SUFFIX
 
 # proj/solution/
-SOLUTION_TAGS = "solution"+TAGS_SUFFIX
+SOLUTION_TAGS = "solution" + TAGS_SUFFIX
 
 # proj/solution/TESTS_DIR/
-TESTS_TAGS = "tests"+TAGS_SUFFIX
+TESTS_TAGS = "tests" + TAGS_SUFFIX
 
 # proj/solution/REPORT_DIR/
 CODE_REVIEW_FILE = "code_review"
@@ -57,10 +57,10 @@ TEST_NOTES_FILE = "test_notes"
 TOTAL_REPORT_FILE = "total_report"
 
 # docker mapping
-IMAGE_NAME = 'test'
-RUN_FILE = 'run.sh'
-DOCKER_SUT_DIR = 'sut'
-RESULTS_SUB_DIR = 'tests'
+IMAGE_NAME = "test"
+RUN_FILE = "run.sh"
+DOCKER_SUT_DIR = "sut"
+RESULTS_SUB_DIR = "tests"
 
 
 # printing messages
@@ -86,6 +86,5 @@ EMPTY_TAG_FILTER_MESSAGE = "add tag filter... ex: score.1 > 5"
 def log(message):
     day = datetime.date.today()
     time = datetime.datetime.now().strftime("%X")
-    with open(LOG_FILE, 'a') as f:
-        f.write("{} {} | {}\n".format(day,time,message))
-
+    with open(LOG_FILE, "a") as f:
+        f.write("{} {} | {}\n".format(day, time, message))

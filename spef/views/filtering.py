@@ -11,7 +11,6 @@ from spef.utils.logger import *
 from spef.views.help import show_help
 
 
-
 def filter_management(stdscr, screen, win, env):
     curses.curs_set(1)
 
@@ -25,7 +24,6 @@ def filter_management(stdscr, screen, win, env):
     elif env.is_tag_mode() and env.tag_filter_on():
         user_input.text = list(env.filter.tag)
 
-
     if not env.filter:
         if env.cwd.proj:
             env.filter = Filter(env.cwd.proj.path)
@@ -34,7 +32,7 @@ def filter_management(stdscr, screen, win, env):
             env.filter = Filter(env.cwd.path)
     # log("path: "+str(env.filter.root))
 
-    old_filter_text = ''.join(user_input.text)
+    old_filter_text = "".join(user_input.text)
 
     print_hint(env)
 
@@ -49,18 +47,22 @@ def filter_management(stdscr, screen, win, env):
         show_filter(screen, user_input, max_rows, max_cols, env)
 
         try:
-            """ move cursor to correct position """
+            """move cursor to correct position"""
             shifted_pointer = user_input.get_shifted_pointer()
-            new_row, new_col = win.last_row, win.begin_x+1-win.border+shifted_pointer
+            new_row, new_col = (
+                win.last_row,
+                win.begin_x + 1 - win.border + shifted_pointer,
+            )
             if env.line_numbers and env.is_view_mode():
                 new_col -= win.line_num_shift
             stdscr.move(new_row, new_col)
         except Exception as err:
-            log("filter move cursor | "+str(err)+" | "+str(traceback.format_exc()))
+            log(
+                "filter move cursor | " + str(err) + " | " + str(traceback.format_exc())
+            )
             env.set_exit_mode()
             env.filter_mode = False
             return env
-
 
         key = stdscr.getch()
 
@@ -68,20 +70,23 @@ def filter_management(stdscr, screen, win, env):
             function = get_function_for_key(env, key)
             if function is not None:
                 filter_data = (screen, win, user_input)
-                filter_data, env, exit_program = run_function(stdscr, filter_data, old_filter_text, env, function, key)
+                filter_data, env, exit_program = run_function(
+                    stdscr, filter_data, old_filter_text, env, function, key
+                )
                 if exit_program:
                     env.filter_mode = False
                     return env
 
         except Exception as err:
-            log("filter management | "+str(err)+" | "+str(traceback.format_exc()))
+            log("filter management | " + str(err) + " | " + str(traceback.format_exc()))
             env.set_exit_mode()
             env.filter_mode = False
             return env
 
 
-
 """ implementation of functions for filter management """
+
+
 def run_function(stdscr, filter_data, old_filter_text, env, fce, key):
     screen, win, user_input = filter_data
 
@@ -122,7 +127,7 @@ def run_function(stdscr, filter_data, old_filter_text, env, fce, key):
     elif fce == PRINT_CHAR:
         user_input.insert_symbol(win, chr(key))
     elif fce == SAVE_FILTER:
-        text = ''.join(user_input.text)
+        text = "".join(user_input.text)
         env.filter.add_by_current_mode(env, text)
         env.filter.find_files(env)
         if old_filter_text != text:
@@ -140,7 +145,6 @@ def run_function(stdscr, filter_data, old_filter_text, env, fce, key):
         env.filter.find_files(env)
         env.prepare_browsing_after_filter()
         return filter_data, env, True
-
 
     result_data = (screen, win, user_input)
     return result_data, env, False

@@ -1,4 +1,3 @@
-
 import curses
 import curses.ascii
 import traceback
@@ -14,7 +13,11 @@ from spef.views.help import show_help
 menu_options = []
 returns env, selected_options
 """
-def brows_menu(stdscr, env, menu_options, keys=False, select_multiple=False, color=None, title=None):
+
+
+def brows_menu(
+    stdscr, env, menu_options, keys=False, select_multiple=False, color=None, title=None
+):
     curses.curs_set(0)
 
     env.menu_mode = True
@@ -26,7 +29,6 @@ def brows_menu(stdscr, env, menu_options, keys=False, select_multiple=False, col
     win.set_border(0)
 
     rewrite_all_wins(env)
-
 
     selected_options = []
     keys_list = None
@@ -40,27 +42,38 @@ def brows_menu(stdscr, env, menu_options, keys=False, select_multiple=False, col
         screen, win = env.get_center_win()
 
         """ show menu options """
-        show_menu(screen, win, menu_options, env, keys=keys_list, selected=selected_options, color=color, title=title)
+        show_menu(
+            screen,
+            win,
+            menu_options,
+            env,
+            keys=keys_list,
+            selected=selected_options,
+            color=color,
+            title=title,
+        )
 
         key = stdscr.getch()
 
         try:
             function = get_function_for_key(env, key)
             if function is not None:
-
-                selected_options, env, exit_program = run_function(stdscr, menu_data, selected_options, env, function, key)
+                selected_options, env, exit_program = run_function(
+                    stdscr, menu_data, selected_options, env, function, key
+                )
                 if exit_program:
                     env.menu_mode = False
                     return env, selected_options
 
         except Exception as err:
-            log("brows menu | "+str(err)+" | "+str(traceback.format_exc()))
+            log("brows menu | " + str(err) + " | " + str(traceback.format_exc()))
             env.set_exit_mode()
             return env, None
 
 
-
 """ implementation of functions for browsing in menu """
+
+
 def run_function(stdscr, menu_data, selected_options, env, fce, key):
     screen, win = env.get_center_win()
     old_position = win.position
@@ -80,8 +93,8 @@ def run_function(stdscr, menu_data, selected_options, env, fce, key):
         old_shift, old_row = win.row_shift, win.cursor.row - win.row_shift
         env = resize_all(stdscr, env)
         screen, win = env.get_center_win(reset=True, row=0, col=0)
-        new_row = max(min(old_row, win.end_y-win.begin_y-win.border-2), 0)
-        win.set_cursor(new_row+old_shift, 0)
+        new_row = max(min(old_row, win.end_y - win.begin_y - win.border - 2), 0)
+        win.set_cursor(new_row + old_shift, 0)
         win.row_shift = old_shift
         win.set_border(0)
         rewrite_all_wins(env)
@@ -106,13 +119,13 @@ def run_function(stdscr, menu_data, selected_options, env, fce, key):
             char_key = chr(key)
             if char_key in keys_list:
                 if char_key in [str(i) for i in "123456789"]:
-                    option = int(char_key)-1
+                    option = int(char_key) - 1
                     if select_multiple:
                         selected_options.append(option)
                     else:
                         return option, env, True
                 elif char_key in [str(c) for c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"]:
-                    option = ord(char_key)-55-1
+                    option = ord(char_key) - 55 - 1
                     if select_multiple:
                         selected_options.append(option)
                     else:
@@ -137,4 +150,3 @@ def run_function(stdscr, menu_data, selected_options, env, fce, key):
 
     env.update_center_win(win)
     return selected_options, env, False
-

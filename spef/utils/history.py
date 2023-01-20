@@ -3,8 +3,11 @@ import shutil
 import traceback
 
 from spef.utils.logger import *
-from spef.utils.loading import load_testcase_tags, load_testsuite_tags, save_tags_to_file
-
+from spef.utils.loading import (
+    load_testcase_tags,
+    load_testsuite_tags,
+    save_tags_to_file,
+)
 
 
 def is_test_history_in_tmp(proj_dir, test_name):
@@ -34,23 +37,28 @@ def history_test_removed(env, proj_dir, test_name, add_to_user_logs):
             # copy test dir to history
             history_test_dir = os.path.join(history_dir, test_name)
             history_test_v_dir = os.path.join(history_test_dir, f"version_{version}")
-            if not os.path.exists(history_test_dir) or not os.path.isdir(history_test_dir):
+            if not os.path.exists(history_test_dir) or not os.path.isdir(
+                history_test_dir
+            ):
                 os.mkdir(history_test_dir)
             if not os.path.exists(history_test_v_dir):
                 # if actual version of this test do not already exists in history
                 shutil.copytree(testcase_dir, history_test_v_dir)
-                add_to_user_logs(env, 'info', f"test '{test_name}' (version: {version}) is archived in history")
-
+                add_to_user_logs(
+                    env,
+                    "info",
+                    f"test '{test_name}' (version: {version}) is archived in history",
+                )
 
             # add event to history logs
             history_test_event(proj_dir, test_name, f"remove test (version {version})")
             return True
     except Exception as err:
-        log("history test removed | "+str(err)+" | "+str(traceback.format_exc()))
+        log("history test removed | " + str(err) + " | " + str(traceback.format_exc()))
     return False
 
 
-""" vola sa pri ukladani bufferu (ukladanie modifikovaneho testu) """
+# vola sa pri ukladani bufferu (ukladanie modifikovaneho testu)
 # increment test tag
 # copy test from tmp dir to history dir
 # increment testsuite tag
@@ -80,24 +88,34 @@ def history_test_modified(env, proj_dir, test_name, add_to_user_logs):
                 return False
 
             # increment test version
-            testcase_tags.set_tag('version', [str(version+1)])
+            testcase_tags.set_tag("version", [str(version + 1)])
             save_tags_to_file(testcase_tags)
-
 
             # copy test from tmp dir to history
             history_test_dir = os.path.join(history_dir, test_name)
             history_test_v_dir = os.path.join(history_test_dir, f"version_{version}")
-            if not os.path.exists(history_test_dir) or not os.path.isdir(history_test_dir):
+            if not os.path.exists(history_test_dir) or not os.path.isdir(
+                history_test_dir
+            ):
                 os.mkdir(history_test_dir)
             if os.path.exists(history_test_v_dir):
-                log(f"history test modified | test {test_name} with version {version} already exists in history!!")
+                log(
+                    f"history test modified | test {test_name} with version {version} already exists in history!!"
+                )
                 return False
             shutil.copytree(tmp_test_v_dir, history_test_v_dir)
-            add_to_user_logs(env, 'info', f"old version ({version}) of test '{test_name}' is saved in history")
-
+            add_to_user_logs(
+                env,
+                "info",
+                f"old version ({version}) of test '{test_name}' is saved in history",
+            )
 
             # add event to history logs
-            history_test_event(proj_dir, test_name, f"modify test (test version {version} -> {version+1})")
+            history_test_event(
+                proj_dir,
+                test_name,
+                f"modify test (test version {version} -> {version+1})",
+            )
 
             # remove tmp dir with test
             # shutil.rmtree(tmp_test_v_dir)
@@ -106,7 +124,7 @@ def history_test_modified(env, proj_dir, test_name, add_to_user_logs):
             log("history test modified | cant load test tags ")
             return False
     except Exception as err:
-        log("history test modified | "+str(err)+" | "+str(traceback.format_exc()))
+        log("history test modified | " + str(err) + " | " + str(traceback.format_exc()))
         return False
 
 
@@ -130,8 +148,8 @@ def history_test_event(proj_dir, test_name, event):
             version = 1
         else:
             version = int(args[0])
-            add_event_to_tests_history(history_file, version+1, test_name, event)
-            testsuite_tags.set_tag('version', [str(version+1)])
+            add_event_to_tests_history(history_file, version + 1, test_name, event)
+            testsuite_tags.set_tag("version", [str(version + 1)])
             save_tags_to_file(testsuite_tags)
             # tags_file = os.path.join(tests_dir, TESTSUITE_TAGS)
             # add_tag_to_file(tags_file, {"version": [version+1]})
@@ -140,5 +158,5 @@ def history_test_event(proj_dir, test_name, event):
 
 
 def add_event_to_tests_history(file_path, version, test, event):
-    with open(file_path, 'a+', encoding='utf8') as f:
+    with open(file_path, "a+", encoding="utf8") as f:
         f.write(f"{version}:{test}:{event}\n")

@@ -37,6 +37,8 @@ INT_BASH = 5
     * loaded typical notes from file
     * loaded user logs from file
 """
+
+
 def prepare_environment(stdscr):
     curses.set_escdelay(1)
 
@@ -46,16 +48,14 @@ def prepare_environment(stdscr):
 
     init_color_pairs()
     bkgd_color = curses.color_pair(COL_BKGD)
-    stdscr.bkgd(' ', bkgd_color)
-
+    stdscr.bkgd(" ", bkgd_color)
 
     """ create screens and windows for TUI """
     print_prepare_message(stdscr, 0, "preparing screens...")
     screens, windows = create_screens_and_windows(curses.LINES, curses.COLS)
-    windows.brows.set_cursor(0,0)
-    windows.notes.set_cursor(0,0)
-    windows.tag.set_cursor(0,0)
-
+    windows.brows.set_cursor(0, 0)
+    windows.notes.set_cursor(0, 0)
+    windows.tag.set_cursor(0, 0)
 
     """ load config from file and create framework environment """
     print_prepare_message(stdscr, 1, "preparing system environment...")
@@ -64,7 +64,6 @@ def prepare_environment(stdscr):
         return None
     env = Environment(screens, windows, config)
 
-
     """ load control from file """
     print_prepare_message(stdscr, 2, "loading system controls...")
     control = load_control_from_file()
@@ -72,21 +71,17 @@ def prepare_environment(stdscr):
         return None
     env.set_user_control(control)
 
-
     """ load saved typical notes from file """
     print_prepare_message(stdscr, 3, "loading typical notes...")
     env.typical_notes = load_typical_notes_from_file()
-
 
     """ load user logs from file """
     print_prepare_message(stdscr, 4, "loading user logs...")
     env.user_logs = load_user_logs_from_file()
     go_down_in_user_logs(env)
 
-
     """ get current files and dirs """
     env.cwd = get_directory_content(env)
-
 
     print_prepare_message(stdscr, 5, "preparing done !")
     return env
@@ -94,11 +89,13 @@ def prepare_environment(stdscr):
 
 def print_prepare_message(stdscr, i, mess):
     if curses.LINES > i and curses.COLS > 0:
-        stdscr.addstr(i,0,mess[:curses.COLS])
+        stdscr.addstr(i, 0, mess[: curses.COLS])
         stdscr.refresh()
 
 
 """ ======================= START MAIN ========================= """
+
+
 def main(stdscr, env=None):
     global bash_proc
     log("START")
@@ -148,18 +145,20 @@ def main(stdscr, env=None):
 
     log("END")
     return 0, None
+
+
 """ ======================= END MAIN ========================= """
 
 
-class Bash_process():
+class Bash_process:
     def __init__(self, pid, fd):
-        self.pid = pid # pid for bash subprocess
+        self.pid = pid  # pid for bash subprocess
         self.fd = fd
 
         self.buff_lock = threading.Lock()
-        self.buff = "" # bash buffer
+        self.buff = ""  # bash buffer
 
-        self.active = False # bash is active
+        self.active = False  # bash is active
         self.reader_run = True
         self.pause = False
 
@@ -185,7 +184,6 @@ class Bash_process():
     def write_command(self, cmd):
         os.write(self.fd, cmd.encode("utf-8"))
 
-
     def async_reader(self):
         while self.reader_run:
             r, _, _ = select.select([self.fd], [], [], 1)
@@ -202,15 +200,16 @@ class Bash_process():
 
     def stop(self):
         self.set_reader(False)
-        os.system(f"kill {self.pid}") # os.kill(self.pid)
+        os.system(f"kill {self.pid}")  # os.kill(self.pid)
 
     def signal_handler(self, sig, frame):
         self.stop()
         sys.exit(0)
 
 
-
 """ switch to bash """
+
+
 def executing_bash(stdscr, env):
     global bash_proc
 
@@ -221,13 +220,12 @@ def executing_bash(stdscr, env):
     bash_proc.pause_reader(False)
     bash_proc.write_command("\n")
 
-
     # set bash as active (rewrite screen with bash buffer)
     bash_proc.set_active(True)
     # curses.curs_set(1) # set cursor as visible
 
     # set exit key from env (else CTRL+O by default (like in mc))
-    exit_key = env.bash_exit_key if env.bash_exit_key is not None else '0f'
+    exit_key = env.bash_exit_key if env.bash_exit_key is not None else "0f"
 
     # bash loop
     while True:
@@ -253,8 +251,9 @@ def executing_bash(stdscr, env):
             bash_proc.write_command(c)
 
 
-
 """ run command in bash """
+
+
 def run_in_bash(stdscr, env):
     global bash_proc
 
@@ -272,8 +271,7 @@ def run_in_bash(stdscr, env):
 
     # send command to bash
     if env.bash_action.cmd:
-        bash_proc.write_command(env.bash_action.cmd+"\n")
-
+        bash_proc.write_command(env.bash_action.cmd + "\n")
 
     # rewrite screen with bash buffer (show in bash)
     bash_proc.set_active(True)
@@ -302,20 +300,20 @@ def run_in_bash(stdscr, env):
             bash_proc.write_command(c)
 
 
-
 """ ======================================================================= """
 
 
 def run():
     global bash_proc
     # clear log file
-    with open(LOG_FILE, 'w+'): pass
+    with open(LOG_FILE, "w+"):
+        pass
     if not os.path.exists(TMP_DIR):
         os.mkdir(TMP_DIR)
     user_logs_file = os.path.join(DATA_DIR, USER_LOGS_FILE)
     if not os.path.exists(user_logs_file):
-        with open(user_logs_file, 'w+'): pass
-
+        with open(user_logs_file, "w+"):
+            pass
 
     # prepare bash subprocess
     pid, fd = os.forkpty()
@@ -336,7 +334,8 @@ def run():
 
     if pid == 0:
         # ======= child =======
-        os.system("stdbuf -i0 -o0 -e0 bash") # bash without buffering stdin, stdout, stderr
+        # bash without buffering stdin, stdout, stderr
+        os.system("stdbuf -i0 -o0 -e0 bash")
     else:
         # ====== parent ======
         # thread for reading bash output and save it to buffer
@@ -345,7 +344,7 @@ def run():
 
         # run ncurses main function
         stdscr = curses.initscr()
-        stdscr.keypad(True) # enable read special keys
+        stdscr.keypad(True)  # enable read special keys
         env = None
         while True:
             ret, env = curses.wrapper(main, env)
@@ -361,4 +360,3 @@ def run():
         th.join()
         bash_proc.set_reader(False)
         os.system(f"kill {pid}")
-

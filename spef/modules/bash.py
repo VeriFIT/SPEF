@@ -1,4 +1,3 @@
-
 from spef.utils.logger import *
 
 """
@@ -7,12 +6,16 @@ from spef.utils.logger import *
 * first jump to current working directory
 * there is no command to run
 """
-class Bash_action():
+
+
+class Bash_action:
     def __init__(self):
         self.type = None
-        self.exit_key = None # hex value of key (if None, read any key to exit bash)
+        # hex value of key (if None, read any key to exit bash)
+        self.exit_key = None
 
-        self.run_in_cwd = True # first go to current working directory (in env) then execute command
+        # first go to current working directory (in env) then execute command
+        self.run_in_cwd = True
         self.cmd = ""
 
     def dont_jump_to_cwd(self):

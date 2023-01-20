@@ -9,10 +9,12 @@ data = {'documentation': ['ok'],
         'test1': ['5', '4', '8'],
         'test2': ['5']}
 """
+
+
 class Tags:
     def __init__(self, path, data):
         self.path = path
-        self.data = data # {"tag_name": [param1, param2], "tag_name": []}
+        self.data = data  # {"tag_name": [param1, param2], "tag_name": []}
 
     def __str__(self):
         return str(self.data)

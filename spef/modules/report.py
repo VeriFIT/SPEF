@@ -26,8 +26,8 @@ class Note:
 
 class Report:
     def __init__(self, path, data=None):
-        self.path = path # ex: fileXYZ_report.yaml
-        self.data = [] if data is None else data # [notes]
+        self.path = path  # ex: fileXYZ_report.yaml
+        self.data = [] if data is None else data  # [notes]
 
         self.original_report = data.copy()
         self.last_save = data.copy()
@@ -51,14 +51,12 @@ class Report:
             if note.row == row:
                 del self.data[idx]
 
-
     def get_notes_on_line(self, row):
         notes = []
         for note in enumerate(self.data):
             if note.row == row:
                 notes.append(note)
         return notes
-
 
     def get_next_line_with_note(self, row):
         self.data.sort(key=lambda note: note.row)
@@ -76,11 +74,13 @@ class Report:
             prev_line = note.row
         return prev_line
 
-
     """ move notes to correct line after adding/removing line in buffer """
+
     def notes_lines_shift(self, row, col, row_shift=0, col_shift=0):
         for note in self.data:
-            if (note.row>row) or (row_shift>=0 and note.row==row and note.col>col):
+            if (note.row > row) or (
+                row_shift >= 0 and note.row == row and note.col > col
+            ):
                 note.col += col_shift
                 note.row += row_shift
 
@@ -97,5 +97,5 @@ class Report:
                     notes[note.row] = {note.col: [note.text]}
             else:
                 notes[0][0].append(note.text)
-        with open(self.path, 'w+', encoding='utf8') as f:
+        with open(self.path, "w+", encoding="utf8") as f:
             yaml.dump(notes, f, default_flow_style=False, allow_unicode=True)

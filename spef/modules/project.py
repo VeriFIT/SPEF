@@ -14,9 +14,8 @@ class Solution:
         self.tags = None
         self.test_tags = None
 
-        self.test_notes = {} # notes related to automatic tests
-        self.user_notes = [] # other notes related to solution
-
+        self.test_notes = {}  # notes related to automatic tests
+        self.user_notes = []  # other notes related to solution
 
     def add_user_note(self, text):
         self.user_notes.append(text)
@@ -35,7 +34,6 @@ class Solution:
     def reload_test_tags(self):
         tags_file = os.path.join(self.path, TESTS_DIR)
         self.test_tags = load_tests_tags(tags_file)
-
 
 
 class Project:
@@ -60,15 +58,14 @@ class Project:
         self.solutions = self.load_solutions()
 
     def get_solutions_list(self):
-        res = [solution for _,solution in self.solutions.items()]
+        res = [solution for _, solution in self.solutions.items()]
         return res
-
 
     def load_solutions(self):
         res = {}
         # get solution dirs
         dirs = set()
-        items = os.listdir(self.path) # list all dirs and files in proj dir
+        items = os.listdir(self.path)  # list all dirs and files in proj dir
         for item in items:
             path = os.path.join(self.path, item)
             if os.path.isdir(path) and bool(re.match(self.solution_id, item)):
@@ -81,7 +78,9 @@ class Project:
 
             # load solution tags
             solution_data.tags = load_solution_tags(solution_dir)
-            solution_data.test_tags = load_tests_tags(os.path.join(solution_dir, TESTS_DIR))
+            solution_data.test_tags = load_tests_tags(
+                os.path.join(solution_dir, TESTS_DIR)
+            )
 
             # load solution reports
             solution_data.user_notes = load_user_notes_for_solution(solution_dir)
@@ -99,28 +98,29 @@ class Project:
 
     def set_values_from_conf(self, data):
         try:
-            self.name = data['name']
-            self.created = data['created']
-            self.solution_id = data['solution_id']
-            self.max_score = data['max_score']
-            self.sut_required = data['sut_required']
-            self.sut_ext_variants = data['sut_ext_variants']
-            self.solution_info = data['solution_info']
-            self.tests_info = data['tests_info']
+            self.name = data["name"]
+            self.created = data["created"]
+            self.solution_id = data["solution_id"]
+            self.max_score = data["max_score"]
+            self.sut_required = data["sut_required"]
+            self.sut_ext_variants = data["sut_ext_variants"]
+            self.solution_info = data["solution_info"]
+            self.tests_info = data["tests_info"]
             self.solutions = self.load_solutions()
             return True
         except:
             log("wrong data for proj")
             return False
 
-
     def set_default_values(self):
         self.name = "project"
-        self.created = datetime.date.today() # date of creation
-        self.solution_id =  "x[a-z]{5}[0-9]{2}" # default solution identifier: xlogin00
+        self.created = datetime.date.today()  # date of creation
+        self.solution_id = "x[a-z]{5}[0-9]{2}"  # default solution identifier: xlogin00
         self.max_score = 10
 
-        self.sut_required = "sut" # default file name of project solution is "sut" (system under test)
+        self.sut_required = (
+            "sut"  # default file name of project solution is "sut" (system under test)
+        )
         self.sut_ext_variants = ["*sut*", "sut.sh", "sut.bash"]
         self.solution_info = self.get_solution_info()
         self.tests_info = self.get_tests_info()
@@ -128,19 +128,17 @@ class Project:
 
         self.test_timeout = 5
 
-
     def to_dict(self):
         return {
-            'name': self.name,
-            'created': self.created,
-            'solution_id': self.solution_id,
-            'max_score' : self.max_score,
-            'sut_required': self.sut_required,
-            'sut_ext_variants': self.sut_ext_variants,
-            'solution_info': self.solution_info,
-            'tests_info': self.tests_info
+            "name": self.name,
+            "created": self.created,
+            "solution_id": self.solution_id,
+            "max_score": self.max_score,
+            "sut_required": self.sut_required,
+            "sut_ext_variants": self.sut_ext_variants,
+            "solution_info": self.solution_info,
+            "tests_info": self.tests_info,
         }
-
 
     """
     solution info = informacie ktore sa zobrazia pre xlogin00 dir
@@ -248,60 +246,59 @@ class Project:
     -u predicate podmienky je mozne pouzit konstantu "XTEST" ktora nahradza akykolvek test name
     -"XTEST" sa moze pouzit ako sucast tag_name, napr: "XTEST_ok" alebo "scoring_XTEST"
     """
+
     def get_tests_info(self):
         # tests_info
         success = {
-            'identifier': 1,
-            'visualization': "ok",
-            'length': 4,
-            'description': "test passsed",
-            'predicates': [{'predicate': ["XTEST_ok"], 'color': 'green'}]
+            "identifier": 1,
+            "visualization": "ok",
+            "length": 4,
+            "description": "test passsed",
+            "predicates": [{"predicate": ["XTEST_ok"], "color": "green"}],
         }
         fail = {
-            'identifier': 1,
-            'visualization': "fail",
-            'length': 4,
-            'description': "test failed",
-            'predicates': [{'predicate': ["XTEST_fail"], 'color': 'red'}]
+            "identifier": 1,
+            "visualization": "fail",
+            "length": 4,
+            "description": "test failed",
+            "predicates": [{"predicate": ["XTEST_fail"], "color": "red"}],
         }
         tests_info = [success, fail]
         return tests_info
-
 
     def get_solution_info(self):
         # sorting by id: [... 3 2 1]
 
         # default info
         date = {
-            'identifier': 1,
-            'visualization': "last_testing.1", # vypise sa ak existuje tag #last_testing
-            'length': 15, #10/03/22-15:30
-            'description': "datetime of last test",
-            'predicates': []
+            "identifier": 1,
+            "visualization": "last_testing.1",  # vypise sa ak existuje tag #last_testing
+            "length": 15,  # 10/03/22-15:30
+            "description": "datetime of last test",
+            "predicates": [],
         }
         status = {
-            'identifier': 2,
-            'visualization': 'T',
-            'description': "project was tested",
-            'predicates': [
-                {'predicate': ['last_testing'], 'color': 'yellow'} # tag: last_testing sa prida na konci testovania
-            ]
+            "identifier": 2,
+            "visualization": "T",
+            "description": "project was tested",
+            "predicates": [
+                {
+                    "predicate": ["last_testing"],
+                    "color": "yellow",
+                }  # tag: last_testing sa prida na konci testovania
+            ],
         }
         group = {
-            'identifier': 3,
-            'visualization': 'G',
-            'description': "is group project",
-            'predicates': [
-                {'predicate': ['group'], 'color': 'blue'}
-            ]
+            "identifier": 3,
+            "visualization": "G",
+            "description": "is group project",
+            "predicates": [{"predicate": ["group"], "color": "blue"}],
         }
         plagiat = {
-            'identifier': 4,
-            'visualization': '!!',
-            'description': "is plagiat",
-            'predicates': [
-                {'predicate': ['plag'], 'color': 'red'}
-            ]
+            "identifier": 4,
+            "visualization": "!!",
+            "description": "is plagiat",
+            "predicates": [{"predicate": ["plag"], "color": "red"}],
         }
 
         # test results
