@@ -1,4 +1,3 @@
-
 import curses
 import curses.ascii
 import traceback
@@ -11,13 +10,10 @@ from spef.utils.logger import *
 from spef.views.help import show_help
 
 
-
 def get_user_input(stdscr, env, title=None, user_input=None):
-
     env.user_input_mode = True
 
     screen, win = env.get_center_win(reset=True)
-
 
     if user_input is None:
         user_input = UserInput()
@@ -34,32 +30,35 @@ def get_user_input(stdscr, env, title=None, user_input=None):
         color = curses.color_pair(COL_GREEN)
 
         """ move cursor to correct position """
-        row, col = show_user_input(screen, user_input, max_rows, max_cols, env, color=color, title=title)
+        row, col = show_user_input(
+            screen, user_input, max_rows, max_cols, env, color=color, title=title
+        )
         stdscr.move(win.begin_y + row, win.begin_x + col)
-
 
         key = stdscr.getch()
 
         try:
             function = get_function_for_key(env, key)
             if function is not None:
-                user_input, env, exit_program = run_function(stdscr, user_input, env, function, key)
+                user_input, env, exit_program = run_function(
+                    stdscr, user_input, env, function, key
+                )
                 if exit_program:
                     env.user_input_mode = False
                     return env, user_input.text
 
         except Exception as err:
-            log("user input | "+str(err)+" | "+str(traceback.format_exc()))
+            log("user input | " + str(err) + " | " + str(traceback.format_exc()))
             env.set_exit_mode()
             return env, None
 
 
-
 """ implementation of functions for user input """
+
+
 def run_function(stdscr, user_input, env, fce, key):
     screen, win = env.get_center_win()
     old_position = win.position
-
 
     # ======================= EXIT =======================
     if fce == EXIT_PROGRAM:
@@ -84,10 +83,10 @@ def run_function(stdscr, user_input, env, fce, key):
         show_help(stdscr, env)
         curses.curs_set(1)
     # ========================= ARROWS =========================
-    elif fce == CURSOR_UP: # TODO: Fix
+    elif fce == CURSOR_UP:  # TODO: Fix
         user_input.pointer = 0
         user_input.col_shift = 0
-    elif fce == CURSOR_DOWN: # TODO: Fix
+    elif fce == CURSOR_DOWN:  # TODO: Fix
         end_of_input = len(user_input)
         user_input.pointer = end_of_input
         user_input.horizontal_shift(win)
@@ -123,7 +122,5 @@ def run_function(stdscr, user_input, env, fce, key):
         rewrite_all_wins(env)
         curses.curs_set(1)
 
-
     env.update_center_win(win)
     return user_input, env, False
-

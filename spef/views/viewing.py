@@ -1,4 +1,3 @@
-
 import curses
 import curses.ascii
 import os
@@ -23,11 +22,11 @@ from spef.views.input import get_user_input
 from spef.views.user_logs import add_to_user_logs
 
 
-
 def file_viewing(stdscr, env):
     screen, win = env.get_screen_for_current_mode()
 
-    if not env.file_to_open or is_archive_file(env.file_to_open): # there is no file to open
+    # there is no file to open
+    if not env.file_to_open or is_archive_file(env.file_to_open):
         if env.show_tags and env.tags is not None:
             env.set_tag_mode()
         else:
@@ -41,20 +40,21 @@ def file_viewing(stdscr, env):
     env, buffer, succ = load_buffer_and_tags(env)
     if not succ:
         env.set_file_to_open(None)
-        env.set_brows_mode() # instead of exit mode
+        env.set_brows_mode()  # instead of exit mode
         return env
 
     # editing test file
     if os.path.basename(env.file_to_open) == TEST_FILE and env.cwd.proj:
         env.editing_test_file = True
         # copy test dir to history (if there is no other copy of this test with this version)
-        succ = copy_test_history_to_tmp(env.cwd.proj.path, os.path.dirname(env.file_to_open))
+        succ = copy_test_history_to_tmp(
+            env.cwd.proj.path, os.path.dirname(env.file_to_open)
+        )
 
     if os.path.basename(env.file_to_open) == REPORT_TEMPLATE and env.cwd.proj:
         env.editing_report_template = True
     else:
         env.editing_report_template = False
-
 
     """ try load code review to report  """
     report_already_loaded = False
@@ -70,7 +70,6 @@ def file_viewing(stdscr, env):
         report = load_report_from_file(buffer.path, orig_file_name=orig_file_name)
         env.report = report
 
-
     """ calculate line numbers """
     if env.line_numbers or env.start_with_line_numbers:
         env.start_with_line_numbers = False
@@ -81,7 +80,6 @@ def file_viewing(stdscr, env):
         env.set_exit_mode()
         return env
 
-
     env.buffer = buffer
     env.report = report
     rewrite_all_wins(env)
@@ -90,17 +88,17 @@ def file_viewing(stdscr, env):
     rewrite_hint = True
 
     while True:
-        """ print all screens """
+        """print all screens"""
         screen, win = env.get_screen_for_current_mode()
         if rewrite:
             rewrite_file(env, hint=rewrite_hint)
 
         try:
-            """ move cursor to correct position """
+            """move cursor to correct position"""
             new_row, new_col = win.get_cursor_position()
             stdscr.move(new_row, new_col)
         except Exception as err:
-            log("move cursor | "+str(err)+" | "+str(traceback.format_exc()))
+            log("move cursor | " + str(err) + " | " + str(traceback.format_exc()))
             env.set_exit_mode()
             return env
 
@@ -109,17 +107,20 @@ def file_viewing(stdscr, env):
         try:
             function = get_function_for_key(env, key)
             if function is not None:
-                env, rewrite, rewrite_hint, exit_view = run_function(stdscr, env, function, key)
+                env, rewrite, rewrite_hint, exit_view = run_function(
+                    stdscr, env, function, key
+                )
                 if exit_view:
                     return env
         except Exception as err:
-            log("viewing Exception | "+str(err)+" | "+str(traceback.format_exc()))
+            log("viewing Exception | " + str(err) + " | " + str(traceback.format_exc()))
             env.set_exit_mode()
             return env
 
 
-
 """ implementation of functions for file edit/management """
+
+
 def run_function(stdscr, env, fce, key):
     screen, win = env.get_screen_for_current_mode()
     rewrite = False
@@ -135,7 +136,7 @@ def run_function(stdscr, env, fce, key):
     elif fce == BASH_SWITCH:
         hex_key = "{0:x}".format(key)
         env.bash_action = Bash_action()
-        env.bash_action.set_exit_key(('0' if len(hex_key)%2 else '')+str(hex_key))
+        env.bash_action.set_exit_key(("0" if len(hex_key) % 2 else "") + str(hex_key))
         env.bash_active = True
         return env, rewrite, rewrite_hint, True
     # ======================= FOCUS =======================
@@ -159,22 +160,22 @@ def run_function(stdscr, env, fce, key):
         old_shifts = win.row_shift, win.col_shift
         win.up(env.buffer, use_restrictions=True)
         win.calculate_tab_shift(env.buffer, env.tab_size)
-        rewrite = (old_shifts != (win.row_shift, win.col_shift))
+        rewrite = old_shifts != (win.row_shift, win.col_shift)
     elif fce == CURSOR_DOWN:
         old_shifts = win.row_shift, win.col_shift
         win.down(env.buffer, filter_on=env.content_filter_on(), use_restrictions=True)
         win.calculate_tab_shift(env.buffer, env.tab_size)
-        rewrite = (old_shifts != (win.row_shift, win.col_shift))
+        rewrite = old_shifts != (win.row_shift, win.col_shift)
     elif fce == CURSOR_LEFT:
         old_shifts = win.row_shift, win.col_shift
         win.left(env.buffer)
         win.calculate_tab_shift(env.buffer, env.tab_size)
-        rewrite = (old_shifts != (win.row_shift, win.col_shift))
+        rewrite = old_shifts != (win.row_shift, win.col_shift)
     elif fce == CURSOR_RIGHT:
         old_shifts = win.row_shift, win.col_shift
         win.right(env.buffer, filter_on=env.content_filter_on())
         win.calculate_tab_shift(env.buffer, env.tab_size)
-        rewrite = (old_shifts != (win.row_shift, win.col_shift))
+        rewrite = old_shifts != (win.row_shift, win.col_shift)
     # ======================= SHOW HELP =======================
     elif fce == SHOW_HELP:
         show_help(stdscr, env)
@@ -239,7 +240,9 @@ def run_function(stdscr, env, fce, key):
             # show list of implemented functions for testing
             try:
                 check_bash_functions_for_testing(env.cwd.proj.path)
-                bash_file = os.path.join(env.cwd.proj.path, TESTS_DIR, TST_FCE_DIR, TST_FCE_FILE)
+                bash_file = os.path.join(
+                    env.cwd.proj.path, TESTS_DIR, TST_FCE_DIR, TST_FCE_FILE
+                )
                 options = env.get_supported_test_functions(bash_file)
                 custom_help = (None, "Supported functions:", options)
                 env, key = show_help(stdscr, env, custom_help=custom_help, exit_key=[])
@@ -247,7 +250,7 @@ def run_function(stdscr, env, fce, key):
                 rewrite_all_wins(env)
                 curses.curs_set(1)
             except Exception as err:
-                log("show test functions | "+str(err))
+                log("show test functions | " + str(err))
         elif env.editing_report_template:
             # =============== SHOW DATA FOR REPORT TEMPLATE ===============
             # show supported data for 'report_template.j2' while user is creating report template
@@ -258,26 +261,36 @@ def run_function(stdscr, env, fce, key):
                 rewrite_all_wins(env)
                 curses.curs_set(1)
             except Exception as err:
-                log("show report template data | "+str(err))
+                log("show report template data | " + str(err))
     # ======================= NOTES JUMP =======================
     elif fce == GO_TO_PREV_NOTE:
         if env.note_highlight:
-            old_shifts = win.row_shift, win.col_shift # get old shifts
+            old_shifts = win.row_shift, win.col_shift  # get old shifts
             prev_line = env.report.get_prev_line_with_note(win.cursor.row)
             while win.cursor.row != prev_line:
                 win.up(env.buffer, use_restrictions=True)
             win.calculate_tab_shift(env.buffer, env.tab_size)
             env.update_win_for_current_mode(win)
-            rewrite = (old_shifts != (win.row_shift, win.col_shift)) # rewrite if shifts changed
+            # rewrite if shifts changed
+            rewrite = old_shifts != (
+                win.row_shift,
+                win.col_shift,
+            )
     elif fce == GO_TO_NEXT_NOTE:
         if env.note_highlight:
-            old_shifts = win.row_shift, win.col_shift # get old shifts
+            old_shifts = win.row_shift, win.col_shift  # get old shifts
             next_line = env.report.get_next_line_with_note(win.cursor.row)
             while win.cursor.row != next_line:
-                win.down(env.buffer, filter_on=env.content_filter_on(), use_restrictions=True)
+                win.down(
+                    env.buffer, filter_on=env.content_filter_on(), use_restrictions=True
+                )
             win.calculate_tab_shift(env.buffer, env.tab_size)
             env.update_win_for_current_mode(win)
-            rewrite = (old_shifts != (win.row_shift, win.col_shift)) # rewrite if shifts changed
+            # rewrite if shifts changed
+            rewrite = old_shifts != (
+                win.row_shift,
+                win.col_shift,
+            )
     # ======================= RELOAD =======================
     elif fce == RELOAD_ORIGINAL_BUFF:
         env.buffer.lines = env.buffer.original_buff.copy()
@@ -285,17 +298,22 @@ def run_function(stdscr, env, fce, key):
         while win.cursor.row > len(env.buffer):
             win.up(env.buffer, use_restrictions=False)
         win.calculate_tab_shift(env.buffer, env.tab_size)
-        if win.cursor.col > len(env.buffer[win.cursor.row - win.begin_y])+win.begin_x:
+        if win.cursor.col > len(env.buffer[win.cursor.row - win.begin_y]) + win.begin_x:
             win.cursor.col = win.begin_x
         rewrite = True
     elif fce == RELOAD_FILE_FROM_LAST_SAVE:
-        if file_changes_are_saved(stdscr, env, add_to_user_logs, warning=RELOAD_FILE_WITHOUT_SAVING):
+        if file_changes_are_saved(
+            stdscr, env, add_to_user_logs, warning=RELOAD_FILE_WITHOUT_SAVING
+        ):
             env.buffer.lines = env.buffer.last_save.copy()
             env.report.data = env.report.last_save.copy()
             while win.cursor.row > len(env.buffer):
                 win.up(env.buffer, use_restrictions=False)
             win.calculate_tab_shift(env.buffer, env.tab_size)
-            if win.cursor.col > len(env.buffer[win.cursor.row - win.begin_y])+win.begin_x:
+            if (
+                win.cursor.col
+                > len(env.buffer[win.cursor.row - win.begin_y]) + win.begin_x
+            ):
                 win.cursor.col = win.begin_x
         rewrite = True
     else:
@@ -376,7 +394,10 @@ def run_function(stdscr, env, fce, key):
             elif fce == ADD_CUSTOM_NOTE:
                 note_row, note_col = win.cursor.row, win.cursor.col - win.begin_x
                 # define specific highlight for current line which is related to the new note
-                env.specific_line_highlight = (note_row, curses.color_pair(COL_NOTE_LIGHT))
+                env.specific_line_highlight = (
+                    note_row,
+                    curses.color_pair(COL_NOTE_LIGHT),
+                )
 
                 title = f"Enter new note at {note_row}:{note_col}"
                 env, text = get_user_input(stdscr, env, title=title)
@@ -384,7 +405,7 @@ def run_function(stdscr, env, fce, key):
                 curses.curs_set(1)
                 env.specific_line_highlight = None
                 if text is not None:
-                    env.report.add_note(note_row, note_col, ''.join(text))
+                    env.report.add_note(note_row, note_col, "".join(text))
                     save_report_to_file(env.report)
                 rewrite_all_wins(env)
                 curses.curs_set(1)
@@ -401,4 +422,3 @@ def run_function(stdscr, env, fce, key):
 
     env.update_win_for_current_mode(win)
     return env, rewrite, rewrite_hint, False
-

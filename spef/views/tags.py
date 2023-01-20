@@ -20,13 +20,12 @@ def tag_management(stdscr, env):
     curses.curs_set(0)
     screen, win = env.get_screen_for_current_mode()
 
-    if env.tags is None: # there is no tags loaded
+    if env.tags is None:  # there is no tags loaded
         env.switch_to_next_mode()
         return env
 
-
     while True:
-        """ print all screens """
+        """print all screens"""
         # screen, win = env.get_screen_for_current_mode()
         rewrite_all_wins(env)
 
@@ -40,13 +39,14 @@ def tag_management(stdscr, env):
                     return env
 
         except Exception as err:
-            log("tagging | "+str(err)+" | "+str(traceback.format_exc()))
+            log("tagging | " + str(err) + " | " + str(traceback.format_exc()))
             env.set_exit_mode()
             return env
 
 
-
 """ implementation of functions for tag management """
+
+
 def run_function(stdscr, env, fce, key):
     screen, win = env.get_screen_for_current_mode()
 
@@ -59,7 +59,7 @@ def run_function(stdscr, env, fce, key):
     elif fce == BASH_SWITCH:
         hex_key = "{0:x}".format(key)
         env.bash_action = Bash_action()
-        env.bash_action.set_exit_key(('0' if len(hex_key)%2 else '')+str(hex_key))
+        env.bash_action.set_exit_key(("0" if len(hex_key) % 2 else "") + str(hex_key))
         env.bash_active = True
         return env, True
     # ======================= FOCUS =======================
@@ -100,7 +100,7 @@ def run_function(stdscr, env, fce, key):
 
             # replace old tag with new one
             if text is not None:
-                tag_parts = shlex.split(''.join(text))
+                tag_parts = shlex.split("".join(text))
                 # tag_parts = ''.join(text).split()
                 if len(tag_parts) < 1:
                     log("edit tag | wrong tag format")
@@ -122,7 +122,7 @@ def run_function(stdscr, env, fce, key):
         screen, win = env.get_screen_for_current_mode()
         curses.curs_set(0)
         if text is not None:
-            tag_parts = shlex.split(''.join(text))
+            tag_parts = shlex.split("".join(text))
             if len(tag_parts) < 1:
                 log("add tag | wrong tag format")
             else:
@@ -143,7 +143,6 @@ def run_function(stdscr, env, fce, key):
         if env.is_exit_mode() or env.is_brows_mode():
             return env, True
         curses.curs_set(0)
-
 
     env.update_win_for_current_mode(win)
     return env, False

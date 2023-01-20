@@ -10,6 +10,8 @@ from spef.utils.match import *
 
 
 """ from subjA/proj1/xlogin00/dir/file_name to proj1/xlogin00/dir/file_name """
+
+
 def get_path_relative_to_project_dir(dest_path, proj_path=None):
     # check if its project subdir
     cur_dir = dest_path if os.path.isdir(dest_path) else os.path.dirname(dest_path)
@@ -38,8 +40,9 @@ def get_path_relative_to_project_dir(dest_path, proj_path=None):
     return os.path.relpath(dest_path, os.path.dirname(proj_path))
 
 
-
 """ from subjA/proj1/xlogin00/dir/file_name to xlogin00/dir/file_name """
+
+
 def get_path_relative_to_solution_dir(dest_path):
     # check if its project subdir
     proj = None
@@ -75,7 +78,6 @@ def get_path_relative_to_solution_dir(dest_path):
     return os.path.relpath(dest_path, os.path.dirname(solution_dir))
 
 
-
 def generate_code_review(env, solution):
     if not env.cwd.proj or not solution:
         log("generate code review | current directory is not project (sub)directory")
@@ -89,7 +91,7 @@ def generate_code_review(env, solution):
     # process all notes from code review
     code_review = []
     try:
-        dest_path = os.path.join(solution.path, "**", "*"+REPORT_SUFFIX)
+        dest_path = os.path.join(solution.path, "**", "*" + REPORT_SUFFIX)
         for report_file in glob.glob(dest_path, recursive=True):
             if os.path.isfile(report_file):
                 report = load_report_from_file(report_file, add_suffix=False)
@@ -103,16 +105,20 @@ def generate_code_review(env, solution):
                         code_review.append(f"{file_name}:{note.row}:{note.col}")
                     else:
                         code_review.append(f"{file_name}")
-                    code_review.append(str(note.text)+'\n')
+                    code_review.append(str(note.text) + "\n")
     except Exception as err:
-        log("gen code review | get report files | "+str(err)+" | "+str(traceback.format_exc()))
+        log(
+            "gen code review | get report files | "
+            + str(err)
+            + " | "
+            + str(traceback.format_exc())
+        )
         return
 
     # save code review to file
     code_review_file = os.path.join(report_dir, CODE_REVIEW_FILE)
-    with open(code_review_file, 'w+') as f:
-        f.write('\n'.join(code_review))
-
+    with open(code_review_file, "w+") as f:
+        f.write("\n".join(code_review))
 
 
 def add_test_note_to_solutions(env, solutions, note_text):
@@ -124,16 +130,19 @@ def add_test_note_to_solutions(env, solutions, note_text):
     testsuite_tags = load_testsuite_tags(tests_dir)
     if testsuite_tags is not None:
         args = testsuite_tags.get_args_for_tag("version")
-        if args is not None and len(args)>0:
+        if args is not None and len(args) > 0:
             version = int(args[0])
             for solution in solutions:
                 # add test note
                 solution.add_test_note(note_text, version)
                 save_test_notes_for_solution(solution)
 
+
 """
 graf bodoveho hodnotenia (rozlozenie - kolko studentov spada do danej bodovej kategorie)
 """
+
+
 def generate_scoring_stats(env):
     if env.cwd.proj is None:
         return
@@ -147,9 +156,9 @@ def generate_scoring_stats(env):
         for key, solution in env.cwd.proj.solutions.items():
             # get score for solution
             total_score = None
-            if solution.tags is not None and len(solution.tags)>0:
+            if solution.tags is not None and len(solution.tags) > 0:
                 score_args = solution.tags.get_args_for_tag("score")
-                if score_args is not None and len(score_args)>0:
+                if score_args is not None and len(score_args) > 0:
                     total_score = int(score_args[0])
                 else:
                     scoring = calculate_score(env, solution)
@@ -168,26 +177,30 @@ def generate_scoring_stats(env):
                 else:
                     scoring_severity[score] = 1
 
-        for i in range(0,env.cwd.proj.max_score+1):
+        for i in range(0, env.cwd.proj.max_score + 1):
             if not i in scoring_severity:
                 scoring_severity[i] = 0
 
         scoring_severity = dict(sorted(scoring_severity.items()))
-        average = round(sum_score/scored_solutions, 2) if scored_solutions>0 else 0
-        nonzero_average = round(sum_score/nonzero_scored_solutions, 2) if nonzero_scored_solutions>0 else 0
+        average = round(sum_score / scored_solutions, 2) if scored_solutions > 0 else 0
+        nonzero_average = (
+            round(sum_score / nonzero_scored_solutions, 2)
+            if nonzero_scored_solutions > 0
+            else 0
+        )
         modus = max(scoring_severity, key=scoring_severity.get)
-        shift = len(str(env.cwd.proj.max_score))+1
+        shift = len(str(env.cwd.proj.max_score)) + 1
         highest_score = max(list(scoring_severity.values()))
 
-        severity=""
+        severity = ""
         for key, value in scoring_severity.items():
             # norm_val = int((value/highest_score)*10) if highest_score>0 else 0
             norm_val = int(value)
-            space = ' '*(shift-len(str(key)))
-            stars = '*'*norm_val
-            severity+=f"{key}:{space}{stars} {value}\n"
+            space = " " * (shift - len(str(key)))
+            stars = "*" * norm_val
+            severity += f"{key}:{space}{stars} {value}\n"
 
-        statistics=f"""\
+        statistics = f"""\
 Maximum score: {env.cwd.proj.max_score}
 ------------------------------------
 Average: {average}
@@ -203,24 +216,25 @@ Scoring severity:
             os.makedirs(report_dir)
 
         stats_file = os.path.join(report_dir, SCORING_STATS_FILE)
-        with open(stats_file, 'w+') as f:
+        with open(stats_file, "w+") as f:
             f.write(statistics)
     except Exception as err:
         log(f"generate stats | {err} | {traceback.format_exc()}")
 
 
-
 """
 histogram vysledkov testov (ktore testy boli ako hodnotene)
 """
+
+
 def generate_test_results_hist(env):
     if env.cwd.proj is None:
         return
 
     max_score = env.cwd.proj.max_score
     score_nums = set()
-    tests_stats = {} # {'test_name': {'0': x%, '1': x,...}, 'test_name': {...},...}
-    total_score_stats = {} # {'score'}
+    tests_stats = {}  # {'test_name': {'0': x%, '1': x,...}, 'test_name': {...},...}
+    total_score_stats = {}  # {'score'}
     try:
         ################### TESTS STATS ###################
         tests = get_tests_names(env)
@@ -231,9 +245,11 @@ def generate_test_results_hist(env):
             for key, solution in env.cwd.proj.solutions.items():
                 # get test result scoring for solution
                 test_score = None
-                if solution.test_tags is not None and len(solution.test_tags)>0:
-                    score_args = solution.test_tags.get_args_for_tag(f"scoring_{test_name}")
-                    if score_args is not None and len(score_args)>0:
+                if solution.test_tags is not None and len(solution.test_tags) > 0:
+                    score_args = solution.test_tags.get_args_for_tag(
+                        f"scoring_{test_name}"
+                    )
+                    if score_args is not None and len(score_args) > 0:
                         test_score = int(score_args[0])
                         tested_solutions += 1
                         score_nums.add(test_score)
@@ -243,12 +259,13 @@ def generate_test_results_hist(env):
                             test_scoring_severity[test_score] = 1
 
             # parse scoring severity to percentage
-            test_scoring_percentage={}
+            test_scoring_percentage = {}
             for score, severity in test_scoring_severity.items():
-                test_scoring_percentage[score]=int((severity/tested_solutions)*100)
+                test_scoring_percentage[score] = int(
+                    (severity / tested_solutions) * 100
+                )
 
-            tests_stats[test_name]=test_scoring_percentage
-
+            tests_stats[test_name] = test_scoring_percentage
 
         ################### TOTAL SCORE STATS ###################
         # get total score for solution
@@ -256,9 +273,9 @@ def generate_test_results_hist(env):
         total_score_severity = {}
         for key, solution in env.cwd.proj.solutions.items():
             score_sum = None
-            if solution.tags is not None and len(solution.tags)>0:
+            if solution.tags is not None and len(solution.tags) > 0:
                 score_args = solution.tags.get_args_for_tag("score")
-                if score_args is not None and len(score_args)>0:
+                if score_args is not None and len(score_args) > 0:
                     score_sum = int(score_args[0])
                 else:
                     scoring = calculate_score(env, solution)
@@ -273,8 +290,7 @@ def generate_test_results_hist(env):
 
         # parse total score to percentage
         for score, severity in total_score_severity.items():
-            total_score_stats[score]=int((severity/scored_solutions)*100)
-
+            total_score_stats[score] = int((severity / scored_solutions) * 100)
 
         ################### PRINT STATISTICS ###################
         max_len_tst_name = int(max([len(str(tst_name)) for tst_name in tests_stats]))
@@ -283,8 +299,8 @@ def generate_test_results_hist(env):
         score_nums = sorted(score_nums)
         score_n = ""
         for num in score_nums:
-            max_len = int(max(len(str(num)+'b'), len('100%')))
-            space = ' '*(max_len-(len(str(num)+'b')))
+            max_len = int(max(len(str(num) + "b"), len("100%")))
+            space = " " * (max_len - (len(str(num) + "b")))
             score_n += f" {num}b{space} |"
 
         # scoring percentage for each test
@@ -294,10 +310,10 @@ def generate_test_results_hist(env):
             percentage = ""
             for num in score_nums:
                 score = scoring[num] if num in scoring else 0
-                max_len = int(max(len(str(num)+'b'), len('100%')))
-                space = ' '*(max_len-(len(str(score)+'%')))
+                max_len = int(max(len(str(num) + "b"), len("100%")))
+                space = " " * (max_len - (len(str(score) + "%")))
                 percentage += f" {score}%{space} |"
-            space = ' '*(max_len_tst_name-len(test_name))
+            space = " " * (max_len_tst_name - len(test_name))
             tests_res += f"{test_name}{space} |{percentage}\n"
 
         # total scoring percentage
@@ -305,16 +321,17 @@ def generate_test_results_hist(env):
         sum_res = ""
         total_score_stats = dict(sorted(total_score_stats.items()))
         for number, percentage in total_score_stats.items():
-            max_len = int(max(len(str(number)+'b'), len('100%')))
-            space_n = ' '*(max_len-(len(str(number)+'b')))
-            space_res = ' '*(max_len-(len(str(percentage)+'%')))
+            max_len = int(max(len(str(number) + "b"), len("100%")))
+            space_n = " " * (max_len - (len(str(number) + "b")))
+            space_res = " " * (max_len - (len(str(percentage) + "%")))
             sum_n += f"{number}b{space_n} |"
             sum_res += f"{percentage}%{space_res} |"
 
-
-        space = ' '*(max_len_tst_name-len("Test name"))
-        line = '-'*(max(len(f"Test name{space} |{score_n}"), len(f"Total score |{score_n}")))
-        statistics=f"""\
+        space = " " * (max_len_tst_name - len("Test name"))
+        line = "-" * (
+            max(len(f"Test name{space} |{score_n}"), len(f"Total score |{score_n}"))
+        )
+        statistics = f"""\
 Test name{space} |{score_n}
 {line}
 {tests_res}{line}
@@ -327,10 +344,7 @@ Total score |{sum_res}
             os.makedirs(report_dir)
 
         stats_file = os.path.join(report_dir, TESTS_STATS_FILE)
-        with open(stats_file, 'w+') as f:
+        with open(stats_file, "w+") as f:
             f.write(statistics)
     except Exception as err:
         log(f"generate stats | {err} | {traceback.format_exc()}")
-
-
-

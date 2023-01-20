@@ -30,9 +30,8 @@ def notes_management(stdscr, env):
     # define specific highlight for current line which is related to the new note
     env.specific_line_highlight = (note_row, curses.color_pair(COL_NOTE_LIGHT))
 
-
     while True:
-        """ print notes """
+        """print notes"""
         rewrite_all_wins(env)
 
         key = stdscr.getch()
@@ -40,18 +39,21 @@ def notes_management(stdscr, env):
         try:
             function = get_function_for_key(env, key)
             if function is not None:
-                env, exit_program = run_function(stdscr, env, function, key, (note_row, note_col))
+                env, exit_program = run_function(
+                    stdscr, env, function, key, (note_row, note_col)
+                )
                 if exit_program:
                     env.specific_line_highlight = None
                     return env
         except Exception as err:
-            log("note management | "+str(err)+" | "+str(traceback.format_exc()))
+            log("note management | " + str(err) + " | " + str(traceback.format_exc()))
             env.set_exit_mode()
             return env
 
 
-
 """ implementation of functions for note management """
+
+
 def run_function(stdscr, env, fce, key, line):
     screen, win = env.get_screen_for_current_mode()
     note_row, note_col = line
@@ -66,7 +68,7 @@ def run_function(stdscr, env, fce, key, line):
     elif fce == BASH_SWITCH:
         hex_key = "{0:x}".format(key)
         env.bash_action = Bash_action()
-        env.bash_action.set_exit_key(('0' if len(hex_key)%2 else '')+str(hex_key))
+        env.bash_action.set_exit_key(("0" if len(hex_key) % 2 else "") + str(hex_key))
         env.bash_active = True
         return env, True
     # ================ EXIT NOTE MANAGEMENT ================
@@ -101,7 +103,10 @@ def run_function(stdscr, env, fce, key, line):
 
             # define specific highlight for current line which is related to the new note
             old_highlight = env.specific_line_highlight
-            env.specific_line_highlight = (current_note.row, curses.color_pair(COL_NOTE_LIGHT))
+            env.specific_line_highlight = (
+                current_note.row,
+                curses.color_pair(COL_NOTE_LIGHT),
+            )
 
             title = f"Edit note at {current_note.row}:{current_note.col}"
             env, text = get_user_input(stdscr, env, title=title, user_input=user_input)
@@ -109,7 +114,7 @@ def run_function(stdscr, env, fce, key, line):
             curses.curs_set(0)
             env.specific_line_highlight = old_highlight
             if text is not None:
-                env.report.data[win.cursor.row].text = ''.join(text)
+                env.report.data[win.cursor.row].text = "".join(text)
     # ================== CREATE NEW NOTE ==================
     elif fce == ADD_CUSTOM_NOTE:
         title = f"Enter new note at {note_row}:{note_col}"
@@ -117,27 +122,39 @@ def run_function(stdscr, env, fce, key, line):
         screen, win = env.get_screen_for_current_mode()
         curses.curs_set(0)
         if text is not None:
-            """ move cursor down if new note is lower then current item (current cursor position) """
+            """move cursor down if new note is lower then current item (current cursor position)"""
             if len(env.report.data) > 0:
                 current_note_row = env.report.data[win.cursor.row].row
                 current_note_col = env.report.data[win.cursor.row].col
-                if note_row < current_note_row or (note_row == current_note_row and note_col < current_note_col):
-                    win.down(env.report, filter_on=env.tag_filter_on(), use_restrictions=False)
+                if note_row < current_note_row or (
+                    note_row == current_note_row and note_col < current_note_col
+                ):
+                    win.down(
+                        env.report,
+                        filter_on=env.tag_filter_on(),
+                        use_restrictions=False,
+                    )
 
             """ add note to report """
-            env.report.add_note(note_row, note_col, ''.join(text))
+            env.report.add_note(note_row, note_col, "".join(text))
             save_report_to_file(env.report)
     # ================ INSERT TYPICAL NOTE ================
     elif fce == ADD_TYPICAL_NOTE:
         options = env.get_typical_notes_dict()
         char_key = chr(key)
         if char_key in options.keys():
-            """ move cursor down if new note is lower then current item (current cursor position) """
+            """move cursor down if new note is lower then current item (current cursor position)"""
             if len(env.report.data) > 0:
                 current_note_row = env.report.data[win.cursor.row].row
                 current_note_col = env.report.data[win.cursor.row].col
-                if note_row < current_note_row or (note_row == current_note_row and note_col < current_note_col):
-                    win.down(env.report, filter_on=env.tag_filter_on(), use_restrictions=False)
+                if note_row < current_note_row or (
+                    note_row == current_note_row and note_col < current_note_col
+                ):
+                    win.down(
+                        env.report,
+                        filter_on=env.tag_filter_on(),
+                        use_restrictions=False,
+                    )
 
             """ add note to report """
             str_text = options[char_key]
@@ -154,12 +171,18 @@ def run_function(stdscr, env, fce, key, line):
         if curses.ascii.isprint(key):
             char_key = chr(key)
             if char_key in options.keys():
-                """ move cursor down if new note is lower then current item (current cursor position) """
+                """move cursor down if new note is lower then current item (current cursor position)"""
                 if len(env.report.data) > 0:
                     current_note_row = env.report.data[win.cursor.row].row
                     current_note_col = env.report.data[win.cursor.row].col
-                    if note_row < current_note_row or (note_row == current_note_row and note_col < current_note_col):
-                        win.down(env.report, filter_on=env.tag_filter_on(), use_restrictions=False)
+                    if note_row < current_note_row or (
+                        note_row == current_note_row and note_col < current_note_col
+                    ):
+                        win.down(
+                            env.report,
+                            filter_on=env.tag_filter_on(),
+                            use_restrictions=False,
+                        )
 
                 """ add note to report """
                 str_text = options[char_key]
@@ -176,7 +199,11 @@ def run_function(stdscr, env, fce, key, line):
                     view_win.up(env.buffer, use_restrictions=True)
             else:
                 while current_note.row != view_win.cursor.row:
-                    view_win.down(env.buffer, filter_on=env.content_filter_on(), use_restrictions=True)
+                    view_win.down(
+                        env.buffer,
+                        filter_on=env.content_filter_on(),
+                        use_restrictions=True,
+                    )
             return env, True
     # ================== SAVE AS TYPICAL ==================
     elif fce == SAVE_AS_TYPICAL_NOTE:
@@ -193,7 +220,6 @@ def run_function(stdscr, env, fce, key, line):
             if len(env.report.data) <= win.cursor.row:
                 win.up(env.report, use_restrictions=False)
                 save_report_to_file(env.report)
-
 
     env.update_win_for_current_mode(win)
     return env, False

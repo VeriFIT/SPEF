@@ -4,8 +4,7 @@ from spef.controls.functions import *
 from spef.utils.logger import *
 
 
-
-class Control():
+class Control:
     def __init__(self):
         self.directory_brows = {}
         self.file_edit = {}
@@ -24,7 +23,6 @@ class Control():
         self.note_hint = {}
         self.logs_hint = {}
 
-
     def set_hints(self, env):
         data = []
         # filter
@@ -33,7 +31,8 @@ class Control():
             AGGREGATE_FILTER: "aggregate",
             REMOVE_FILTER: "remove all filters",
             EXIT_FILTER: "exit filter",
-            EXIT_PROGRAM: "exit"}
+            EXIT_PROGRAM: "exit",
+        }
         filter_dict_funcions = self.filter_management
         data.append(("F", filter_main_functions, filter_dict_funcions))
 
@@ -48,7 +47,8 @@ class Control():
             OPEN_FILE: "edit",
             GO_TO_TAGS: "go to tags",
             DELETE_FILE: "delete",
-            EXIT_PROGRAM: "exit"}
+            EXIT_PROGRAM: "exit",
+        }
         brows_dict_funcions = self.directory_brows
         data.append(("B", brows_main_functions, brows_dict_funcions))
 
@@ -66,7 +66,8 @@ class Control():
             SHOW_TYPICAL_NOTES: "show typical notes",
             SET_MANAGE_FILE_MODE: "manage file",
             SET_EDIT_FILE_MODE: "edit file",
-            EXIT_PROGRAM: "exit"}
+            EXIT_PROGRAM: "exit",
+        }
         file_dict_funcions = self.file_edit.copy()
         file_dict_funcions.update(self.file_management)
         data.append(("V", view_main_functions, file_dict_funcions))
@@ -77,14 +78,18 @@ class Control():
             EDIT_TAG: "edit tag",
             ADD_TAG: "new tag",
             DELETE_TAG: "delete",
-            EXIT_PROGRAM: "exit"}
+            EXIT_PROGRAM: "exit",
+        }
         tag_dict_funcions = self.tag_management
         data.append(("T", tag_main_functions, tag_dict_funcions))
 
         # notes
         typical_switch = "save as"
         if env.report is not None:
-            if len(env.report.data) > 0 and len(env.report.data) >= env.windows.notes.cursor.row:
+            if (
+                len(env.report.data) > 0
+                and len(env.report.data) >= env.windows.notes.cursor.row
+            ):
                 if env.report.data[env.windows.notes.cursor.row].is_typical(env):
                     typical_switch = "unsave from"
         note_main_functions = {
@@ -96,7 +101,8 @@ class Control():
             DELETE_NOTE: "delete",
             ADD_CUSTOM_NOTE: "add custom note",
             EXIT_NOTES: "exit note mgmt",
-            EXIT_PROGRAM: "exit"}
+            EXIT_PROGRAM: "exit",
+        }
         note_dict_funcions = self.note_management
         data.append(("N", note_main_functions, note_dict_funcions))
 
@@ -105,10 +111,10 @@ class Control():
             SHOW_HELP: "help",
             OPEN_FILE: "open logs file",
             CLEAR_LOG: "clear logs file",
-            EXIT_PROGRAM: "exit"}
+            EXIT_PROGRAM: "exit",
+        }
         logs_dict_funcions = self.user_logs
         data.append(("L", logs_main_functions, logs_dict_funcions))
-
 
         for item in data:
             mode, main_functions, dict_funcions = item
@@ -134,7 +140,6 @@ class Control():
                 self.note_hint = help_dict
             elif mode == "L":
                 self.logs_hint = help_dict
-
 
     def get_hint_for_mode(self, env):
         if env.is_filter_mode():
@@ -177,7 +182,10 @@ class Control():
         elif env.is_notes_mode():
             typical_switch = "save as"
             if env.report is not None:
-                if len(env.report.data) > 0 and len(env.report.data) >= env.windows.notes.cursor.row:
+                if (
+                    len(env.report.data) > 0
+                    and len(env.report.data) >= env.windows.notes.cursor.row
+                ):
                     if env.report.data[env.windows.notes.cursor.row].is_typical(env):
                         typical_switch = "unsave from"
             note_dict_funcions = self.note_management
@@ -194,14 +202,13 @@ class Control():
 
         return None
 
-
     """ get function for key according to current mode """
+
     def get_function(self, env, key):
         dict_funcions = self.get_function_mapping_for_mode(env)
         if key in dict_funcions:
             return dict_funcions[key]
         return None
-
 
     def get_function_mapping_for_mode(self, env):
         dict_funcions = {}
@@ -226,20 +233,19 @@ class Control():
             dict_funcions = self.user_logs
         return dict_funcions
 
-
     def set_file_functions(self, control):
         file_functions = {}
-        file_functions.update(control['general'])
-        file_functions.update(control['file_functions'])
-        file_functions.update(control['arrows'])
-        edit_file_functions = control['edit_file_functions']
-        manage_file_functions = control['manage_file_functions']
+        file_functions.update(control["general"])
+        file_functions.update(control["file_functions"])
+        file_functions.update(control["arrows"])
+        edit_file_functions = control["edit_file_functions"]
+        manage_file_functions = control["manage_file_functions"]
 
         file_keys = {}
         for str_fce, key in file_functions.items():
             fce = map_file_function(str_fce)
             if fce is not None:
-                if isinstance(key,list):
+                if isinstance(key, list):
                     for k in key:
                         file_keys[k] = fce
                 else:
@@ -250,7 +256,7 @@ class Control():
         for str_fce, key in edit_file_functions.items():
             fce = map_file_function(str_fce)
             if fce is not None:
-                if isinstance(key,list):
+                if isinstance(key, list):
                     for k in key:
                         edit_keys[k] = fce
                 else:
@@ -261,7 +267,7 @@ class Control():
         for str_fce, key in manage_file_functions.items():
             fce = map_file_function(str_fce)
             if fce is not None:
-                if isinstance(key,list):
+                if isinstance(key, list):
                     for k in key:
                         mgmt_keys[k] = fce
                 else:
@@ -270,17 +276,16 @@ class Control():
         self.file_edit = edit_keys
         self.file_management = mgmt_keys
 
-
     def set_brows_functions(self, control):
         brows_functions = {}
-        brows_functions.update(control['general'])
-        brows_functions.update(control['brows_functions'])
-        brows_functions.update(control['arrows'])
+        brows_functions.update(control["general"])
+        brows_functions.update(control["brows_functions"])
+        brows_functions.update(control["arrows"])
         keys = {}
         for str_fce, key in brows_functions.items():
             fce = map_brows_function(str_fce)
             if fce is not None:
-                if isinstance(key,list):
+                if isinstance(key, list):
                     for k in key:
                         keys[k] = fce
                 else:
@@ -289,14 +294,14 @@ class Control():
 
     def set_tags_functions(self, control):
         tags_functions = {}
-        tags_functions.update(control['general'])
-        tags_functions.update(control['tags_functions'])
-        tags_functions.update(control['arrows'])
+        tags_functions.update(control["general"])
+        tags_functions.update(control["tags_functions"])
+        tags_functions.update(control["arrows"])
         keys = {}
         for str_fce, key in tags_functions.items():
             fce = map_tags_function(str_fce)
             if fce is not None:
-                if isinstance(key,list):
+                if isinstance(key, list):
                     for k in key:
                         keys[k] = fce
                 else:
@@ -305,14 +310,14 @@ class Control():
 
     def set_notes_functions(self, control):
         notes_functions = {}
-        notes_functions.update(control['general'])
-        notes_functions.update(control['notes_functions'])
-        notes_functions.update(control['arrows'])
+        notes_functions.update(control["general"])
+        notes_functions.update(control["notes_functions"])
+        notes_functions.update(control["arrows"])
         keys = {}
         for str_fce, key in notes_functions.items():
             fce = map_notes_function(str_fce)
             if fce is not None:
-                if isinstance(key,list):
+                if isinstance(key, list):
                     for k in key:
                         keys[k] = fce
                 else:
@@ -321,14 +326,14 @@ class Control():
 
     def set_filter_functions(self, control):
         filter_functions = {}
-        filter_functions.update(control['general'])
-        filter_functions.update(control['filter_functions'])
-        filter_functions.update(control['arrows'])
+        filter_functions.update(control["general"])
+        filter_functions.update(control["filter_functions"])
+        filter_functions.update(control["arrows"])
         keys = {}
         for str_fce, key in filter_functions.items():
             fce = map_filter_function(str_fce)
             if fce is not None:
-                if isinstance(key,list):
+                if isinstance(key, list):
                     for k in key:
                         keys[k] = fce
                 else:
@@ -337,14 +342,14 @@ class Control():
 
     def set_menu_functions(self, control):
         menu_functions = {}
-        menu_functions.update(control['general'])
-        menu_functions.update(control['menu_functions'])
-        menu_functions.update(control['arrows'])
+        menu_functions.update(control["general"])
+        menu_functions.update(control["menu_functions"])
+        menu_functions.update(control["arrows"])
         keys = {}
         for str_fce, key in menu_functions.items():
             fce = map_menu_function(str_fce)
             if fce is not None:
-                if isinstance(key,list):
+                if isinstance(key, list):
                     for k in key:
                         keys[k] = fce
                 else:
@@ -353,14 +358,14 @@ class Control():
 
     def set_user_input_functions(self, control):
         user_input_functions = {}
-        user_input_functions.update(control['general'])
-        user_input_functions.update(control['user_input_functions'])
-        user_input_functions.update(control['arrows'])
+        user_input_functions.update(control["general"])
+        user_input_functions.update(control["user_input_functions"])
+        user_input_functions.update(control["arrows"])
         keys = {}
         for str_fce, key in user_input_functions.items():
             fce = map_user_input_function(str_fce)
             if fce is not None:
-                if isinstance(key,list):
+                if isinstance(key, list):
                     for k in key:
                         keys[k] = fce
                 else:
@@ -369,14 +374,14 @@ class Control():
 
     def set_user_logs_functions(self, control):
         user_logs_functions = {}
-        user_logs_functions.update(control['general'])
-        user_logs_functions.update(control['user_logs_functions'])
-        user_logs_functions.update(control['arrows'])
+        user_logs_functions.update(control["general"])
+        user_logs_functions.update(control["user_logs_functions"])
+        user_logs_functions.update(control["arrows"])
         keys = {}
         for str_fce, key in user_logs_functions.items():
             fce = map_user_logs_function(str_fce)
             if fce is not None:
-                if isinstance(key,list):
+                if isinstance(key, list):
                     for k in key:
                         keys[k] = fce
                 else:
@@ -384,102 +389,99 @@ class Control():
         self.user_logs = keys
 
 
-
 def get_function_for_key(env, key):
     if key == curses.KEY_F1:
-        return env.control.get_function(env, 'F1')
+        return env.control.get_function(env, "F1")
     elif key == curses.KEY_F2:
-        return env.control.get_function(env, 'F2')
+        return env.control.get_function(env, "F2")
     elif key == curses.KEY_F3:
-        return env.control.get_function(env, 'F3')
+        return env.control.get_function(env, "F3")
     elif key == curses.KEY_F4:
-        return env.control.get_function(env, 'F4')
+        return env.control.get_function(env, "F4")
     elif key == curses.KEY_F5:
-        return env.control.get_function(env, 'F5')
+        return env.control.get_function(env, "F5")
     elif key == curses.KEY_F6:
-        return env.control.get_function(env, 'F6')
+        return env.control.get_function(env, "F6")
     elif key == curses.KEY_F7:
-        return env.control.get_function(env, 'F7')
+        return env.control.get_function(env, "F7")
     elif key == curses.KEY_F8:
-        return env.control.get_function(env, 'F8')
+        return env.control.get_function(env, "F8")
     elif key == curses.KEY_F9:
-        return env.control.get_function(env, 'F9')
+        return env.control.get_function(env, "F9")
     elif key == curses.KEY_F10:
-        return env.control.get_function(env, 'F10')
+        return env.control.get_function(env, "F10")
     elif key == curses.KEY_F11:
-        return env.control.get_function(env, 'F11')
+        return env.control.get_function(env, "F11")
     elif key == curses.KEY_F12:
-        return env.control.get_function(env, 'F12')
+        return env.control.get_function(env, "F12")
     elif key == 27:
-        return env.control.get_function(env, 'ESC')
+        return env.control.get_function(env, "ESC")
     elif key == curses.ascii.TAB:
-        return env.control.get_function(env, 'TAB')
+        return env.control.get_function(env, "TAB")
     elif key == curses.KEY_RESIZE:
         return RESIZE_WIN
         # return env.control.get_function(env, 'RESIZE')
     elif key == curses.KEY_UP:
-        return env.control.get_function(env, 'UP')
+        return env.control.get_function(env, "UP")
     elif key == curses.KEY_DOWN:
-        return env.control.get_function(env, 'DOWN')
+        return env.control.get_function(env, "DOWN")
     elif key == curses.KEY_LEFT:
-        return env.control.get_function(env, 'LEFT')
+        return env.control.get_function(env, "LEFT")
     elif key == curses.KEY_RIGHT:
-        return env.control.get_function(env, 'RIGHT')
+        return env.control.get_function(env, "RIGHT")
     elif key == curses.KEY_DC:
-        return env.control.get_function(env, 'DELETE')
+        return env.control.get_function(env, "DELETE")
     elif key == curses.KEY_BACKSPACE:
-        return env.control.get_function(env, 'BACKSPACE')
+        return env.control.get_function(env, "BACKSPACE")
     elif key == curses.ascii.NL:
-        return env.control.get_function(env, 'ENTER')
+        return env.control.get_function(env, "ENTER")
     elif curses.ascii.isprint(key):
         char_key = chr(key)
         function = None
         # try to find some function for specitic ascii symbols
-        if char_key == '/':
-            function = env.control.get_function(env, 'SLASH')
-        elif char_key in [str(i) for i in range(0,10)]:
-            function = env.control.get_function(env, char_key) # number 0..9
+        if char_key == "/":
+            function = env.control.get_function(env, "SLASH")
+        elif char_key in [str(i) for i in range(0, 10)]:
+            function = env.control.get_function(env, char_key)  # number 0..9
         elif char_key in "abcdefghijklmnopqrstuvwxyz":
             function = env.control.get_function(env, char_key)
             if function is None:
-                function = env.control.get_function(env, 'a..z')
+                function = env.control.get_function(env, "a..z")
         elif char_key in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
             function = env.control.get_function(env, char_key)
             if function is None:
-                function = env.control.get_function(env, 'A..Z')
+                function = env.control.get_function(env, "A..Z")
         # ============>>> HERE YOU CAN ADD SPECIFIC SYMBOLS TO MATCH <<<============
 
         if function is None:
             # if there is no specific function, return general ASCII function
-            return env.control.get_function(env, 'ASCII')
+            return env.control.get_function(env, "ASCII")
         else:
             return function
     if curses.ascii.ismeta(key):
         ctrl_key = curses.ascii.unctrl(key)
         # https://asecuritysite.com/coding/asc2?val=512%2C768
-        if hex(key) == "0x237" or ctrl_key == '7':
-            return env.control.get_function(env, 'CTRL+UP')
-        elif hex(key) == "0x20e" or ctrl_key == '^N':
-            return env.control.get_function(env, 'CTRL+DOWN')
+        if hex(key) == "0x237" or ctrl_key == "7":
+            return env.control.get_function(env, "CTRL+UP")
+        elif hex(key) == "0x20e" or ctrl_key == "^N":
+            return env.control.get_function(env, "CTRL+DOWN")
         elif hex(key) == "0x222":
-            return env.control.get_function(env, 'CTRL+LEFT')
+            return env.control.get_function(env, "CTRL+LEFT")
         elif hex(key) == "0x231":
-            return env.control.get_function(env, 'CTRL+RIGHT')
+            return env.control.get_function(env, "CTRL+RIGHT")
 
     elif curses.ascii.iscntrl(key):
         ctrl_key = curses.ascii.unctrl(key)
-        if ctrl_key == '^L':
-            return env.control.get_function(env, 'CTRL+L')
-        elif ctrl_key == '^N':
-            return env.control.get_function(env, 'CTRL+N')
-        elif ctrl_key == '^R':
-            return env.control.get_function(env, 'CTRL+R')
-        elif ctrl_key == '^T':
-            return env.control.get_function(env, 'CTRL+T')
-        elif ctrl_key == '^O':
-            return env.control.get_function(env, 'CTRL+O')
+        if ctrl_key == "^L":
+            return env.control.get_function(env, "CTRL+L")
+        elif ctrl_key == "^N":
+            return env.control.get_function(env, "CTRL+N")
+        elif ctrl_key == "^R":
+            return env.control.get_function(env, "CTRL+R")
+        elif ctrl_key == "^T":
+            return env.control.get_function(env, "CTRL+T")
+        elif ctrl_key == "^O":
+            return env.control.get_function(env, "CTRL+O")
         # ===============>>> HERE YOU CAN ADD CTRL KEYS TO MATCH <<<===============
 
     return None
-
-
