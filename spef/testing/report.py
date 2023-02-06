@@ -6,17 +6,18 @@ import traceback
 from jinja2 import Environment, FileSystemLoader
 
 from spef.testing.tst import calculate_score
-from spef.utils.loading import *
-from spef.utils.logger import *
+from spef.utils.loading import load_report_from_file, load_testsuite_tags
+from spef.utils.match import get_tests_names
+import spef.utils.logger as logger
 
-REPORT_TEMPLATE_FILE = os.path.join(DATA_DIR, REPORT_TEMPLATE)
+REPORT_TEMPLATE_FILE = os.path.join(logger.DATA_DIR, logger.REPORT_TEMPLATE)
 
 
 def copy_default_report_template(dst_file):
     try:
         shutil.copy(REPORT_TEMPLATE_FILE, dst_file)
     except Exception as err:
-        log(f"copy default report template | {err} | {traceback.format_exc()}")
+        logger.log(f"copy default report template | {err} | {traceback.format_exc()}")
 
 
 def get_supported_data_for_report():
@@ -65,7 +66,7 @@ def get_data_for_report(env, solution):
         else:
             solution_tags = {}
     except Exception as err:
-        log(
+        logger.log(
             f"get data for report | get solution data | {err} | {traceback.format_exc()}"
         )
 
@@ -115,14 +116,14 @@ def get_data_for_report(env, solution):
             test_results_tags = {}
             test_results = []
     except Exception as err:
-        log(
+        logger.log(
             f"get data for report | get test results | {err} | {traceback.format_exc()}"
         )
 
     try:
         # get code review
         code_review = []
-        dest_path = os.path.join(solution.path, "**", "*" + REPORT_SUFFIX)
+        dest_path = os.path.join(solution.path, "**", "*" + logger.REPORT_SUFFIX)
         for report_file in glob.glob(dest_path, recursive=True):
             if os.path.isfile(report_file):
                 report = load_report_from_file(report_file, add_suffix=False)
@@ -131,7 +132,7 @@ def get_data_for_report(env, solution):
                         file_name = report.orig_file_name[:-1]
                     else:
                         file_name = os.path.relpath(report.path, solution.name)
-                        file_name = str(file_name).removesuffix(REPORT_SUFFIX)
+                        file_name = str(file_name).removesuffix(logger.REPORT_SUFFIX)
 
                     row = note.row if note.row is not None else "-"
                     col = note.col if note.col is not None else "-"
@@ -144,14 +145,16 @@ def get_data_for_report(env, solution):
                         }
                     )
     except Exception as err:
-        log(f"get data for report | get code review | {err} | {traceback.format_exc()}")
+        logger.log(
+            f"get data for report | get code review | {err} | {traceback.format_exc()}"
+        )
 
     # get user notes
     user_notes = solution.user_notes
 
     # get current version of testsuite
     version = None
-    tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
+    tests_dir = os.path.join(env.cwd.proj.path, logger.TESTS_DIR)
     testsuite_tags = load_testsuite_tags(tests_dir)
     if testsuite_tags is not None:
         # get testsuite version
@@ -192,15 +195,15 @@ def generate_report_from_template(env, solution):
     data = get_data_for_report(env, solution)
     if data:
         # get template
-        report_dir = os.path.join(env.cwd.proj.path, REPORT_DIR)
+        report_dir = os.path.join(env.cwd.proj.path, logger.REPORT_DIR)
         jinja_env = Environment(
             loader=FileSystemLoader(report_dir), trim_blocks=True, lstrip_blocks=True
         )
-        template = jinja_env.get_template(REPORT_TEMPLATE)
+        template = jinja_env.get_template(logger.REPORT_TEMPLATE)
 
         # generate report
-        dest_report_dir = os.path.join(solution.path, REPORT_DIR)
-        dest_report_file = os.path.join(dest_report_dir, TOTAL_REPORT_FILE)
+        dest_report_dir = os.path.join(solution.path, logger.REPORT_DIR)
+        dest_report_file = os.path.join(dest_report_dir, logger.TOTAL_REPORT_FILE)
         if not os.path.exists(dest_report_dir):
             os.makedirs(dest_report_dir)
         with open(dest_report_file, "w+") as f:

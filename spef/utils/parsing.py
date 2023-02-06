@@ -1,8 +1,8 @@
 import curses
 import re
 
-from spef.utils.coloring import *
-from spef.utils.logger import *
+import spef.utils.coloring as clr
+from spef.utils.logger import log
 from spef.utils.match import get_tests_names
 
 
@@ -156,14 +156,14 @@ def parse_solution_info_predicate(
     predicate, solution, info_for_tests=False, test_name=None
 ):
     # defined colors
-    red = curses.color_pair(COL_RED)
-    green = curses.color_pair(COL_GREEN)
-    blue = curses.color_pair(COL_BLUE)
+    red = curses.color_pair(clr.COL_RED)
+    green = curses.color_pair(clr.COL_GREEN)
+    blue = curses.color_pair(clr.COL_BLUE)
     normal = curses.A_NORMAL
-    cyan = curses.color_pair(COL_CYAN)
-    yellow = curses.color_pair(COL_YELLOW)
-    orange = curses.color_pair(COL_ORANGE)
-    pink = curses.color_pair(COL_PINK)
+    cyan = curses.color_pair(clr.COL_CYAN)
+    yellow = curses.color_pair(clr.COL_YELLOW)
+    orange = curses.color_pair(clr.COL_ORANGE)
+    pink = curses.color_pair(clr.COL_PINK)
 
     color = normal
     match = False

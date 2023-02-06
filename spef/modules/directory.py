@@ -1,11 +1,12 @@
 import os
 import traceback
 
-from spef.modules.project import Project
+import curses
 
-from spef.utils.loading import *
-from spef.utils.logger import *
-from spef.utils.match import *
+from spef.modules.project import Project
+from spef.utils.loading import load_proj_from_conf_file
+from spef.utils.logger import log
+from spef.utils.match import get_proj_path, is_testcase_result_dir
 from spef.utils.parsing import (
     parse_solution_info_visualization,
     parse_solution_info_predicate,

@@ -6,13 +6,23 @@ import traceback
 import tarfile
 import zipfile
 
+from spef.modules.project import Project
 from spef.controls.functions import SHOW_SUPPORTED_DATA
 from spef.testing.tst import check_bash_functions_for_testing
 from spef.testing.report import copy_default_report_template
-from spef.utils.loading import *
-from spef.utils.logger import *
-from spef.utils.match import *
-from spef.utils.reporting import *
+from spef.utils.loading import (
+    save_tags_to_file,
+    load_testcase_tags,
+    save_proj_to_conf_file,
+    add_tag_to_file,
+)
+import spef.utils.logger as logger
+from spef.utils.match import (
+    filter_intern_files,
+    is_root_project_dir,
+    is_in_project_dir,
+    get_proj_path,
+)
 from spef.utils.history import history_test_event
 
 
@@ -59,7 +69,7 @@ def extract_archives(archives):
                         os.mkdir(dest_dir)
                     arch_file.extractall(dest_dir)
         except Exception as err:
-            log(
+            logger.log(
                 "extract all from archive | "
                 + str(err)
                 + " | "
@@ -120,7 +130,7 @@ def rename_solutions(proj, solution=None):
 def copy_test_history_to_tmp(proj_dir, test_dir):
     try:
         # check if history dir exists
-        history_dir = os.path.join(proj_dir, HISTORY_DIR)
+        history_dir = os.path.join(proj_dir, logger.HISTORY_DIR)
         if not os.path.exists(history_dir) or not os.path.isdir(history_dir):
             create_tests_history_dir(history_dir)
 
@@ -132,25 +142,25 @@ def copy_test_history_to_tmp(proj_dir, test_dir):
 
             # create tmp dir for test with actual version
             test_name = os.path.basename(test_dir)
-            tmp_test_dir = os.path.join(TMP_DIR, test_name)
+            tmp_test_dir = os.path.join(logger.TMP_DIR, test_name)
             tmp_test_v_dir = os.path.join(tmp_test_dir, f"version_{version}")
             if not os.path.exists(tmp_test_dir):
                 os.mkdir(tmp_test_dir)
             if os.path.exists(tmp_test_v_dir):
-                log(
+                logger.log(
                     f"copy test dir to history | tmp file for test {test_name} and version {version} already exists!!"
                 )
                 return False
             else:
                 # copy test dir to tmp dir
                 shutil.copytree(test_dir, tmp_test_v_dir)
-                log("test history saved to tmp dir")
+                logger.log("test history saved to tmp dir")
             return True
         else:
-            log("copy test dir to history | cannot find test tags")
+            logger.log("copy test dir to history | cannot find test tags")
             return False
     except Exception as err:
-        log(
+        logger.log(
             "copy test dir to history | "
             + str(err)
             + " | "
@@ -164,7 +174,7 @@ def copy_test_history_to_tmp(proj_dir, test_dir):
 
 def actualize_test_history_in_tmp(proj_dir, test_dir):
     # check if history dir exists
-    history_dir = os.path.join(proj_dir, HISTORY_DIR)
+    history_dir = os.path.join(proj_dir, logger.HISTORY_DIR)
     if not os.path.exists(history_dir) or not os.path.isdir(history_dir):
         create_tests_history_dir(history_dir)
 
@@ -176,7 +186,7 @@ def actualize_test_history_in_tmp(proj_dir, test_dir):
 
         # create tmp dir for test with actual version
         test_name = os.path.basename(test_dir)
-        tmp_test_dir = os.path.join(TMP_DIR, test_name)
+        tmp_test_dir = os.path.join(logger.TMP_DIR, test_name)
         tmp_test_v_dir = os.path.join(tmp_test_dir, f"version_{version}")
         if not os.path.exists(tmp_test_dir):
             os.mkdir(tmp_test_dir)
@@ -193,22 +203,22 @@ def create_project(env):
     env.cwd.proj = proj
 
     # create report dir
-    report_dir = os.path.join(proj.path, REPORT_DIR)
+    report_dir = os.path.join(proj.path, logger.REPORT_DIR)
     create_report_dir(report_dir)
 
     # create tests dir
-    tests_dir = os.path.join(proj.path, TESTS_DIR)
+    tests_dir = os.path.join(proj.path, logger.TESTS_DIR)
     create_tests_dir(tests_dir)
 
     # create history dir
-    history_dir = os.path.join(proj.path, HISTORY_DIR)
+    history_dir = os.path.join(proj.path, logger.HISTORY_DIR)
     create_tests_history_dir(history_dir)
     return env
 
 
 ############ REPORT ############
 def create_report_dir(report_dir):
-    report_template = os.path.join(report_dir, REPORT_TEMPLATE)
+    report_template = os.path.join(report_dir, logger.REPORT_TEMPLATE)
     if not (os.path.exists(report_dir) and os.path.isdir(report_dir)):
         os.mkdir(report_dir)
     if not os.path.exists(report_template):
@@ -217,7 +227,7 @@ def create_report_dir(report_dir):
 
 ############ HISTORY ############
 def create_tests_history_dir(history_dir):
-    testsuite_history = os.path.join(history_dir, HISTORY_FILE)
+    testsuite_history = os.path.join(history_dir, logger.HISTORY_FILE)
     if not (os.path.exists(history_dir) and os.path.isdir(history_dir)):
         os.mkdir(history_dir)
     if not os.path.exists(testsuite_history):
@@ -228,10 +238,10 @@ def create_tests_history_dir(history_dir):
 ############ TESTS ############
 # create tests dir with necessary files
 def create_tests_dir(tests_dir):
-    testsuite_file = os.path.join(tests_dir, TESTSUITE_FILE)
-    scoring_file = os.path.join(tests_dir, SCORING_FILE)
-    sum_file = os.path.join(tests_dir, SUM_FILE)
-    testsuite_tags = os.path.join(tests_dir, TESTSUITE_TAGS)
+    testsuite_file = os.path.join(tests_dir, logger.TESTSUITE_FILE)
+    scoring_file = os.path.join(tests_dir, logger.SCORING_FILE)
+    sum_file = os.path.join(tests_dir, logger.SUM_FILE)
+    testsuite_tags = os.path.join(tests_dir, logger.TESTSUITE_TAGS)
 
     if not (os.path.exists(tests_dir) and os.path.isdir(tests_dir)):
         os.mkdir(tests_dir)
@@ -292,19 +302,19 @@ def create_new_test(env, proj_dir, test_name=None):
             if is_in_project_dir:
                 proj_dir = get_proj_path(proj_dir)
             else:
-                log("create new test | must be in project (sub)dir")
+                logger.log("create new test | must be in project (sub)dir")
                 return None
 
         ############### TESTS ###############
         # create tests dir if not exists
-        tests_dir = os.path.join(proj_dir, TESTS_DIR)
+        tests_dir = os.path.join(proj_dir, logger.TESTS_DIR)
         create_tests_dir(tests_dir)
         # copy bash functions to tests/src/tst file
         check_bash_functions_for_testing(proj_dir)
 
         ############### HISTORY ###############
         # create tests history dir if not exists
-        history_dir = os.path.join(proj_dir, HISTORY_DIR)
+        history_dir = os.path.join(proj_dir, logger.HISTORY_DIR)
         if not os.path.exists(history_dir):
             create_tests_history_dir(history_dir)
 
@@ -324,7 +334,7 @@ def create_new_test(env, proj_dir, test_name=None):
 
         ############ DOTEST.SH ############
         # create file for test script (dotest.sh)
-        with open(os.path.join(new_test_dir, TEST_FILE), "w+") as f:
+        with open(os.path.join(new_test_dir, logger.TEST_FILE), "w+") as f:
             f.write("#!/bin/bash\n")
             f.write("# ***** write test here *****\n")
             for key, fce in env.control.file_edit.items():
@@ -336,7 +346,7 @@ def create_new_test(env, proj_dir, test_name=None):
 
         ############ TEST_TAGS ############
         # create file for test tags
-        test_tags = os.path.join(new_test_dir, TESTCASE_TAGS)
+        test_tags = os.path.join(new_test_dir, logger.TESTCASE_TAGS)
         with open(test_tags, "w+") as f:
             pass
         # add default tag for testsuite version
@@ -347,16 +357,18 @@ def create_new_test(env, proj_dir, test_name=None):
         history_test_event(proj_dir, test_name, "create new test")
 
         # set default scoring for new test
-        scoring_file = os.path.join(tests_dir, SCORING_FILE)
+        scoring_file = os.path.join(tests_dir, logger.SCORING_FILE)
         with open(scoring_file, "a+") as f:
             f.write(f"{test_name}_ok=1; {test_name}_fail=0\n")
 
-        log(
+        logger.log(
             "create new test | scoring set to default (ok=1, fail=0) -- you can change it in: "
             + str(scoring_file)
         )
 
         return new_test_dir
     except Exception as err:
-        log("create new test | " + str(err) + " | " + str(traceback.format_exc()))
+        logger.log(
+            "create new test | " + str(err) + " | " + str(traceback.format_exc())
+        )
         return None

@@ -1,6 +1,6 @@
 import traceback
 
-from spef.utils.logger import *
+from spef.utils.logger import log
 
 
 """ curses screens (each with its specific size and position on the main screen) """

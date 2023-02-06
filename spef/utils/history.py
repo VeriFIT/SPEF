@@ -2,16 +2,16 @@ import os
 import shutil
 import traceback
 
-from spef.utils.logger import *
+import spef.utils.logger as logger
 from spef.utils.loading import (
     load_testcase_tags,
-    load_testsuite_tags,
     save_tags_to_file,
+    load_testsuite_tags,
 )
 
 
 def is_test_history_in_tmp(proj_dir, test_name):
-    testcase_dir = os.path.join(proj_dir, TESTS_DIR, test_name)
+    testcase_dir = os.path.join(proj_dir, logger.TESTS_DIR, test_name)
     testcase_tags = load_testcase_tags(testcase_dir)
     if testcase_tags is not None:
         # get version of test
@@ -19,15 +19,15 @@ def is_test_history_in_tmp(proj_dir, test_name):
         version = 1 if args is None or len(args) < 1 else int(args[0])
 
         # check if tmp dir with test with actual version exists
-        tmp_test_v_dir = os.path.join(TMP_DIR, test_name, f"version_{version}")
+        tmp_test_v_dir = os.path.join(logger.TMP_DIR, test_name, f"version_{version}")
         return os.path.exists(tmp_test_v_dir) and os.path.isdir(tmp_test_v_dir)
 
 
 def history_test_removed(env, proj_dir, test_name, add_to_user_logs):
     try:
-        history_dir = os.path.join(proj_dir, HISTORY_DIR)
+        history_dir = os.path.join(proj_dir, logger.HISTORY_DIR)
 
-        testcase_dir = os.path.join(proj_dir, TESTS_DIR, test_name)
+        testcase_dir = os.path.join(proj_dir, logger.TESTS_DIR, test_name)
         testcase_tags = load_testcase_tags(testcase_dir)
         if testcase_tags is not None:
             # get version of test
@@ -54,7 +54,9 @@ def history_test_removed(env, proj_dir, test_name, add_to_user_logs):
             history_test_event(proj_dir, test_name, f"remove test (version {version})")
             return True
     except Exception as err:
-        log("history test removed | " + str(err) + " | " + str(traceback.format_exc()))
+        logger.log(
+            "history test removed | " + str(err) + " | " + str(traceback.format_exc())
+        )
     return False
 
 
@@ -66,25 +68,27 @@ def history_test_removed(env, proj_dir, test_name, add_to_user_logs):
 # return success
 def history_test_modified(env, proj_dir, test_name, add_to_user_logs):
     try:
-        history_dir = os.path.join(proj_dir, HISTORY_DIR)
+        history_dir = os.path.join(proj_dir, logger.HISTORY_DIR)
 
-        tests_dir = os.path.join(proj_dir, TESTS_DIR)
+        tests_dir = os.path.join(proj_dir, logger.TESTS_DIR)
         testcase_dir = os.path.join(tests_dir, test_name)
         testcase_tags = load_testcase_tags(testcase_dir)
         if testcase_tags is not None:
             # get version of test
             args = testcase_tags.get_args_for_tag("version")
             if args is None or len(args) < 1:
-                log("history test modified | test tags - cant find tag #version(int)")
+                logger.log(
+                    "history test modified | test tags - cant find tag #version(int)"
+                )
                 version = 1
             else:
                 version = int(args[0])
 
             # check if tmp dir with test with actual version exists
-            tmp_test_dir = os.path.join(TMP_DIR, test_name)
+            tmp_test_dir = os.path.join(logger.TMP_DIR, test_name)
             tmp_test_v_dir = os.path.join(tmp_test_dir, f"version_{version}")
             if not os.path.exists(tmp_test_v_dir) or not os.path.isdir(tmp_test_v_dir):
-                log("history test modified | test is not saved in tmp dir")
+                logger.log("history test modified | test is not saved in tmp dir")
                 return False
 
             # increment test version
@@ -99,7 +103,7 @@ def history_test_modified(env, proj_dir, test_name, add_to_user_logs):
             ):
                 os.mkdir(history_test_dir)
             if os.path.exists(history_test_v_dir):
-                log(
+                logger.log(
                     f"history test modified | test {test_name} with version {version} already exists in history!!"
                 )
                 return False
@@ -121,10 +125,12 @@ def history_test_modified(env, proj_dir, test_name, add_to_user_logs):
             # shutil.rmtree(tmp_test_v_dir)
             # log("remove tmp test dir")
         else:
-            log("history test modified | cant load test tags ")
+            logger.log("history test modified | cant load test tags ")
             return False
     except Exception as err:
-        log("history test modified | " + str(err) + " | " + str(traceback.format_exc()))
+        logger.log(
+            "history test modified | " + str(err) + " | " + str(traceback.format_exc())
+        )
         return False
 
 
@@ -135,16 +141,18 @@ def history_test_event(proj_dir, test_name, event):
     if not event:
         return
 
-    history_dir = os.path.join(proj_dir, HISTORY_DIR)
-    history_file = os.path.join(history_dir, HISTORY_FILE)
+    history_dir = os.path.join(proj_dir, logger.HISTORY_DIR)
+    history_file = os.path.join(history_dir, logger.HISTORY_FILE)
 
-    tests_dir = os.path.join(proj_dir, TESTS_DIR)
+    tests_dir = os.path.join(proj_dir, logger.TESTS_DIR)
     testsuite_tags = load_testsuite_tags(tests_dir)
     if testsuite_tags is not None:
         # get testsuite version
         args = testsuite_tags.get_args_for_tag("version")
         if args is None or len(args) < 1:
-            log("history new test | testsuite tags - cant find tag #version(int)")
+            logger.log(
+                "history new test | testsuite tags - cant find tag #version(int)"
+            )
             version = 1
         else:
             version = int(args[0])
@@ -154,7 +162,7 @@ def history_test_event(proj_dir, test_name, event):
             # tags_file = os.path.join(tests_dir, TESTSUITE_TAGS)
             # add_tag_to_file(tags_file, {"version": [version+1]})
     else:
-        log("history new test | cant load testsuite tags ")
+        logger.log("history new test | cant load testsuite tags ")
 
 
 def add_event_to_tests_history(file_path, version, test, event):

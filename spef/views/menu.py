@@ -2,10 +2,12 @@ import curses
 import curses.ascii
 import traceback
 
-from spef.controls.control import *
-from spef.utils.printing import *
-from spef.utils.screens import *
-from spef.utils.logger import *
+import spef.controls.functions as func
+from spef.utils.coloring import COL_GREEN
+from spef.controls.control import get_function_for_key
+from spef.utils.printing import rewrite_all_wins, show_menu
+from spef.utils.screens import resize_all
+from spef.utils.logger import log
 from spef.views.help import show_help
 
 
@@ -81,15 +83,15 @@ def run_function(stdscr, menu_data, selected_options, env, fce, key):
     keys_list, menu_options, select_multiple = menu_data
 
     # ======================= EXIT =======================
-    if fce == EXIT_PROGRAM:
+    if fce == func.EXIT_PROGRAM:
         rewrite_all_wins(env)
         env.set_exit_mode()
         return None, env, True
-    elif fce == EXIT_MENU:
+    elif fce == func.EXIT_MENU:
         rewrite_all_wins(env)
         return None, env, True
     # ======================= RESIZE =======================
-    elif fce == RESIZE_WIN:
+    elif fce == func.RESIZE_WIN:
         old_shift, old_row = win.row_shift, win.cursor.row - win.row_shift
         env = resize_all(stdscr, env)
         screen, win = env.get_center_win(reset=True, row=0, col=0)
@@ -99,22 +101,22 @@ def run_function(stdscr, menu_data, selected_options, env, fce, key):
         win.set_border(0)
         rewrite_all_wins(env)
     # ======================= SHOW HELP =======================
-    elif fce == SHOW_HELP:
+    elif fce == func.SHOW_HELP:
         show_help(stdscr, env)
         curses.curs_set(1)
     # ========================= ARROWS =========================
-    elif fce == CURSOR_UP:
+    elif fce == func.CURSOR_UP:
         win.up(menu_options, use_restrictions=False)
-    elif fce == CURSOR_DOWN:
+    elif fce == func.CURSOR_DOWN:
         win.down(menu_options, use_restrictions=False)
     # ====================== SELECT OPTION ======================
-    elif fce == SAVE_OPTION:
+    elif fce == func.SAVE_OPTION:
         if select_multiple:
             return selected_options, env, True
         else:
             option = win.cursor.row
             return option, env, True
-    elif fce == SELECT_BY_IDX:
+    elif fce == func.SELECT_BY_IDX:
         if keys_list is not None:
             char_key = chr(key)
             if char_key in keys_list:
@@ -130,18 +132,18 @@ def run_function(stdscr, menu_data, selected_options, env, fce, key):
                         selected_options.append(option)
                     else:
                         return option, env, True
-    elif fce == SELECT_OPTION:
+    elif fce == func.SELECT_OPTION:
         if select_multiple:
             option = win.cursor.row
             selected_options.append(option)
     # ========================= MOVE WIN =========================
-    elif fce == MOVE_LEFT:
+    elif fce == func.MOVE_LEFT:
         if old_position == 2:
             win.set_position(1, screen)
         elif old_position == 3:
             win.set_position(2, screen)
         rewrite_all_wins(env)
-    elif fce == MOVE_RIGHT:
+    elif fce == func.MOVE_RIGHT:
         if old_position == 1:
             win.set_position(2, screen)
         elif old_position == 2:

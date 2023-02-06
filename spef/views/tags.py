@@ -3,14 +3,14 @@ import curses.ascii
 import shlex
 import traceback
 
-from spef.controls.control import *
-
+import spef.controls.functions as func
+from spef.controls.control import get_function_for_key
 from spef.modules.buffer import UserInput
 from spef.modules.bash import Bash_action
 from spef.utils.loading import save_tags_to_file
-from spef.utils.screens import *
-from spef.utils.printing import *
-from spef.utils.logger import *
+from spef.utils.screens import resize_all
+from spef.utils.printing import rewrite_all_wins
+from spef.utils.logger import log
 from spef.views.filtering import filter_management
 from spef.views.help import show_help
 from spef.views.input import get_user_input
@@ -51,37 +51,37 @@ def run_function(stdscr, env, fce, key):
     screen, win = env.get_screen_for_current_mode()
 
     # ======================= EXIT =======================
-    if fce == EXIT_PROGRAM:
+    if fce == func.EXIT_PROGRAM:
         save_tags_to_file(env.tags)
         env.set_exit_mode()
         return env, True
     # ======================= BASH =======================
-    elif fce == BASH_SWITCH:
+    elif fce == func.BASH_SWITCH:
         hex_key = "{0:x}".format(key)
         env.bash_action = Bash_action()
         env.bash_action.set_exit_key(("0" if len(hex_key) % 2 else "") + str(hex_key))
         env.bash_active = True
         return env, True
     # ======================= FOCUS =======================
-    elif fce == CHANGE_FOCUS:
+    elif fce == func.CHANGE_FOCUS:
         save_tags_to_file(env.tags)
         env.switch_to_next_mode()
         return env, True
     # ======================= RESIZE =======================
-    elif fce == RESIZE_WIN:
+    elif fce == func.RESIZE_WIN:
         env = resize_all(stdscr, env)
         screen, win = env.get_screen_for_current_mode()
     # ======================= ARROWS =======================
-    elif fce == CURSOR_UP:
+    elif fce == func.CURSOR_UP:
         win.up(env.tags, use_restrictions=False)
-    elif fce == CURSOR_DOWN:
+    elif fce == func.CURSOR_DOWN:
         win.down(env.tags, filter_on=env.tag_filter_on(), use_restrictions=False)
     # ======================= SHOW HELP =======================
-    elif fce == SHOW_HELP:
+    elif fce == func.SHOW_HELP:
         show_help(stdscr, env)
         curses.curs_set(0)
     # ======================= EDIT TAG =======================
-    elif fce == EDIT_TAG:
+    elif fce == func.EDIT_TAG:
         # get current tag
         tag_name, old_args = env.tags.get_tag_by_idx(win.cursor.row)
 
@@ -114,7 +114,7 @@ def run_function(stdscr, env, fce, key):
                         env.tags.set_tag(tag_name, old_args)
                     save_tags_to_file(env.tags)
     # ======================= ADD TAG =======================
-    elif fce == ADD_TAG:
+    elif fce == func.ADD_TAG:
         title = "Enter new tag in format: tag_name param1 param2 ..."
         env, text = get_user_input(stdscr, env, title=title)
         if env.is_exit_mode():
@@ -130,15 +130,15 @@ def run_function(stdscr, env, fce, key):
                 env.tags.set_tag(tag_name, args)
                 save_tags_to_file(env.tags)
     # ======================= OPEN FILE TAG =======================
-    elif fce == OPEN_TAG_FILE:
+    elif fce == func.OPEN_TAG_FILE:
         pass
     # ======================= DELETE TAG =======================
-    elif fce == DELETE_TAG:
+    elif fce == func.DELETE_TAG:
         env.tags.remove_tag_by_idx(win.cursor.row)
         save_tags_to_file(env.tags)
         win.up(env.tags, use_restrictions=False)
     # ======================= FILTER =======================
-    elif fce == FILTER:
+    elif fce == func.FILTER:
         env = filter_management(stdscr, screen, win, env)
         if env.is_exit_mode() or env.is_brows_mode():
             return env, True

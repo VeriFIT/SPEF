@@ -5,8 +5,12 @@ import subprocess
 import datetime
 import traceback
 
-from spef.utils.logger import *
-from spef.utils.loading import *
+import spef.utils.logger as logger
+from spef.utils.loading import (
+    load_testsuite_tags,
+    save_tags_to_file,
+    load_sum_equation_from_file,
+)
 from spef.utils.parsing import parse_sum_equation
 
 
@@ -16,17 +20,17 @@ CONTAINER_SUT_DIR = "/opt/sut/"
 CONTAINER_RUN_FILE = "/opt/tests/run.sh"
 
 
-SHARED_DIR = os.path.join(TMP_DIR, "docker_shared")
-SHARED_TESTS_DIR = os.path.join(TMP_DIR, "docker_shared/tests")
-SHARED_SUT_DIR = os.path.join(TMP_DIR, "docker_shared/sut")
-SHARED_RUN_FILE = os.path.join(TMP_DIR, "docker_shared/tests/run.sh")
+SHARED_DIR = os.path.join(logger.TMP_DIR, "docker_shared")
+SHARED_TESTS_DIR = os.path.join(logger.TMP_DIR, "docker_shared/tests")
+SHARED_SUT_DIR = os.path.join(logger.TMP_DIR, "docker_shared/sut")
+SHARED_RUN_FILE = os.path.join(logger.TMP_DIR, "docker_shared/tests/run.sh")
 
 # shell functions
 TST_FCE_DIR = "src"
 TST_FCE_FILE = "tst"  # proj/tests/src/tst
-SRC_BASH_FILE = os.path.join(DATA_DIR, "tst.sh")
-SRC_RUN_TESTSUITE_FILE = os.path.join(DATA_DIR, "run_testsuite.sh")
-SRC_RUN_TESTS_FILE = os.path.join(DATA_DIR, "run_tests.sh")
+SRC_BASH_FILE = os.path.join(logger.DATA_DIR, "tst.sh")
+SRC_RUN_TESTSUITE_FILE = os.path.join(logger.DATA_DIR, "run_testsuite.sh")
+SRC_RUN_TESTS_FILE = os.path.join(logger.DATA_DIR, "run_tests.sh")
 
 
 def run_testsuite(
@@ -34,7 +38,7 @@ def run_testsuite(
 ):
     try:
         if not env.cwd.proj or not solution:
-            log("run testsuite | run from solution dir in some project dir")
+            logger.log("run testsuite | run from solution dir in some project dir")
             return env, False
 
         ############### 1. CHECK IF FUT EXISTS ###############
@@ -50,7 +54,9 @@ def run_testsuite(
             fut_ready = True
         else:
             # add tag "missing sut file"
-            log(f"run testsuite | fut file '{fut}' doesnt exists in solution dir")
+            logger.log(
+                f"run testsuite | fut file '{fut}' doesnt exists in solution dir"
+            )
             add_to_user_logs(
                 env, "error", f"FUT '{fut}' doesnt exists in solution directory"
             )
@@ -70,7 +76,7 @@ def run_testsuite(
             else:
                 data_ok = prepare_data(env, solution.path, SRC_RUN_TESTSUITE_FILE)
             if not data_ok:
-                log("run testsuite | problem with testing data")
+                logger.log("run testsuite | problem with testing data")
                 add_to_user_logs(env, "error", f"problem with testing data...")
                 return env, False
 
@@ -86,13 +92,13 @@ def run_testsuite(
                 tests=f3,
             )
             if not succ:
-                log("run testsuite | problem with testsuite run in docker")
+                logger.log("run testsuite | problem with testsuite run in docker")
                 return env, False
             # reload tests tags for solution after testsuite is done
             solution.reload_test_tags()
 
             # get testsuite version and add tag "testsuite_version" to solution tags
-            tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
+            tests_dir = os.path.join(env.cwd.proj.path, logger.TESTS_DIR)
             tests_tags = load_testsuite_tags(tests_dir)
             if tests_tags is not None and len(tests_tags) > 0:
                 version_args = tests_tags.get_args_for_tag("version")
@@ -115,7 +121,7 @@ def run_testsuite(
         save_tags_to_file(solution.tags)
 
     except Exception as err:
-        log("run testsuite | " + str(err) + " | " + str(traceback.format_exc()))
+        logger.log("run testsuite | " + str(err) + " | " + str(traceback.format_exc()))
         env.set_exit_mode()
         return env, False
 
@@ -127,23 +133,23 @@ def prepare_data(env, solution_dir, run_file):
         return False
 
     # 1. check necessary dirs and files
-    tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
-    sum_file = os.path.join(tests_dir, SUM_FILE)
-    scoring_file = os.path.join(tests_dir, SCORING_FILE)
-    testsuite_file = os.path.join(tests_dir, TESTSUITE_FILE)
+    tests_dir = os.path.join(env.cwd.proj.path, logger.TESTS_DIR)
+    sum_file = os.path.join(tests_dir, logger.SUM_FILE)
+    scoring_file = os.path.join(tests_dir, logger.SCORING_FILE)
+    testsuite_file = os.path.join(tests_dir, logger.TESTSUITE_FILE)
     if not os.path.exists(tests_dir) or not os.path.isdir(tests_dir):
-        log(
+        logger.log(
             f"prepare data | tests_dir '{tests_dir}' doesnt exists or its not a directory"
         )
         return False
     if not os.path.exists(scoring_file):
-        log(f"prepare data | scoring file '{scoring_file}' doesnt exist")
+        logger.log(f"prepare data | scoring file '{scoring_file}' doesnt exist")
         return False
     if not os.path.exists(sum_file):
-        log(f"prepare data | sum file '{sum_file}' doesnt exist")
+        logger.log(f"prepare data | sum file '{sum_file}' doesnt exist")
         return False
     if not os.path.exists(testsuite_file):
-        log(f"prepare data | testsuite '{testsuite_file}' doesnt exist")
+        logger.log(f"prepare data | testsuite '{testsuite_file}' doesnt exist")
         return False
     if not os.access(testsuite_file, os.X_OK):
         st = os.stat(testsuite_file)
@@ -154,7 +160,7 @@ def prepare_data(env, solution_dir, run_file):
     # 2. check if tst fce file is in proj/tests/src/ dir
     bash_tests_ok = check_bash_functions_for_testing(env.cwd.proj.path)
     if not bash_tests_ok:
-        log("prepare data | problem with bash functions for tests")
+        logger.log("prepare data | problem with bash functions for tests")
         return False
 
     # 3. copy data for testing to shared dir
@@ -165,9 +171,9 @@ def prepare_data(env, solution_dir, run_file):
         # proj/xlogin/ -> /docker_shared/sut/
         shutil.copytree(solution_dir, SHARED_SUT_DIR)
         shutil.copyfile(run_file, SHARED_RUN_FILE)
-        os.mkdir(os.path.join(SHARED_SUT_DIR, RESULTS_SUB_DIR))
+        os.mkdir(os.path.join(SHARED_SUT_DIR, logger.RESULTS_SUB_DIR))
     except Exception as err:
-        log("prepare data | copy data | " + str(err))
+        logger.log("prepare data | copy data | " + str(err))
         return False
 
     return True
@@ -178,25 +184,25 @@ def prepare_data_for_static_testing(env, solution_dir):
         return False
 
     # 1. check necessary dirs and files
-    tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
-    sum_file = os.path.join(tests_dir, SUM_FILE)
-    scoring_file = os.path.join(tests_dir, SCORING_FILE)
+    tests_dir = os.path.join(env.cwd.proj.path, logger.TESTS_DIR)
+    sum_file = os.path.join(tests_dir, logger.SUM_FILE)
+    scoring_file = os.path.join(tests_dir, logger.SCORING_FILE)
     if not os.path.exists(tests_dir) or not os.path.isdir(tests_dir):
-        log(
+        logger.log(
             f"prepare data | tests_dir '{tests_dir}' doesnt exists or its not a directory"
         )
         return False
     if not os.path.exists(scoring_file):
-        log(f"prepare data | scoring file '{scoring_file}' doesnt exist")
+        logger.log(f"prepare data | scoring file '{scoring_file}' doesnt exist")
         return False
     if not os.path.exists(sum_file):
-        log(f"prepare data | sum file '{sum_file}' doesnt exist")
+        logger.log(f"prepare data | sum file '{sum_file}' doesnt exist")
         return False
 
     # 2. check if tst fce file is in proj/tests/src/ dir
     bash_tests_ok = check_bash_functions_for_testing(env.cwd.proj.path)
     if not bash_tests_ok:
-        log("prepare data | problem with bash functions for tests")
+        logger.log("prepare data | problem with bash functions for tests")
         return False
     return True
 
@@ -222,7 +228,7 @@ def run_testsuite_in_docker(
         if os.path.exists(container_cid_file):
             os.remove(container_cid_file)
         output = subprocess.run(
-            f"docker run --cidfile {container_cid_file} --rm -d --workdir {CONTAINER_DIR} -v {SHARED_DIR}:{CONTAINER_DIR}:z {IMAGE_NAME} bash -c".split(
+            f"docker run --cidfile {container_cid_file} --rm -d --workdir {CONTAINER_DIR} -v {SHARED_DIR}:{CONTAINER_DIR}:z {logger.IMAGE_NAME} bash -c".split(
                 " "
             )
             + ["while true; do sleep 1; done"],
@@ -230,8 +236,8 @@ def run_testsuite_in_docker(
         )
         output_out = str(output.stdout.decode("utf-8"))
         output_err = str(output.stderr.decode("utf-8"))
-        log(f"docker run stdout | {output_out}")
-        log(f"docker run stderr | {output_err}")
+        logger.log(f"docker run stdout | {output_out}")
+        logger.log(f"docker run stderr | {output_err}")
         if not output_err:
             with open(container_cid_file, "r") as f:
                 cid = f.read()
@@ -242,10 +248,10 @@ def run_testsuite_in_docker(
             if run_seq_tests and tests:
                 # run_tests tst_file tests_dir TESTS_TAGS RESULTS_DIR login fut tests
                 test_list = " ".join(tests)
-                command = f"{CONTAINER_RUN_FILE} /opt/tests/src/tst /opt/tests tests_tags.yaml {RESULTS_SUB_DIR} sut {fut} {test_list}"
+                command = f"{CONTAINER_RUN_FILE} /opt/tests/src/tst /opt/tests tests_tags.yaml {logger.RESULTS_SUB_DIR} sut {fut} {test_list}"
             else:
                 # run_testsuite /opt/tests/src /opt/tests /opt/sut/tests_tags.yaml tests sut {fut}
-                command = f"{CONTAINER_RUN_FILE} /opt/tests/src /opt/tests tests_tags.yaml {RESULTS_SUB_DIR} sut {fut}"
+                command = f"{CONTAINER_RUN_FILE} /opt/tests/src /opt/tests tests_tags.yaml {logger.RESULTS_SUB_DIR} sut {fut}"
 
             output = subprocess.run(
                 f"docker exec --workdir {CONTAINER_SUT_DIR} {cid} bash {command}".split(
@@ -255,8 +261,8 @@ def run_testsuite_in_docker(
             )
             result = output.stdout.decode("utf-8")
             err = output.stderr.decode("utf-8")
-            log("docker exec stdout | " + str(result))
-            log("docker exec stderr | " + str(err))
+            logger.log("docker exec stdout | " + str(result))
+            logger.log("docker exec stderr | " + str(err))
 
             # remove container
             out = subprocess.run(f"docker rm -f {cid}".split(" "), capture_output=True)
@@ -265,14 +271,14 @@ def run_testsuite_in_docker(
                 add_to_user_logs(env, "info", f"getting results from tests...")
 
             # get results from test script
-            docker_results = os.path.join(SHARED_SUT_DIR, RESULTS_SUB_DIR)
-            student_results = os.path.join(solution_dir, RESULTS_SUB_DIR)
+            docker_results = os.path.join(SHARED_SUT_DIR, logger.RESULTS_SUB_DIR)
+            student_results = os.path.join(solution_dir, logger.RESULTS_SUB_DIR)
             shutil.copytree(docker_results, student_results, dirs_exist_ok=True)
         else:
             add_to_user_logs(env, "error", f"cannot create docker container...")
             succ = False
     except Exception as err:
-        log("run testsuite | " + str(err) + " | " + str(traceback.format_exc()))
+        logger.log("run testsuite | " + str(err) + " | " + str(traceback.format_exc()))
         succ = False
 
     try:
@@ -285,7 +291,7 @@ def run_testsuite_in_docker(
         if os.path.exists(SHARED_DIR):
             shutil.rmtree(SHARED_DIR)
     except Exception as err:
-        log(
+        logger.log(
             "warning | remove shared dir & cid file | "
             + str(err)
             + " | "
@@ -297,13 +303,13 @@ def run_testsuite_in_docker(
 
 def clean_test(solution):
     try:
-        student_results = os.path.join(solution.path, RESULTS_SUB_DIR)
+        student_results = os.path.join(solution.path, logger.RESULTS_SUB_DIR)
         if os.path.exists(student_results):
             shutil.rmtree(student_results)
         if os.path.exists(SHARED_DIR):
             shutil.rmtree(SHARED_DIR)
     except Exception as err:
-        log("clean test | " + str(err))
+        logger.log("clean test | " + str(err))
 
 
 def calculate_score(env, solution):
@@ -313,8 +319,8 @@ def calculate_score(env, solution):
     max_score = env.cwd.proj.max_score
     try:
         # load sum file
-        tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
-        sum_file = os.path.join(tests_dir, SUM_FILE)
+        tests_dir = os.path.join(env.cwd.proj.path, logger.TESTS_DIR)
+        sum_file = os.path.join(tests_dir, logger.SUM_FILE)
         sum_equation_str = load_sum_equation_from_file(env, sum_file)
 
         # parse sum equation
@@ -328,16 +334,18 @@ def calculate_score(env, solution):
             bonus = result - max_score if result > max_score else 0
             return (score, bonus)
         else:
-            log("calculate score sum | no tag from SUM equation was found")
-            log("ignored tags: " + str(ignored_tags))
+            logger.log("calculate score sum | no tag from SUM equation was found")
+            logger.log("ignored tags: " + str(ignored_tags))
             return None
     except Exception as err:
-        log("calculate score sum | " + str(err) + " | " + str(traceback.format_exc()))
+        logger.log(
+            "calculate score sum | " + str(err) + " | " + str(traceback.format_exc())
+        )
         return None
 
 
 def check_bash_functions_for_testing(proj_dir):
-    bash_dir = os.path.join(proj_dir, TESTS_DIR, TST_FCE_DIR)
+    bash_dir = os.path.join(proj_dir, logger.TESTS_DIR, TST_FCE_DIR)
     bash_file = os.path.join(bash_dir, TST_FCE_FILE)
     bash_file_exists = False
     if os.path.exists(bash_file):
@@ -351,5 +359,5 @@ def check_bash_functions_for_testing(proj_dir):
             os.chmod(bash_file, st.st_mode | stat.S_IEXEC)
             bash_file_exists = True
         except Exception as err:
-            log("copy bash functions | " + str(err))
+            logger.log("copy bash functions | " + str(err))
     return bash_file_exists

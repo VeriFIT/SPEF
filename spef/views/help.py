@@ -1,10 +1,10 @@
 import curses
 import curses.ascii
 
-from spef.controls.functions import *
-from spef.utils.printing import *
-from spef.utils.screens import *
-from spef.utils.logger import *
+import spef.controls.functions as func
+from spef.utils.printing import parse_line_into_sublines, rewrite_all_wins, print_help
+from spef.utils.screens import resize_all
+from spef.utils.logger import ESC
 
 
 # return number of lines needed to print given buffer
@@ -115,10 +115,15 @@ def get_help(env):
 
     actions = {}
     for key, function in dict_functions.items():
-        if function in [CURSOR_UP, CURSOR_DOWN, CURSOR_LEFT, CURSOR_RIGHT]:
+        if function in [
+            func.CURSOR_UP,
+            func.CURSOR_DOWN,
+            func.CURSOR_LEFT,
+            func.CURSOR_RIGHT,
+        ]:
             key = "Arrows"
             function = "Arrows"
-        elif function in [DELETE_CHAR, BACKSPACE_CHAR]:
+        elif function in [func.DELETE_CHAR, func.BACKSPACE_CHAR]:
             key = "Delete, backspace"
             function = "Del"
         elif key == "SLASH":
@@ -162,57 +167,57 @@ def get_description_for_fce(env, fce):
 
     if env.is_user_input_mode():
         descr_dir = {
-            SHOW_HELP: "show this user help",
-            EXIT_PROGRAM: "exit program",
-            EXIT_USER_INPUT: "exit user input without saving",
-            BASH_SWITCH: "switch to bash",
+            func.SHOW_HELP: "show this user help",
+            func.EXIT_PROGRAM: "exit program",
+            func.EXIT_USER_INPUT: "exit user input without saving",
+            func.BASH_SWITCH: "switch to bash",
             "Arrows": "move cursor in user input",
             "Del": "delete symbol in user input",
-            PRINT_CHAR: "insert symbol in user input",
-            SAVE_INPUT: "save user input and exit",
-            MOVE_LEFT: "move window to the left",
-            MOVE_RIGHT: "move window to the right",
+            func.PRINT_CHAR: "insert symbol in user input",
+            func.SAVE_INPUT: "save user input and exit",
+            func.MOVE_LEFT: "move window to the left",
+            func.MOVE_RIGHT: "move window to the right",
         }
     elif env.is_menu_mode():
         descr_dir = {
-            SHOW_HELP: "show this user help",
-            EXIT_PROGRAM: "exit program",
-            EXIT_MENU: "exit menu",
-            BASH_SWITCH: "switch to bash",
+            func.SHOW_HELP: "show this user help",
+            func.EXIT_PROGRAM: "exit program",
+            func.EXIT_MENU: "exit menu",
+            func.BASH_SWITCH: "switch to bash",
             "Arrows": "brows between menu options",
-            SAVE_OPTION: "save current selected option",
-            SELECT_BY_IDX: "save option by index",
-            SELECT_OPTION: "select multiple options",
-            MOVE_LEFT: "move window to the left",
-            MOVE_RIGHT: "move window to the right",
+            func.SAVE_OPTION: "save current selected option",
+            func.SELECT_BY_IDX: "save option by index",
+            func.SELECT_OPTION: "select multiple options",
+            func.MOVE_LEFT: "move window to the left",
+            func.MOVE_RIGHT: "move window to the right",
         }
     elif env.is_filter_mode():
         descr_dir = {
-            SHOW_HELP: "show this user help",
-            AGGREGATE_FILTER: "aggregate by same tags file",
-            REMOVE_FILTER: "remove all filters",
-            EXIT_PROGRAM: "exit program",
-            EXIT_FILTER: "exit filter management",
-            BASH_SWITCH: "switch to bash",
+            func.SHOW_HELP: "show this user help",
+            func.AGGREGATE_FILTER: "aggregate by same tags file",
+            func.REMOVE_FILTER: "remove all filters",
+            func.EXIT_PROGRAM: "exit program",
+            func.EXIT_FILTER: "exit filter management",
+            func.BASH_SWITCH: "switch to bash",
             "Arrows": "move cursor in user input",
             "Del": "delete symbol in user input",
-            PRINT_CHAR: "insert symbol in user input",
-            SAVE_FILTER: "set filter and exit filter management",
+            func.PRINT_CHAR: "insert symbol in user input",
+            func.SAVE_FILTER: "set filter and exit filter management",
         }
     elif env.is_brows_mode():
         descr_dir = {
-            SHOW_HELP: "show this user help",
-            OPEN_MENU: "open menu with other functions",
-            QUICK_VIEW_ON_OFF: "set quick view mode on/off",
-            OPEN_FILE: "open file for edit",
-            GO_TO_TAGS: "change focus to tags",
-            SHOW_OR_HIDE_CACHED_FILES: "show/hide cached files (tags, report)",
-            SHOW_OR_HIDE_LOGS: "show/hide logs for user",
-            DELETE_FILE: "delete selected file",
-            EXIT_PROGRAM: "exit program",
-            CHANGE_FOCUS: "change focus to file view/edit",
-            BASH_SWITCH: "switch to bash",
-            FILTER: "set filter by path",
+            func.SHOW_HELP: "show this user help",
+            func.OPEN_MENU: "open menu with other functions",
+            func.QUICK_VIEW_ON_OFF: "set quick view mode on/off",
+            func.OPEN_FILE: "open file for edit",
+            func.GO_TO_TAGS: "change focus to tags",
+            func.SHOW_OR_HIDE_CACHED_FILES: "show/hide cached files (tags, report)",
+            func.SHOW_OR_HIDE_LOGS: "show/hide logs for user",
+            func.DELETE_FILE: "delete selected file",
+            func.EXIT_PROGRAM: "exit program",
+            func.CHANGE_FOCUS: "change focus to file view/edit",
+            func.BASH_SWITCH: "switch to bash",
+            func.FILTER: "set filter by path",
             "Arrows": "brows between files and dirs",
         }
     elif env.is_view_mode():
@@ -223,66 +228,68 @@ def get_description_for_fce(env, fce):
         else:
             tab_action = "directory browsing"
         descr_dir = {
-            SHOW_HELP: "show this user help",
-            SAVE_FILE: "save file changes",
-            SHOW_OR_HIDE_TAGS: "show/hide tags",
-            SHOW_OR_HIDE_LINE_NUMBERS: "show/hide line numbers",
-            SHOW_OR_HIDE_NOTE_HIGHLIGHT: "show/hide note highlight",
-            OPEN_NOTE_MANAGEMENT: "open note management",
-            RELOAD_FILE_FROM_LAST_SAVE: "reload file content from last save",
-            SHOW_TYPICAL_NOTES: "show typical notes",
-            EXIT_PROGRAM: "exit program",
-            CHANGE_FOCUS: f"change focus to {tab_action}",
-            BASH_SWITCH: "switch to bash",
-            FILTER: "set filter by content",
+            func.SHOW_HELP: "show this user help",
+            func.SAVE_FILE: "save file changes",
+            func.SHOW_OR_HIDE_TAGS: "show/hide tags",
+            func.SHOW_OR_HIDE_LINE_NUMBERS: "show/hide line numbers",
+            func.SHOW_OR_HIDE_NOTE_HIGHLIGHT: "show/hide note highlight",
+            func.OPEN_NOTE_MANAGEMENT: "open note management",
+            func.RELOAD_FILE_FROM_LAST_SAVE: "reload file content from last save",
+            func.SHOW_TYPICAL_NOTES: "show typical notes",
+            func.EXIT_PROGRAM: "exit program",
+            func.CHANGE_FOCUS: f"change focus to {tab_action}",
+            func.BASH_SWITCH: "switch to bash",
+            func.FILTER: "set filter by content",
             "Arrows": "move cursor in file content",
-            SET_MANAGE_FILE_MODE: "set manage file mode",
-            SET_EDIT_FILE_MODE: "set edit file mode",
-            ADD_CUSTOM_NOTE: "add custom note to current line",
-            ADD_TYPICAL_NOTE: "add typical note to current line",
-            PRINT_CHAR: "insert symbol in file on current cursor position",
-            PRINT_NEW_LINE: "insert new line in file on current cursor position",
+            func.SET_MANAGE_FILE_MODE: "set manage file mode",
+            func.SET_EDIT_FILE_MODE: "set edit file mode",
+            func.ADD_CUSTOM_NOTE: "add custom note to current line",
+            func.ADD_TYPICAL_NOTE: "add typical note to current line",
+            func.PRINT_CHAR: "insert symbol in file on current cursor position",
+            func.PRINT_NEW_LINE: "insert new line in file on current cursor position",
             "Del": "delete symbol in file on current cursor position",
-            GO_TO_PREV_NOTE: "jump to line with previous note in file",
-            GO_TO_NEXT_NOTE: "jump to line with next note in file",
-            RELOAD_ORIGINAL_BUFF: "reload file content from original buffer",
+            func.GO_TO_PREV_NOTE: "jump to line with previous note in file",
+            func.GO_TO_NEXT_NOTE: "jump to line with next note in file",
+            func.RELOAD_ORIGINAL_BUFF: "reload file content from original buffer",
         }
         if env.editing_test_file:
             descr_dir.update(
-                {SHOW_SUPPORTED_DATA: "show supported bash functions for 'dotest.sh'"}
+                {
+                    func.SHOW_SUPPORTED_DATA: "show supported bash functions for 'dotest.sh'"
+                }
             )
         elif env.editing_report_template:
             descr_dir.update(
-                {SHOW_SUPPORTED_DATA: "show supported data for report template"}
+                {func.SHOW_SUPPORTED_DATA: "show supported data for report template"}
             )
     elif env.is_tag_mode():
         descr_dir = {
-            SHOW_HELP: "show this user help",
-            EDIT_TAG: "edit current tag",
-            ADD_TAG: "create new tag",
-            OPEN_TAG_FILE: "open file with tags for edit",
-            DELETE_TAG: "delete current tag",
-            EXIT_PROGRAM: "exit program",
-            CHANGE_FOCUS: "change focus to directory browsing",
-            BASH_SWITCH: "switch to bash",
-            FILTER: "set filter by tag",
+            func.SHOW_HELP: "show this user help",
+            func.EDIT_TAG: "edit current tag",
+            func.ADD_TAG: "create new tag",
+            func.OPEN_TAG_FILE: "open file with tags for edit",
+            func.DELETE_TAG: "delete current tag",
+            func.EXIT_PROGRAM: "exit program",
+            func.CHANGE_FOCUS: "change focus to directory browsing",
+            func.BASH_SWITCH: "switch to bash",
+            func.FILTER: "set filter by tag",
             "Arrows": "brows between tags",
         }
     elif env.is_notes_mode():
         descr_dir = {
-            SHOW_HELP: "show this user help",
-            EDIT_NOTE: "edit current note",
-            SHOW_TYPICAL_NOTES: "show typical notes",
-            GO_TO_NOTE: "go to current note in file",
-            SAVE_AS_TYPICAL_NOTE: "save note as typical",
-            DELETE_NOTE: "delete current note",
-            EXIT_PROGRAM: "exit program",
-            EXIT_NOTES: "exit note management",
-            CHANGE_FOCUS: "change focus to file view/edit",
-            BASH_SWITCH: "switch to bash",
+            func.SHOW_HELP: "show this user help",
+            func.EDIT_NOTE: "edit current note",
+            func.SHOW_TYPICAL_NOTES: "show typical notes",
+            func.GO_TO_NOTE: "go to current note in file",
+            func.SAVE_AS_TYPICAL_NOTE: "save note as typical",
+            func.DELETE_NOTE: "delete current note",
+            func.EXIT_PROGRAM: "exit program",
+            func.EXIT_NOTES: "exit note management",
+            func.CHANGE_FOCUS: "change focus to file view/edit",
+            func.BASH_SWITCH: "switch to bash",
             "Arrows": "brows between notes",
-            ADD_CUSTOM_NOTE: "add custom note",
-            ADD_TYPICAL_NOTE: "add typical notes",
+            func.ADD_CUSTOM_NOTE: "add custom note",
+            func.ADD_TYPICAL_NOTE: "add typical notes",
         }
 
     if fce in descr_dir:

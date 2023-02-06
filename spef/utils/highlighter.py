@@ -2,7 +2,6 @@ from pygments import highlight
 from pygments import lexers
 from pygments.formatter import Formatter
 
-from spef.utils.logger import *
 
 """ ======================= SYNTAX HIGHLIGHTER ========================= """
 

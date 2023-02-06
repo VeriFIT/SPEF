@@ -1,7 +1,8 @@
 import os
 
-from spef.controls.control import *
-from spef.utils.logger import *
+from spef.controls.control import Control
+from spef.utils.logger import log
+
 
 """ modes """
 BROWS = 1

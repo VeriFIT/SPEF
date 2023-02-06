@@ -2,14 +2,15 @@ import curses
 import curses.ascii
 import traceback
 
-from spef.controls.control import *
+import spef.controls.functions as func
+from spef.controls.control import get_function_for_key
 from spef.modules.buffer import UserInput
 from spef.modules.bash import Bash_action
 from spef.utils.loading import save_report_to_file
-from spef.utils.screens import *
-from spef.utils.printing import *
-from spef.utils.logger import *
-from spef.utils.coloring import *
+from spef.utils.screens import resize_all
+from spef.utils.printing import rewrite_all_wins
+from spef.utils.logger import log
+from spef.utils.coloring import COL_NOTE_LIGHT
 from spef.views.input import get_user_input
 from spef.views.help import show_help
 
@@ -59,43 +60,43 @@ def run_function(stdscr, env, fce, key, line):
     note_row, note_col = line
 
     # ==================== EXIT PROGRAM ====================
-    if fce == EXIT_PROGRAM:
+    if fce == func.EXIT_PROGRAM:
         env.disable_note_management()
         env.set_exit_mode()
         save_report_to_file(env.report)
         return env, True
     # ======================= BASH =======================
-    elif fce == BASH_SWITCH:
+    elif fce == func.BASH_SWITCH:
         hex_key = "{0:x}".format(key)
         env.bash_action = Bash_action()
         env.bash_action.set_exit_key(("0" if len(hex_key) % 2 else "") + str(hex_key))
         env.bash_active = True
         return env, True
     # ================ EXIT NOTE MANAGEMENT ================
-    elif fce == EXIT_NOTES:
+    elif fce == func.EXIT_NOTES:
         env.disable_note_management()
         env.switch_to_next_mode()
         save_report_to_file(env.report)
         return env, True
     # ======================= FOCUS =======================
-    elif fce == CHANGE_FOCUS:
+    elif fce == func.CHANGE_FOCUS:
         env.switch_to_next_mode()
         return env, True
     # ======================= RESIZE =======================
-    elif fce == RESIZE_WIN:
+    elif fce == func.RESIZE_WIN:
         env = resize_all(stdscr, env)
         screen, win = env.get_screen_for_current_mode()
     # ======================= ARROWS =======================
-    elif fce == CURSOR_UP:
+    elif fce == func.CURSOR_UP:
         win.up(env.report, use_restrictions=False)
-    elif fce == CURSOR_DOWN:
+    elif fce == func.CURSOR_DOWN:
         win.down(env.report, filter_on=env.tag_filter_on(), use_restrictions=False)
     # ===================== SHOW HELP ======================
-    elif fce == SHOW_HELP:
+    elif fce == func.SHOW_HELP:
         show_help(stdscr, env)
         curses.curs_set(0)
     # ===================== EDIT NOTE =====================
-    elif fce == EDIT_NOTE:
+    elif fce == func.EDIT_NOTE:
         if len(env.report.data) > 0 and len(env.report.data) >= win.cursor.row:
             current_note = env.report.data[win.cursor.row]
             user_input = UserInput()
@@ -116,7 +117,7 @@ def run_function(stdscr, env, fce, key, line):
             if text is not None:
                 env.report.data[win.cursor.row].text = "".join(text)
     # ================== CREATE NEW NOTE ==================
-    elif fce == ADD_CUSTOM_NOTE:
+    elif fce == func.ADD_CUSTOM_NOTE:
         title = f"Enter new note at {note_row}:{note_col}"
         env, text = get_user_input(stdscr, env, title=title)
         screen, win = env.get_screen_for_current_mode()
@@ -139,7 +140,7 @@ def run_function(stdscr, env, fce, key, line):
             env.report.add_note(note_row, note_col, "".join(text))
             save_report_to_file(env.report)
     # ================ INSERT TYPICAL NOTE ================
-    elif fce == ADD_TYPICAL_NOTE:
+    elif fce == func.ADD_TYPICAL_NOTE:
         options = env.get_typical_notes_dict()
         char_key = chr(key)
         if char_key in options.keys():
@@ -160,7 +161,7 @@ def run_function(stdscr, env, fce, key, line):
             str_text = options[char_key]
             env.report.add_note(note_row, note_col, str_text)
             save_report_to_file(env.report)
-    elif fce == SHOW_TYPICAL_NOTES:
+    elif fce == func.SHOW_TYPICAL_NOTES:
         # show list of typical notes with indexes
         options = env.get_typical_notes_dict()
         custom_help = (None, "Typical notes:", options)
@@ -189,7 +190,7 @@ def run_function(stdscr, env, fce, key, line):
                 env.report.add_note(note_row, note_col, str_text)
                 save_report_to_file(env.report)
     # ==================== GO TO NOTE ====================
-    elif fce == GO_TO_NOTE:
+    elif fce == func.GO_TO_NOTE:
         if len(env.report.data) > 0:
             current_note = env.report.data[win.cursor.row]
             env.switch_to_next_mode()
@@ -206,7 +207,7 @@ def run_function(stdscr, env, fce, key, line):
                     )
             return env, True
     # ================== SAVE AS TYPICAL ==================
-    elif fce == SAVE_AS_TYPICAL_NOTE:
+    elif fce == func.SAVE_AS_TYPICAL_NOTE:
         if len(env.report.data) > 0:
             current_note = env.report.data[win.cursor.row]
             if current_note.is_typical(env):
@@ -214,7 +215,7 @@ def run_function(stdscr, env, fce, key, line):
             else:
                 current_note.set_as_typical(env)
     # ==================== DELETE NOTE ====================
-    elif fce == DELETE_NOTE:
+    elif fce == func.DELETE_NOTE:
         if len(env.report.data) > 0 and len(env.report.data) >= win.cursor.row:
             del env.report.data[win.cursor.row]
             if len(env.report.data) <= win.cursor.row:

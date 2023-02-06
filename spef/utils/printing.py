@@ -3,7 +3,6 @@ import os
 import re
 import traceback
 
-from spef.controls.functions import *
 from spef.modules.buffer import UserInput
 from spef.utils.highlighter import parse_code
 from spef.utils.loading import (
@@ -11,8 +10,8 @@ from spef.utils.loading import (
     save_report_to_file,
     load_testcase_tags,
 )
-from spef.utils.coloring import *
-from spef.utils.logger import *
+import spef.utils.coloring as clr
+import spef.utils.logger as logger
 from spef.utils.history import history_test_modified, is_test_history_in_tmp
 from spef.utils.file import actualize_test_history_in_tmp
 
@@ -98,7 +97,7 @@ def print_help(screen, win, env, exit_mess, title, actions):
     if exit_mess:
         if len(exit_mess) >= max_cols:
             exit_mess = exit_mess[: max_cols - 1]
-        screen.addstr(line, 1, exit_mess, curses.color_pair(COL_HELP))
+        screen.addstr(line, 1, exit_mess, curses.color_pair(clr.COL_HELP))
         line += 1
     if title:
         if len(title) >= max_cols:
@@ -117,7 +116,7 @@ def print_help(screen, win, env, exit_mess, title, actions):
         # print key
         if len(key) + 3 >= max_cols:
             break
-        screen.addstr(line, 1, str(key), curses.color_pair(COL_HELP))
+        screen.addstr(line, 1, str(key), curses.color_pair(clr.COL_HELP))
 
         # print action
         action = actions[key]
@@ -177,8 +176,8 @@ def file_changes_are_saved(stdscr, env, add_to_user_logs, warning=None):
         if (env.buffer.is_saved) or (env.buffer.original_buff == env.buffer.lines):
             return True
         else:
-            curses_key, str_key = (ESC, "ESC")
-            message = warning if warning else EXIT_WITHOUT_SAVING
+            curses_key, str_key = (logger.ESC, "ESC")
+            message = warning if warning else logger.EXIT_WITHOUT_SAVING
 
             """ print warning message """
             screen = env.screens.right
@@ -201,7 +200,7 @@ def file_changes_are_saved(stdscr, env, add_to_user_logs, warning=None):
 
 def save_buffer(stdscr, env, add_to_user_logs):
     if not env.file_to_open or not env.buffer:
-        log("save buffer | missing env.file_to_open or mising env.buffer")
+        logger.log("save buffer | missing env.file_to_open or mising env.buffer")
         return
 
     save_buffer_to_file(env.file_to_open, env.buffer)
@@ -219,7 +218,7 @@ def save_buffer(stdscr, env, add_to_user_logs):
             """print warning message"""
             screen = env.screens.right
             screen.erase()
-            screen.addstr(1, 1, str(TEST_MODIFICATION), curses.A_BOLD)
+            screen.addstr(1, 1, str(logger.TEST_MODIFICATION), curses.A_BOLD)
             screen.border(0)
             screen.refresh()
 
@@ -233,7 +232,7 @@ def save_buffer(stdscr, env, add_to_user_logs):
                     env.cwd.proj.path, os.path.dirname(env.file_to_open)
                 )
             else:  # dont save to history
-                log(
+                logger.log(
                     "dont save old test version to history | will be discard after system exit"
                 )
 
@@ -334,22 +333,25 @@ def show_filter(screen, user_input, max_rows, max_cols, env):
         # show default message with example usage of filter
         empty_message = ""
         if env.is_brows_mode():
-            empty_message = EMPTY_PATH_FILTER_MESSAGE
+            empty_message = logger.EMPTY_PATH_FILTER_MESSAGE
         elif env.is_view_mode():
-            empty_message = EMPTY_CONTENT_FILTER_MESSAGE
+            empty_message = logger.EMPTY_CONTENT_FILTER_MESSAGE
         elif env.is_tag_mode():
-            empty_message = EMPTY_TAG_FILTER_MESSAGE
+            empty_message = logger.EMPTY_TAG_FILTER_MESSAGE
         empty_message += " " * (max_cols - 1 - len(empty_message))
         screen.addstr(
             max_rows,
             1,
             empty_message[: max_cols - 1],
-            curses.color_pair(COL_FILTER) | curses.A_ITALIC,
+            curses.color_pair(clr.COL_FILTER) | curses.A_ITALIC,
         )
     else:
         user_input_str += " " * (max_cols - 1 - len(user_input_str))
         screen.addstr(
-            max_rows, 1, user_input_str[: max_cols - 1], curses.color_pair(COL_FILTER)
+            max_rows,
+            1,
+            user_input_str[: max_cols - 1],
+            curses.color_pair(clr.COL_FILTER),
         )
     screen.refresh()
 
@@ -367,9 +369,9 @@ def show_directory_content(env):
     """ print borders """
     screen.erase()
     if env.is_brows_mode():
-        screen.attron(curses.color_pair(COL_BORDER))
+        screen.attron(curses.color_pair(clr.COL_BORDER))
         screen.border(0)
-        screen.attroff(curses.color_pair(COL_BORDER))
+        screen.attroff(curses.color_pair(clr.COL_BORDER))
     else:
         screen.border(0)
 
@@ -400,7 +402,7 @@ def show_directory_content(env):
                 if i > max_rows or (i == max_rows and env.path_filter_on()):
                     break
                 coloring = (
-                    curses.color_pair(COL_SELECT)
+                    curses.color_pair(clr.COL_SELECT)
                     if i + win.row_shift == win.cursor.row + 1
                     else curses.A_NORMAL
                 )
@@ -422,7 +424,7 @@ def show_directory_content(env):
                                 break
                             x = x - len(info) - 1
                             color = (
-                                curses.color_pair(COL_SELECT)
+                                curses.color_pair(clr.COL_SELECT)
                                 if i + win.row_shift == win.cursor.row + 1
                                 else col
                             )
@@ -437,7 +439,7 @@ def show_directory_content(env):
                 if i > max_rows or (i == max_rows and env.path_filter_on()):
                     break
                 coloring = (
-                    curses.color_pair(COL_SELECT)
+                    curses.color_pair(clr.COL_SELECT)
                     if i + win.row_shift == win.cursor.row + 1
                     else curses.A_NORMAL
                 )
@@ -452,7 +454,7 @@ def show_directory_content(env):
                 show_filter(screen, user_input, max_rows, max_cols, env)
 
     except Exception as err:
-        log("show directory | " + str(err) + " | " + str(traceback.format_exc()))
+        logger.log("show directory | " + str(err) + " | " + str(traceback.format_exc()))
     finally:
         screen.refresh()
 
@@ -570,9 +572,9 @@ def show_file_content(env):
     screen.erase()
     """ print border """
     if env.is_view_mode():
-        screen.attron(curses.color_pair(COL_BORDER))
+        screen.attron(curses.color_pair(clr.COL_BORDER))
         screen.border(0)
-        screen.attroff(curses.color_pair(COL_BORDER))
+        screen.attroff(curses.color_pair(clr.COL_BORDER))
     else:
         screen.border(0)
 
@@ -639,9 +641,9 @@ def show_file_content(env):
                     #  OPTION B : note highlight on line number
                     """ set color for line numbers and for line text """
                     if y + win.row_shift in colored_lines:
-                        line_num_color = curses.color_pair(COL_NOTE)
+                        line_num_color = curses.color_pair(clr.COL_NOTE)
                     else:
-                        line_num_color = curses.color_pair(COL_LINE_NUM)
+                        line_num_color = curses.color_pair(clr.COL_LINE_NUM)
 
                     text_color = curses.color_pair(style)
                     if env.specific_line_highlight is not None:
@@ -740,9 +742,9 @@ def show_file_content(env):
                     #  OPTION B : note highlight on line number
                     """ set color for line numbers and for line text """
                     if row + 1 + win.row_shift in colored_lines:
-                        line_num_color = curses.color_pair(COL_NOTE)
+                        line_num_color = curses.color_pair(clr.COL_NOTE)
                     else:
-                        line_num_color = curses.color_pair(COL_LINE_NUM)
+                        line_num_color = curses.color_pair(clr.COL_LINE_NUM)
 
                     text_color = curses.A_NORMAL
                     if env.specific_line_highlight is not None:
@@ -789,9 +791,9 @@ def show_file_content(env):
             #  OPTION B : note highlight on line number
             """set color for line numbers"""
             if 1 in colored_lines:
-                line_num_color = curses.color_pair(COL_NOTE)
+                line_num_color = curses.color_pair(clr.COL_NOTE)
             else:
-                line_num_color = curses.color_pair(COL_LINE_NUM)
+                line_num_color = curses.color_pair(clr.COL_LINE_NUM)
 
             """ print line number """
             if env.line_numbers:
@@ -821,7 +823,7 @@ def show_file_content(env):
             # show_filter(screen, user_input, max_rows, max_cols, env)
 
     except Exception as err:
-        log("show file | " + str(err) + " | " + str(traceback.format_exc()))
+        logger.log("show file | " + str(err) + " | " + str(traceback.format_exc()))
     finally:
         screen.refresh()
 
@@ -840,9 +842,9 @@ def show_tags(env):
     """ print borders """
     screen.erase()
     if env.is_tag_mode():
-        screen.attron(curses.color_pair(COL_BORDER))
+        screen.attron(curses.color_pair(clr.COL_BORDER))
         screen.border(0)
-        screen.attroff(curses.color_pair(COL_BORDER))
+        screen.attroff(curses.color_pair(clr.COL_BORDER))
     else:
         screen.border(0)
 
@@ -867,7 +869,7 @@ def show_tags(env):
 
                 """ set color """
                 if i - 1 + win.row_shift == win.cursor.row and env.is_tag_mode():
-                    coloring = curses.color_pair(COL_SELECT)
+                    coloring = curses.color_pair(clr.COL_SELECT)
                 else:
                     coloring = curses.A_NORMAL
 
@@ -887,7 +889,7 @@ def show_tags(env):
             show_filter(screen, user_input, max_rows, max_cols, env)
 
     except Exception as err:
-        log("show tags | " + str(err) + " | " + str(traceback.format_exc()))
+        logger.log("show tags | " + str(err) + " | " + str(traceback.format_exc()))
     finally:
         screen.refresh()
 
@@ -903,9 +905,9 @@ def show_notes(env):
     """ print borders """
     screen.erase()
     if env.is_notes_mode():
-        screen.attron(curses.color_pair(COL_BORDER))
+        screen.attron(curses.color_pair(clr.COL_BORDER))
         screen.border(0)
-        screen.attroff(curses.color_pair(COL_BORDER))
+        screen.attroff(curses.color_pair(clr.COL_BORDER))
     else:
         screen.border(0)
 
@@ -941,7 +943,7 @@ def show_notes(env):
 
                 """ set color """
                 if row + win.row_shift == win.cursor.row and env.is_notes_mode():
-                    color = curses.color_pair(COL_SELECT)
+                    color = curses.color_pair(clr.COL_SELECT)
                 else:
                     color = curses.A_NORMAL
 
@@ -949,7 +951,7 @@ def show_notes(env):
                 screen.addstr(row + 1, 1, line, color)
 
     except Exception as err:
-        log("show notes | " + str(err) + " | " + str(traceback.format_exc()))
+        logger.log("show notes | " + str(err) + " | " + str(traceback.format_exc()))
     finally:
         screen.refresh()
 
@@ -981,9 +983,9 @@ def show_menu(
 
                 """ set color """
                 if row + win.row_shift == win.cursor.row + 1:  # +1
-                    coloring = curses.color_pair(COL_SELECT)
+                    coloring = curses.color_pair(clr.COL_SELECT)
                 elif row + win.row_shift - 1 in selected:
-                    coloring = curses.color_pair(COL_SELECT)
+                    coloring = curses.color_pair(clr.COL_SELECT)
                 else:
                     coloring = curses.A_NORMAL
 
@@ -991,7 +993,7 @@ def show_menu(
                     key = keys[row - 1 + win.row_shift]
                 else:
                     key = row + win.row_shift
-                screen.addstr(row + 1, 1, str(key), curses.color_pair(COL_HELP))
+                screen.addstr(row + 1, 1, str(key), curses.color_pair(clr.COL_HELP))
                 shift = len(str(key)) + 1
                 screen.addstr(
                     row + 1, 1 + shift, str(option[: max_cols - (1 + shift)]), coloring
@@ -1006,7 +1008,7 @@ def show_menu(
             )
 
     except Exception as err:
-        log("show menu | " + str(err) + " | " + str(traceback.format_exc()))
+        logger.log("show menu | " + str(err) + " | " + str(traceback.format_exc()))
     finally:
         screen.refresh()
 
@@ -1024,9 +1026,9 @@ def show_logs(env):
     screen.erase()
     screen.border(0)
     if env.is_logs_mode():
-        screen.attron(curses.color_pair(COL_BORDER))
+        screen.attron(curses.color_pair(clr.COL_BORDER))
         screen.border(0)
-        screen.attroff(curses.color_pair(COL_BORDER))
+        screen.attroff(curses.color_pair(clr.COL_BORDER))
     else:
         screen.border(0)
 
@@ -1052,17 +1054,17 @@ def show_logs(env):
 
             # set color according to message type
             if str(m_type).lower().strip() in ["e", "error"]:
-                m_col = curses.color_pair(COL_RED)
+                m_col = curses.color_pair(clr.COL_RED)
             elif str(m_type).lower().strip() in ["i", "info"]:
                 m_col = curses.A_NORMAL
             elif str(m_type).lower().strip() in ["w", "warning"]:
-                m_col = curses.color_pair(COL_BLUE)
+                m_col = curses.color_pair(clr.COL_BLUE)
             else:
                 m_col = curses.A_NORMAL
 
             data_to_print = [str(date), " | ", str(m_type), " | ", str(message)]
             data_colors = [
-                curses.color_pair(COL_YELLOW),
+                curses.color_pair(clr.COL_YELLOW),
                 curses.A_NORMAL,
                 m_col,
                 curses.A_NORMAL,
@@ -1092,6 +1094,6 @@ def show_logs(env):
         env.user_logs_printed_shift = win.row_shift
 
     except Exception as err:
-        log("show logs | " + str(err) + " | " + str(traceback.format_exc()))
+        logger.log("show logs | " + str(err) + " | " + str(traceback.format_exc()))
     finally:
         screen.refresh()

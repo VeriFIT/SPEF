@@ -1,5 +1,3 @@
-from spef.utils.logger import *
-
 """
 - init setting:
 * exit_key is set to any key
