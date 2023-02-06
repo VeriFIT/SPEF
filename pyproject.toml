@@ -24,10 +24,13 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "black"
+    "black",
+    "types-pyyaml",
+    "types-pygments",
+    "pylint",
 ]
 test = [
-    "pytest"
+    "pytest",
 ]
 
 [project.scripts]
