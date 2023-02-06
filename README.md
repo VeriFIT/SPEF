@@ -12,6 +12,9 @@ Pred spustením je projekt nutné nainštalovať (napr. vo virtualenv)
 * `pip install .`
 * alebo `pip install -e .` pre tzv. "editable" inštaláciu
 
+Instalace dodatečných závislostí vhodných pro vývoj:
+* `pip install -e .[dev]`
+
 Spustenie je následne možné pomocou jedného z príkazov:
 * `spef`
 * `python -m spef`
