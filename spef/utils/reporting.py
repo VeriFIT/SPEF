@@ -4,9 +4,14 @@ import traceback
 
 from spef.modules.project import Project
 from spef.testing.tst import calculate_score
-from spef.utils.logger import *
-from spef.utils.loading import *
-from spef.utils.match import *
+import spef.utils.logger as logger
+from spef.utils.loading import (
+    load_proj_from_conf_file,
+    load_report_from_file,
+    load_testsuite_tags,
+    save_test_notes_for_solution,
+)
+from spef.utils.match import match_regex, get_parent_regex_match, get_tests_names
 
 
 """ from subjA/proj1/xlogin00/dir/file_name to proj1/xlogin00/dir/file_name """
@@ -20,7 +25,7 @@ def get_path_relative_to_project_dir(dest_path, proj_path=None):
         while True:
             file_list = os.listdir(cur_dir)
             parent_dir = os.path.dirname(cur_dir)
-            if PROJ_CONF_FILE in file_list:
+            if logger.PROJ_CONF_FILE in file_list:
                 proj_data = load_proj_from_conf_file(cur_dir)
                 proj = Project(cur_dir)
                 succ = proj.set_values_from_conf(proj_data)
@@ -50,7 +55,7 @@ def get_path_relative_to_solution_dir(dest_path):
     while True:
         file_list = os.listdir(cur_dir)
         parent_dir = os.path.dirname(cur_dir)
-        if PROJ_CONF_FILE in file_list:
+        if logger.PROJ_CONF_FILE in file_list:
             proj_data = load_proj_from_conf_file(cur_dir)
             proj = Project(cur_dir)
             succ = proj.set_values_from_conf(proj_data)
@@ -80,18 +85,20 @@ def get_path_relative_to_solution_dir(dest_path):
 
 def generate_code_review(env, solution):
     if not env.cwd.proj or not solution:
-        log("generate code review | current directory is not project (sub)directory")
+        logger.log(
+            "generate code review | current directory is not project (sub)directory"
+        )
         return
 
     # create dir for reports if not exists
-    report_dir = os.path.join(solution.path, REPORT_DIR)
+    report_dir = os.path.join(solution.path, logger.REPORT_DIR)
     if not os.path.exists(report_dir):
         os.makedirs(report_dir)
 
     # process all notes from code review
     code_review = []
     try:
-        dest_path = os.path.join(solution.path, "**", "*" + REPORT_SUFFIX)
+        dest_path = os.path.join(solution.path, "**", "*" + logger.REPORT_SUFFIX)
         for report_file in glob.glob(dest_path, recursive=True):
             if os.path.isfile(report_file):
                 report = load_report_from_file(report_file, add_suffix=False)
@@ -100,14 +107,14 @@ def generate_code_review(env, solution):
                         file_name = report.orig_file_name[:-1]
                     else:
                         file_name = os.path.relpath(report.path, solution.name)
-                        file_name = str(file_name).removesuffix(REPORT_SUFFIX)
+                        file_name = str(file_name).removesuffix(logger.REPORT_SUFFIX)
                     if note.row is not None and note.col is not None:
                         code_review.append(f"{file_name}:{note.row}:{note.col}")
                     else:
                         code_review.append(f"{file_name}")
                     code_review.append(str(note.text) + "\n")
     except Exception as err:
-        log(
+        logger.log(
             "gen code review | get report files | "
             + str(err)
             + " | "
@@ -116,7 +123,7 @@ def generate_code_review(env, solution):
         return
 
     # save code review to file
-    code_review_file = os.path.join(report_dir, CODE_REVIEW_FILE)
+    code_review_file = os.path.join(report_dir, logger.CODE_REVIEW_FILE)
     with open(code_review_file, "w+") as f:
         f.write("\n".join(code_review))
 
@@ -126,7 +133,7 @@ def add_test_note_to_solutions(env, solutions, note_text):
         return
 
     # get current testsuite version
-    tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
+    tests_dir = os.path.join(env.cwd.proj.path, logger.TESTS_DIR)
     testsuite_tags = load_testsuite_tags(tests_dir)
     if testsuite_tags is not None:
         args = testsuite_tags.get_args_for_tag("version")
@@ -211,15 +218,15 @@ Scoring severity:
 {severity}
 """
         # save stats to file
-        report_dir = os.path.join(env.cwd.proj.path, REPORT_DIR)
+        report_dir = os.path.join(env.cwd.proj.path, logger.REPORT_DIR)
         if not os.path.exists(report_dir) or not os.path.isdir(report_dir):
             os.makedirs(report_dir)
 
-        stats_file = os.path.join(report_dir, SCORING_STATS_FILE)
+        stats_file = os.path.join(report_dir, logger.SCORING_STATS_FILE)
         with open(stats_file, "w+") as f:
             f.write(statistics)
     except Exception as err:
-        log(f"generate stats | {err} | {traceback.format_exc()}")
+        logger.log(f"generate stats | {err} | {traceback.format_exc()}")
 
 
 """
@@ -339,12 +346,12 @@ Test name{space} |{score_n}
 Total score |{sum_res}
 """
         # save stats to file
-        report_dir = os.path.join(env.cwd.proj.path, REPORT_DIR)
+        report_dir = os.path.join(env.cwd.proj.path, logger.REPORT_DIR)
         if not os.path.exists(report_dir) or not os.path.isdir(report_dir):
             os.makedirs(report_dir)
 
-        stats_file = os.path.join(report_dir, TESTS_STATS_FILE)
+        stats_file = os.path.join(report_dir, logger.TESTS_STATS_FILE)
         with open(stats_file, "w+") as f:
             f.write(statistics)
     except Exception as err:
-        log(f"generate stats | {err} | {traceback.format_exc()}")
+        logger.log(f"generate stats | {err} | {traceback.format_exc()}")

@@ -1,7 +1,6 @@
 import curses
 
-from spef.controls.functions import *
-from spef.utils.logger import *
+import spef.controls.functions as func
 
 
 class Control:
@@ -27,11 +26,11 @@ class Control:
         data = []
         # filter
         filter_main_functions = {
-            SHOW_HELP: "help",
-            AGGREGATE_FILTER: "aggregate",
-            REMOVE_FILTER: "remove all filters",
-            EXIT_FILTER: "exit filter",
-            EXIT_PROGRAM: "exit",
+            func.SHOW_HELP: "help",
+            func.AGGREGATE_FILTER: "aggregate",
+            func.REMOVE_FILTER: "remove all filters",
+            func.EXIT_FILTER: "exit filter",
+            func.EXIT_PROGRAM: "exit",
         }
         filter_dict_funcions = self.filter_management
         data.append(("F", filter_main_functions, filter_dict_funcions))
@@ -40,14 +39,14 @@ class Control:
         view_switch = "off" if env.quick_view else "on"
         logs_switch = "hide" if env.show_logs else "show"
         brows_main_functions = {
-            SHOW_HELP: "help",
-            OPEN_MENU: "menu",
-            QUICK_VIEW_ON_OFF: f"quick view {view_switch}",
-            SHOW_OR_HIDE_LOGS: f"{logs_switch} logs",
-            OPEN_FILE: "edit",
-            GO_TO_TAGS: "go to tags",
-            DELETE_FILE: "delete",
-            EXIT_PROGRAM: "exit",
+            func.SHOW_HELP: "help",
+            func.OPEN_MENU: "menu",
+            func.QUICK_VIEW_ON_OFF: f"quick view {view_switch}",
+            func.SHOW_OR_HIDE_LOGS: f"{logs_switch} logs",
+            func.OPEN_FILE: "edit",
+            func.GO_TO_TAGS: "go to tags",
+            func.DELETE_FILE: "delete",
+            func.EXIT_PROGRAM: "exit",
         }
         brows_dict_funcions = self.directory_brows
         data.append(("B", brows_main_functions, brows_dict_funcions))
@@ -56,17 +55,17 @@ class Control:
         tags_switch = "hide" if env.show_tags else "show"
         lines_switch = "hide" if env.line_numbers else "show"
         view_main_functions = {
-            SHOW_HELP: "help",
-            SAVE_FILE: "save",
-            SHOW_OR_HIDE_TAGS: f"{tags_switch} tags",
-            SHOW_OR_HIDE_LINE_NUMBERS: f"{lines_switch} lines",
-            SHOW_OR_HIDE_NOTE_HIGHLIGHT: f"note highlight",
-            OPEN_NOTE_MANAGEMENT: "note mgmt",
-            RELOAD_FILE_FROM_LAST_SAVE: "reload",
-            SHOW_TYPICAL_NOTES: "show typical notes",
-            SET_MANAGE_FILE_MODE: "manage file",
-            SET_EDIT_FILE_MODE: "edit file",
-            EXIT_PROGRAM: "exit",
+            func.SHOW_HELP: "help",
+            func.SAVE_FILE: "save",
+            func.SHOW_OR_HIDE_TAGS: f"{tags_switch} tags",
+            func.SHOW_OR_HIDE_LINE_NUMBERS: f"{lines_switch} lines",
+            func.SHOW_OR_HIDE_NOTE_HIGHLIGHT: f"note highlight",
+            func.OPEN_NOTE_MANAGEMENT: "note mgmt",
+            func.RELOAD_FILE_FROM_LAST_SAVE: "reload",
+            func.SHOW_TYPICAL_NOTES: "show typical notes",
+            func.SET_MANAGE_FILE_MODE: "manage file",
+            func.SET_EDIT_FILE_MODE: "edit file",
+            func.EXIT_PROGRAM: "exit",
         }
         file_dict_funcions = self.file_edit.copy()
         file_dict_funcions.update(self.file_management)
@@ -74,11 +73,11 @@ class Control:
 
         # tags
         tag_main_functions = {
-            SHOW_HELP: "help",
-            EDIT_TAG: "edit tag",
-            ADD_TAG: "new tag",
-            DELETE_TAG: "delete",
-            EXIT_PROGRAM: "exit",
+            func.SHOW_HELP: "help",
+            func.EDIT_TAG: "edit tag",
+            func.ADD_TAG: "new tag",
+            func.DELETE_TAG: "delete",
+            func.EXIT_PROGRAM: "exit",
         }
         tag_dict_funcions = self.tag_management
         data.append(("T", tag_main_functions, tag_dict_funcions))
@@ -93,25 +92,25 @@ class Control:
                 if env.report.data[env.windows.notes.cursor.row].is_typical(env):
                     typical_switch = "unsave from"
         note_main_functions = {
-            SHOW_HELP: "help",
-            EDIT_NOTE: "edit note",
-            SHOW_TYPICAL_NOTES: "show typical notes",
-            GO_TO_NOTE: "go to",
-            SAVE_AS_TYPICAL_NOTE: f"{typical_switch} typical",
-            DELETE_NOTE: "delete",
-            ADD_CUSTOM_NOTE: "add custom note",
-            EXIT_NOTES: "exit note mgmt",
-            EXIT_PROGRAM: "exit",
+            func.SHOW_HELP: "help",
+            func.EDIT_NOTE: "edit note",
+            func.SHOW_TYPICAL_NOTES: "show typical notes",
+            func.GO_TO_NOTE: "go to",
+            func.SAVE_AS_TYPICAL_NOTE: f"{typical_switch} typical",
+            func.DELETE_NOTE: "delete",
+            func.ADD_CUSTOM_NOTE: "add custom note",
+            func.EXIT_NOTES: "exit note mgmt",
+            func.EXIT_PROGRAM: "exit",
         }
         note_dict_funcions = self.note_management
         data.append(("N", note_main_functions, note_dict_funcions))
 
         # logs
         logs_main_functions = {
-            SHOW_HELP: "help",
-            OPEN_FILE: "open logs file",
-            CLEAR_LOG: "clear logs file",
-            EXIT_PROGRAM: "exit",
+            func.SHOW_HELP: "help",
+            func.OPEN_FILE: "open logs file",
+            func.CLEAR_LOG: "clear logs file",
+            func.EXIT_PROGRAM: "exit",
         }
         logs_dict_funcions = self.user_logs
         data.append(("L", logs_main_functions, logs_dict_funcions))
@@ -150,9 +149,9 @@ class Control:
             brows_dict_funcions = self.directory_brows
             brows_key, logs_key = None, None
             for k, v in brows_dict_funcions.items():
-                if QUICK_VIEW_ON_OFF == v:
+                if func.QUICK_VIEW_ON_OFF == v:
                     brows_key = k
-                elif SHOW_OR_HIDE_LOGS == v:
+                elif func.SHOW_OR_HIDE_LOGS == v:
                     logs_key = k
             if brows_key and logs_key:
                 if brows_key in self.brows_hint:
@@ -167,9 +166,9 @@ class Control:
             file_dict_funcions.update(self.file_management)
             tag_key, line_key = None, None
             for k, v in file_dict_funcions.items():
-                if SHOW_OR_HIDE_TAGS == v:
+                if func.SHOW_OR_HIDE_TAGS == v:
                     tag_key = k
-                elif SHOW_OR_HIDE_LINE_NUMBERS == v:
+                elif func.SHOW_OR_HIDE_LINE_NUMBERS == v:
                     line_key = k
             if tag_key and line_key:
                 if tag_key in self.view_hint:
@@ -191,7 +190,7 @@ class Control:
             note_dict_funcions = self.note_management
             note_key = None
             for k, v in note_dict_funcions.items():
-                if SAVE_AS_TYPICAL_NOTE == v:
+                if func.SAVE_AS_TYPICAL_NOTE == v:
                     note_key = k
                     break
             if note_key and note_key in self.note_hint:
@@ -243,7 +242,7 @@ class Control:
 
         file_keys = {}
         for str_fce, key in file_functions.items():
-            fce = map_file_function(str_fce)
+            fce = func.map_file_function(str_fce)
             if fce is not None:
                 if isinstance(key, list):
                     for k in key:
@@ -254,7 +253,7 @@ class Control:
         # control for file edit
         edit_keys = file_keys.copy()
         for str_fce, key in edit_file_functions.items():
-            fce = map_file_function(str_fce)
+            fce = func.map_file_function(str_fce)
             if fce is not None:
                 if isinstance(key, list):
                     for k in key:
@@ -265,7 +264,7 @@ class Control:
         # control for file management
         mgmt_keys = file_keys.copy()
         for str_fce, key in manage_file_functions.items():
-            fce = map_file_function(str_fce)
+            fce = func.map_file_function(str_fce)
             if fce is not None:
                 if isinstance(key, list):
                     for k in key:
@@ -283,7 +282,7 @@ class Control:
         brows_functions.update(control["arrows"])
         keys = {}
         for str_fce, key in brows_functions.items():
-            fce = map_brows_function(str_fce)
+            fce = func.map_brows_function(str_fce)
             if fce is not None:
                 if isinstance(key, list):
                     for k in key:
@@ -299,7 +298,7 @@ class Control:
         tags_functions.update(control["arrows"])
         keys = {}
         for str_fce, key in tags_functions.items():
-            fce = map_tags_function(str_fce)
+            fce = func.map_tags_function(str_fce)
             if fce is not None:
                 if isinstance(key, list):
                     for k in key:
@@ -315,7 +314,7 @@ class Control:
         notes_functions.update(control["arrows"])
         keys = {}
         for str_fce, key in notes_functions.items():
-            fce = map_notes_function(str_fce)
+            fce = func.map_notes_function(str_fce)
             if fce is not None:
                 if isinstance(key, list):
                     for k in key:
@@ -331,7 +330,7 @@ class Control:
         filter_functions.update(control["arrows"])
         keys = {}
         for str_fce, key in filter_functions.items():
-            fce = map_filter_function(str_fce)
+            fce = func.map_filter_function(str_fce)
             if fce is not None:
                 if isinstance(key, list):
                     for k in key:
@@ -347,7 +346,7 @@ class Control:
         menu_functions.update(control["arrows"])
         keys = {}
         for str_fce, key in menu_functions.items():
-            fce = map_menu_function(str_fce)
+            fce = func.map_menu_function(str_fce)
             if fce is not None:
                 if isinstance(key, list):
                     for k in key:
@@ -363,7 +362,7 @@ class Control:
         user_input_functions.update(control["arrows"])
         keys = {}
         for str_fce, key in user_input_functions.items():
-            fce = map_user_input_function(str_fce)
+            fce = func.map_user_input_function(str_fce)
             if fce is not None:
                 if isinstance(key, list):
                     for k in key:
@@ -379,7 +378,7 @@ class Control:
         user_logs_functions.update(control["arrows"])
         keys = {}
         for str_fce, key in user_logs_functions.items():
-            fce = map_user_logs_function(str_fce)
+            fce = func.map_user_logs_function(str_fce)
             if fce is not None:
                 if isinstance(key, list):
                     for k in key:
@@ -419,7 +418,7 @@ def get_function_for_key(env, key):
     elif key == curses.ascii.TAB:
         return env.control.get_function(env, "TAB")
     elif key == curses.KEY_RESIZE:
-        return RESIZE_WIN
+        return func.RESIZE_WIN
         # return env.control.get_function(env, 'RESIZE')
     elif key == curses.KEY_UP:
         return env.control.get_function(env, "UP")

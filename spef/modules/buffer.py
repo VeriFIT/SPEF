@@ -1,7 +1,5 @@
 import re
 
-from spef.utils.logger import *
-
 
 class UserInput:
     def __init__(self):

@@ -1,7 +1,5 @@
 import yaml
 
-from spef.utils.logger import *
-
 
 class Note:
     def __init__(self, text, row=None, col=None):

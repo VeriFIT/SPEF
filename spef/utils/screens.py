@@ -5,9 +5,9 @@ import fcntl
 import termios
 import traceback
 
+from spef.utils.coloring import COL_BKGD
 from spef.modules.window import Windows, Screens, Window
-from spef.utils.printing import *
-from spef.utils.logger import *
+from spef.utils.logger import log
 
 
 def new_vertical_shift(old_shift, old_height, cursor, new_height):

@@ -1,5 +1,3 @@
-import curses
-import curses.ascii
 import csv
 import os
 import traceback
@@ -8,8 +6,13 @@ import yaml
 from spef.modules.buffer import Buffer
 from spef.modules.report import Report, Note
 from spef.modules.tags import Tags
-from spef.utils.logger import *
-from spef.utils.match import *
+import spef.utils.logger as logger
+from spef.utils.match import (
+    get_proj_path,
+    get_root_solution_dir,
+    get_root_tests_dir,
+    get_root_testcase_dir,
+)
 
 
 """ **************** CONFIG **************** """
@@ -18,13 +21,13 @@ from spef.utils.match import *
 def load_config_from_file():
     utils_dir = os.path.dirname(__file__)
     src_dir = os.path.abspath(os.path.join(utils_dir, os.pardir))
-    conf_file = os.path.join(src_dir, CONFIG_FILE)
+    conf_file = os.path.join(src_dir, logger.CONFIG_FILE)
     try:
         with open(conf_file, "r") as f:
             config = yaml.safe_load(f)
         return config
     except Exception as err:
-        log(
+        logger.log(
             "cannot load config file | "
             + str(err)
             + " | "
@@ -36,13 +39,13 @@ def load_config_from_file():
 def load_control_from_file():
     utils_dir = os.path.dirname(__file__)
     src_dir = os.path.abspath(os.path.join(utils_dir, os.pardir))
-    control_file = os.path.join(src_dir, CONTROL_FILE)
+    control_file = os.path.join(src_dir, logger.CONTROL_FILE)
     try:
         with open(control_file, "r") as f:
             control = yaml.safe_load(f)
         return control
     except Exception as err:
-        log(
+        logger.log(
             "cannot load control file | "
             + str(err)
             + " | "
@@ -56,13 +59,13 @@ def load_control_from_file():
 
 def load_proj_from_conf_file(path):
     # load data from yaml file
-    project_file = os.path.join(path, PROJ_CONF_FILE)
+    project_file = os.path.join(path, logger.PROJ_CONF_FILE)
     try:
         with open(project_file, "r") as f:
             data = yaml.safe_load(f)
         return data
     except Exception as err:
-        log(
+        logger.log(
             "cannot load project file | "
             + str(err)
             + " | "
@@ -72,14 +75,14 @@ def load_proj_from_conf_file(path):
 
 
 def save_proj_to_conf_file(path, data):
-    project_file = os.path.join(path, PROJ_CONF_FILE)
+    project_file = os.path.join(path, logger.PROJ_CONF_FILE)
     try:
         with open(project_file, "w+", encoding="utf8") as f:
             yaml.dump(
                 data, f, default_flow_style=False, allow_unicode=True, sort_keys=False
             )
     except Exception as err:
-        log(
+        logger.log(
             "cannot save project conf to file | "
             + str(err)
             + " | "
@@ -88,7 +91,7 @@ def save_proj_to_conf_file(path, data):
 
 
 def load_user_logs_from_file():
-    user_logs_file = os.path.join(DATA_DIR, USER_LOGS_FILE)
+    user_logs_file = os.path.join(logger.DATA_DIR, logger.USER_LOGS_FILE)
     logs = []
     with open(user_logs_file, "r") as f:
         csv_reader = csv.reader(f, delimiter="|")
@@ -102,7 +105,7 @@ def load_user_logs_from_file():
 
 
 def load_typical_notes_from_file():
-    notes_file = os.path.join(DATA_DIR, TYPICAL_NOTES_FILE)
+    notes_file = os.path.join(logger.DATA_DIR, logger.TYPICAL_NOTES_FILE)
     notes = []
     try:
         with open(notes_file, "r") as f:
@@ -114,7 +117,7 @@ def load_typical_notes_from_file():
     except FileNotFoundError:
         return []
     except Exception as err:
-        log(
+        logger.log(
             "cannot load file with typical notes | "
             + str(err)
             + " | "
@@ -131,7 +134,7 @@ def save_typical_notes_to_file(notes):
         for note in notes:
             lines.append(note.text)
 
-        notes_file = os.path.join(DATA_DIR, TYPICAL_NOTES_FILE)
+        notes_file = os.path.join(logger.DATA_DIR, logger.TYPICAL_NOTES_FILE)
         with open(notes_file, "w+") as f:
             lines = "\n".join(lines)
             f.write(lines)
@@ -141,7 +144,9 @@ def save_typical_notes_to_file(notes):
 
 
 def load_user_notes_for_solution(solution_dir):
-    user_notes_file = os.path.join(solution_dir, REPORT_DIR, USER_NOTES_FILE)
+    user_notes_file = os.path.join(
+        solution_dir, logger.REPORT_DIR, logger.USER_NOTES_FILE
+    )
     if os.path.exists(user_notes_file):
         with open(user_notes_file, "r") as f:
             lines = f.read().splitlines()
@@ -150,8 +155,8 @@ def load_user_notes_for_solution(solution_dir):
 
 
 def save_user_notes_for_solution(solution):
-    report_dir = os.path.join(solution.path, REPORT_DIR)
-    user_notes_file = os.path.join(report_dir, USER_NOTES_FILE)
+    report_dir = os.path.join(solution.path, logger.REPORT_DIR)
+    user_notes_file = os.path.join(report_dir, logger.USER_NOTES_FILE)
     try:
         if not os.path.exists(report_dir) or not os.path.isdir(report_dir):
             os.mkdir(report_dir)
@@ -159,7 +164,7 @@ def save_user_notes_for_solution(solution):
             lines = "\n".join(solution.user_notes)
             f.write(lines)
     except Exception as err:
-        log(
+        logger.log(
             "save user notes for solution | "
             + str(err)
             + " | "
@@ -171,7 +176,9 @@ def save_user_notes_for_solution(solution):
 
 
 def load_test_notes_for_solution(solution_dir):
-    test_notes_file = os.path.join(solution_dir, REPORT_DIR, TEST_NOTES_FILE)
+    test_notes_file = os.path.join(
+        solution_dir, logger.REPORT_DIR, logger.TEST_NOTES_FILE
+    )
     if os.path.exists(test_notes_file):
         with open(test_notes_file, "r") as f:
             data = yaml.safe_load(f)
@@ -180,8 +187,8 @@ def load_test_notes_for_solution(solution_dir):
 
 
 def save_test_notes_for_solution(solution):
-    report_dir = os.path.join(solution.path, REPORT_DIR)
-    test_notes_file = os.path.join(report_dir, TEST_NOTES_FILE)
+    report_dir = os.path.join(solution.path, logger.REPORT_DIR)
+    test_notes_file = os.path.join(report_dir, logger.TEST_NOTES_FILE)
     try:
         if not os.path.exists(report_dir) or not os.path.isdir(report_dir):
             os.mkdir(report_dir)
@@ -190,7 +197,7 @@ def save_test_notes_for_solution(solution):
                 solution.test_notes, f, default_flow_style=False, allow_unicode=True
             )
     except Exception as err:
-        log(
+        logger.log(
             "save test notes for solution | "
             + str(err)
             + " | "
@@ -203,7 +210,7 @@ def save_test_notes_for_solution(solution):
 
 def get_report_file_name(path):
     file_name = os.path.splitext(path)[:-1]
-    return str(os.path.join(*file_name)) + REPORT_SUFFIX
+    return str(os.path.join(*file_name)) + logger.REPORT_SUFFIX
 
 
 def load_report_from_file(path, add_suffix=True, orig_file_name=None):
@@ -229,7 +236,7 @@ def load_report_from_file(path, add_suffix=True, orig_file_name=None):
     except FileNotFoundError:
         pass
     except Exception as err:
-        log("load report | " + str(err) + " | " + str(traceback.format_exc()))
+        logger.log("load report | " + str(err) + " | " + str(traceback.format_exc()))
     finally:
         report.orig_file_name = orig_file_name
         return report
@@ -259,7 +266,9 @@ def save_report_to_file(report):
             yaml.dump(notes, f, default_flow_style=False, allow_unicode=True)
         report.last_save = report.data.copy()
     except Exception as err:
-        log("save report to file | " + str(err) + " | " + str(traceback.format_exc()))
+        logger.log(
+            "save report to file | " + str(err) + " | " + str(traceback.format_exc())
+        )
 
 
 """ **************** TAGS **************** """
@@ -267,7 +276,7 @@ def save_report_to_file(report):
 
 def load_solution_tags(solution_dir):
     if os.path.exists(solution_dir):
-        tags_file = os.path.join(solution_dir, SOLUTION_TAGS)
+        tags_file = os.path.join(solution_dir, logger.SOLUTION_TAGS)
         return load_tags(tags_file)
     else:
         return None
@@ -275,7 +284,7 @@ def load_solution_tags(solution_dir):
 
 def load_tests_tags(solution_tests_dir):
     if os.path.exists(solution_tests_dir):
-        tags_file = os.path.join(solution_tests_dir, TESTS_TAGS)
+        tags_file = os.path.join(solution_tests_dir, logger.TESTS_TAGS)
         return load_tags(tags_file)
     else:
         return None
@@ -283,7 +292,7 @@ def load_tests_tags(solution_tests_dir):
 
 def load_testsuite_tags(proj_tests_dir):
     if os.path.exists(proj_tests_dir):
-        tags_file = os.path.join(proj_tests_dir, TESTSUITE_TAGS)
+        tags_file = os.path.join(proj_tests_dir, logger.TESTSUITE_TAGS)
         return load_tags(tags_file)
     else:
         return None
@@ -291,7 +300,7 @@ def load_testsuite_tags(proj_tests_dir):
 
 def load_testcase_tags(proj_testcase_dir):
     if os.path.exists(proj_testcase_dir):
-        tags_file = os.path.join(proj_testcase_dir, TESTCASE_TAGS)
+        tags_file = os.path.join(proj_testcase_dir, logger.TESTCASE_TAGS)
         return load_tags(tags_file)
     else:
         return None
@@ -310,7 +319,7 @@ def load_tags(tags_file):
     except FileNotFoundError:
         tags = Tags(tags_file, {})
     except Exception as err:
-        log("load tags | " + str(err) + " | " + str(traceback.format_exc()))
+        logger.log("load tags | " + str(err) + " | " + str(traceback.format_exc()))
     finally:
         return tags
 
@@ -329,7 +338,7 @@ def load_tags_from_file(path):
 # else cant use tags
 def get_tags_file(path, proj=None):
     if not os.path.exists(path):
-        log(f"get tags file | path '{path}' doesnt exists ")
+        logger.log(f"get tags file | path '{path}' doesnt exists ")
         return None
 
     if proj is not None:
@@ -349,18 +358,18 @@ def get_tags_file(path, proj=None):
         tests_root_dir = get_root_tests_dir(path)
         if solution_root_dir is not None:
             if tests_root_dir is not None:
-                tags_file = os.path.join(tests_root_dir, TESTS_TAGS)
+                tags_file = os.path.join(tests_root_dir, logger.TESTS_TAGS)
             else:
-                tags_file = os.path.join(solution_root_dir, SOLUTION_TAGS)
+                tags_file = os.path.join(solution_root_dir, logger.SOLUTION_TAGS)
         elif tests_root_dir is not None:
             testcase_dir = get_root_testcase_dir(path)
             if testcase_dir is not None:
-                tags_file = os.path.join(testcase_dir, TESTCASE_TAGS)
+                tags_file = os.path.join(testcase_dir, logger.TESTCASE_TAGS)
             else:
-                tags_file = os.path.join(tests_root_dir, TESTSUITE_TAGS)
+                tags_file = os.path.join(tests_root_dir, logger.TESTSUITE_TAGS)
         return tags_file
     else:
-        log(f"get tags file | path '{path}' is probably not in proj dir ")
+        logger.log(f"get tags file | path '{path}' is probably not in proj dir ")
     return None
 
 
@@ -394,10 +403,12 @@ def load_buffer_and_tags(env):
             else:
                 return env, None, False
         except UnicodeDecodeError as err:
-            log("load file content (" + str(env.file_to_open) + ") | " + str(err))
+            logger.log(
+                "load file content (" + str(env.file_to_open) + ") | " + str(err)
+            )
             return env, None, False
         except Exception as err:
-            log(
+            logger.log(
                 "load file content ("
                 + str(env.file_to_open)
                 + ") | "
@@ -451,6 +462,6 @@ def load_sum_equation_from_file(env, path):
                         res.append(line)
                 return "".join(res)
             except Exception as err:
-                log("load sum from file | " + str(err))
+                logger.log("load sum from file | " + str(err))
                 return None
     return None

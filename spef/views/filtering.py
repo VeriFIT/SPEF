@@ -2,12 +2,13 @@ import curses
 import curses.ascii
 import traceback
 
-from spef.controls.control import *
+import spef.controls.functions as func
+from spef.controls.control import get_function_for_key
 from spef.modules.buffer import UserInput
 from spef.modules.filter import Filter
-from spef.utils.screens import *
-from spef.utils.printing import *
-from spef.utils.logger import *
+from spef.utils.screens import resize_all
+from spef.utils.printing import print_hint, show_filter, rewrite_all_wins
+from spef.utils.logger import log
 from spef.views.help import show_help
 
 
@@ -91,55 +92,55 @@ def run_function(stdscr, filter_data, old_filter_text, env, fce, key):
     screen, win, user_input = filter_data
 
     # ======================= EXIT =======================
-    if fce == EXIT_PROGRAM:
+    if fce == func.EXIT_PROGRAM:
         env.set_exit_mode()
         return filter_data, env, True
-    elif fce == EXIT_FILTER:
+    elif fce == func.EXIT_FILTER:
         return filter_data, env, True
     # ======================= RESIZE =======================
-    elif fce == RESIZE_WIN:
+    elif fce == func.RESIZE_WIN:
         env = resize_all(stdscr, env)
         screen, win = env.get_screen_for_current_mode()
         rewrite_all_wins(env)
     # ======================= SHOW HELP =======================
-    elif fce == SHOW_HELP:
+    elif fce == func.SHOW_HELP:
         show_help(stdscr, env)
         curses.curs_set(1)
     # ======================= ARROWS =======================
-    elif fce == CURSOR_UP:
+    elif fce == func.CURSOR_UP:
         user_input.pointer = 0
         user_input.col_shift = 0
-    elif fce == CURSOR_DOWN:
+    elif fce == func.CURSOR_DOWN:
         end_of_input = len(user_input)
         user_input.pointer = end_of_input
         user_input.horizontal_shift(win)
-    elif fce == CURSOR_LEFT:
+    elif fce == func.CURSOR_LEFT:
         user_input.left(win)
-    elif fce == CURSOR_RIGHT:
+    elif fce == func.CURSOR_RIGHT:
         user_input.right(win)
     # ======================= EDIT FILTER =======================
-    elif fce == DELETE_CHAR:
+    elif fce == func.DELETE_CHAR:
         user_input.delete_symbol(win)
-    elif fce == BACKSPACE_CHAR:
+    elif fce == func.BACKSPACE_CHAR:
         if user_input.pointer > 0:
             user_input.left(win)
             user_input.delete_symbol(win)
-    elif fce == PRINT_CHAR:
+    elif fce == func.PRINT_CHAR:
         user_input.insert_symbol(win, chr(key))
-    elif fce == SAVE_FILTER:
+    elif fce == func.SAVE_FILTER:
         text = "".join(user_input.text)
         env.filter.add_by_current_mode(env, text)
         env.filter.find_files(env)
         if old_filter_text != text:
             env.prepare_browsing_after_filter()
         return filter_data, env, True
-    elif fce == AGGREGATE_FILTER:
+    elif fce == func.AGGREGATE_FILTER:
         env.filter.aggregate = not env.filter.aggregate
         env.filter.find_files(env)
         env.prepare_browsing_after_filter()
         return filter_data, env, True
     # ======================= REMOVE FILTER =======================
-    elif fce == REMOVE_FILTER:
+    elif fce == func.REMOVE_FILTER:
         # env.filter.reset_by_current_mode(env)
         env.filter.reset_all()
         env.filter.find_files(env)

@@ -1,7 +1,5 @@
 import re
 
-from spef.utils.logger import *
-
 
 """
 data = {'documentation': ['ok'],

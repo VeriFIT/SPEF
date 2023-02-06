@@ -3,9 +3,13 @@ import os
 import re
 import traceback
 
-from spef.utils.loading import *
-from spef.utils.logger import *
-from spef.utils.match import *
+from spef.utils.loading import get_tags_file, load_tags_from_file
+from spef.utils.logger import log
+from spef.utils.match import (
+    filter_intern_files,
+    get_root_tests_dir,
+    get_root_solution_dir,
+)
 from spef.utils.parsing import parse_tag
 
 

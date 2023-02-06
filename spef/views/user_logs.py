@@ -1,14 +1,16 @@
+import os
 import csv
+import traceback
+import datetime
 import curses
 import curses.ascii
 
-
 from spef.controls.control import get_function_for_key
-from spef.controls.functions import *
+import spef.controls.functions as func
 from spef.modules.bash import Bash_action
-from spef.utils.printing import *
-from spef.utils.screens import *
-from spef.utils.logger import *
+from spef.utils.printing import parse_line_into_sublines, rewrite_all_wins, show_logs
+from spef.utils.screens import resize_all
+from spef.utils.logger import log, DATA_DIR, USER_LOGS_FILE
 from spef.utils.loading import load_user_logs_from_file
 
 
@@ -72,22 +74,22 @@ def run_function(stdscr, env, fce, key, logs_len):
     max_rows = win.end_y - win.begin_y
 
     # ==================== EXIT PROGRAM ====================
-    if fce == EXIT_PROGRAM:
+    if fce == func.EXIT_PROGRAM:
         env.set_exit_mode()
         return logs_len, env, True
     # ======================= BASH =======================
-    elif fce == BASH_SWITCH:
+    elif fce == func.BASH_SWITCH:
         hex_key = "{0:x}".format(key)
         env.bash_action = Bash_action()
         env.bash_action.set_exit_key(("0" if len(hex_key) % 2 else "") + str(hex_key))
         env.bash_active = True
         return logs_len, env, True
     # ======================= FOCUS =======================
-    elif fce == CHANGE_FOCUS:
+    elif fce == func.CHANGE_FOCUS:
         env.switch_to_next_mode()
         return logs_len, env, True
     # ======================= RESIZE =======================
-    elif fce == RESIZE_WIN:
+    elif fce == func.RESIZE_WIN:
         env = resize_all(stdscr, env)
         screen, win = env.get_screen_for_current_mode()
         rewrite_all_wins(env)
@@ -95,24 +97,24 @@ def run_function(stdscr, env, fce, key, logs_len):
         max_rows = win.end_y - win.begin_y
         logs_len = calculate_total_len_lines(env.user_logs, 0, max_cols)
     # ======================= ARROWS =======================
-    elif fce == CURSOR_UP:
+    elif fce == func.CURSOR_UP:
         if win.row_shift > 0:
             win.row_shift -= 1
-    elif fce == CURSOR_DOWN:
+    elif fce == func.CURSOR_DOWN:
         shifted = calculate_total_len_lines(
             env.user_logs, 0, max_cols, stop_at=win.row_shift
         )
         if logs_len >= shifted + max_rows:
             win.row_shift += 1
     # ===================== OPEN FILE ======================
-    elif fce == OPEN_FILE:
+    elif fce == func.OPEN_FILE:
         user_logs_file = os.path.join(DATA_DIR, USER_LOGS_FILE)
         if os.path.isfile(user_logs_file):
             env.set_file_to_open(user_logs_file)
             env.set_view_mode()
             return logs_len, env, True
     # =================== CLEAR USER LOG ===================
-    elif fce == CLEAR_LOG:
+    elif fce == func.CLEAR_LOG:
         user_logs_file = os.path.join(DATA_DIR, USER_LOGS_FILE)
         with open(user_logs_file, "w+"):
             pass

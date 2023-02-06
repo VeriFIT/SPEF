@@ -11,11 +11,17 @@ import time
 import tty
 
 from spef.modules.environment import Environment
-from spef.utils.loading import *
-from spef.utils.screens import *
-from spef.utils.coloring import *
-from spef.utils.printing import *
-from spef.utils.logger import *
+from spef.utils.loading import (
+    load_config_from_file,
+    load_typical_notes_from_file,
+    load_user_logs_from_file,
+    save_typical_notes_to_file,
+    load_control_from_file,
+)
+from spef.utils.screens import create_screens_and_windows
+from spef.utils.coloring import init_color_pairs, COL_BKGD
+from spef.utils.printing import refresh_main_screens, print_hint
+from spef.utils.logger import log, TMP_DIR, LOG_FILE, DATA_DIR, USER_LOGS_FILE
 
 from spef.views.browsing import get_directory_content, directory_browsing
 from spef.views.viewing import file_viewing

@@ -2,9 +2,13 @@ import datetime
 import os
 import re
 
-from spef.utils.loading import *
-from spef.utils.logger import *
-from spef.utils.match import *
+from spef.utils.loading import (
+    load_tests_tags,
+    load_solution_tags,
+    load_user_notes_for_solution,
+    load_test_notes_for_solution,
+)
+from spef.utils.logger import log, TESTS_DIR
 
 
 class Solution:

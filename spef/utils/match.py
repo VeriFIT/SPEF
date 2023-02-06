@@ -4,7 +4,7 @@ import traceback
 import tarfile
 import zipfile
 
-from spef.utils.logger import *
+import spef.utils.logger as logger
 
 
 def filter_intern_files(path_list, keep_reports_and_tests=False):
@@ -13,7 +13,10 @@ def filter_intern_files(path_list, keep_reports_and_tests=False):
             # filter files with repport suffix or tags suffix
             result = list(
                 filter(
-                    lambda x: not x.endswith((REPORT_SUFFIX, TAGS_SUFFIX)), path_list
+                    lambda x: not x.endswith(
+                        (logger.REPORT_SUFFIX, logger.TAGS_SUFFIX)
+                    ),
+                    path_list,
                 )
             )
 
@@ -22,7 +25,7 @@ def filter_intern_files(path_list, keep_reports_and_tests=False):
                 result = list(
                     filter(
                         lambda x: not match_regex(
-                            os.path.join(".*", REPORT_DIR, ".*"), x
+                            os.path.join(".*", logger.REPORT_DIR, ".*"), x
                         ),
                         result,
                     )
@@ -30,23 +33,23 @@ def filter_intern_files(path_list, keep_reports_and_tests=False):
                 result = list(
                     filter(
                         lambda x: not match_regex(
-                            os.path.join(".*", TESTS_DIR, ".*"), x
+                            os.path.join(".*", logger.TESTS_DIR, ".*"), x
                         ),
                         result,
                     )
                 )
             return result
     except Exception as err:
-        log("filter intern files | " + str(err))
+        logger.log("filter intern files | " + str(err))
     return path_list
 
 
 def match_report_dir(path):
-    return match_regex(os.path.join(".*", REPORT_DIR, ".*"), path)
+    return match_regex(os.path.join(".*", logger.REPORT_DIR, ".*"), path)
 
 
 def match_tests_dir(path):
-    return match_regex(os.path.join(".*", TESTS_DIR, ".*"), path)
+    return match_regex(os.path.join(".*", logger.TESTS_DIR, ".*"), path)
 
 
 ############################ CHECK PATH ############################
@@ -71,11 +74,11 @@ def is_root_project_dir(path):
 
         if os.path.isdir(path):
             file_list = os.listdir(path)
-            if PROJ_CONF_FILE in file_list:
+            if logger.PROJ_CONF_FILE in file_list:
                 return True
         return False
     except Exception as err:
-        log("is root proj dir | " + str(err))
+        logger.log("is root proj dir | " + str(err))
         return False
 
 
@@ -154,7 +157,7 @@ def is_root_reports_dir(path):
             return False
 
         if os.path.isdir(path):
-            return os.path.basename(path) == REPORT_DIR
+            return os.path.basename(path) == logger.REPORT_DIR
         return False
     except:
         return False
@@ -187,7 +190,7 @@ def is_root_tests_dir(path):
             return False
 
         if os.path.isdir(path):
-            return os.path.basename(path) == TESTS_DIR
+            return os.path.basename(path) == logger.TESTS_DIR
         return False
     except:
         return False
@@ -225,7 +228,7 @@ def is_testcase_dir(path, with_check=True):
             if is_root_tests_dir(parent_dir):
                 if with_check:
                     file_list = os.listdir(path)
-                    if TEST_FILE in file_list:
+                    if logger.TEST_FILE in file_list:
                         return True
                 else:
                     return True
@@ -240,7 +243,7 @@ def is_testcase_result_dir(solution_id, path):
             return False
 
         if is_in_solution_dir(solution_id, path) and os.path.isdir(path):
-            return os.path.basename(os.path.dirname(path)) == RESULTS_SUB_DIR
+            return os.path.basename(os.path.dirname(path)) == logger.RESULTS_SUB_DIR
     except:
         return False
 
@@ -272,7 +275,7 @@ def get_parent_regex_match(reg, dir_path):
                 else:
                     cur_dir = parent_dir
     except Exception as err:
-        log(
+        logger.log(
             "get parent regex match | " + str(err) + " | " + str(traceback.format_exc())
         )
         return None
@@ -303,7 +306,7 @@ def get_proj_path(path):
                 else:
                     cur_dir = parent_dir
     except Exception as err:
-        log("get proj path | " + str(err))
+        logger.log("get proj path | " + str(err))
         return None
 
 
@@ -327,7 +330,7 @@ def get_root_solution_dir(solution_id, path):
                 else:
                     cur_dir = parent_dir
     except Exception as err:
-        log("get root solution dir | " + str(err))
+        logger.log("get root solution dir | " + str(err))
         return None
 
 
@@ -347,7 +350,7 @@ def get_root_tests_dir(path):
                 else:
                     cur_dir = parent_dir
     except Exception as err:
-        log("get root tests dir | " + str(err))
+        logger.log("get root tests dir | " + str(err))
         return None
 
 
@@ -367,7 +370,7 @@ def get_root_testcase_dir(path):
                 else:
                     cur_dir = parent_dir
     except Exception as err:
-        log("get root testcase dir | " + str(err))
+        logger.log("get root testcase dir | " + str(err))
         return None
 
 
@@ -383,7 +386,7 @@ def get_solution_files(env):
             if is_solution_file(solution_id, path):
                 result.add(path)
     else:
-        log("get_solution_files | cwd is not project root directory")
+        logger.log("get_solution_files | cwd is not project root directory")
     return list(result)
 
 
@@ -397,7 +400,7 @@ def get_solution_archives(env):
         if is_archive_file(file_name):
             solution_archives.add(file_name)
         else:
-            log(
+            logger.log(
                 "solution file but not zipfile or tarfile: "
                 + str(os.path.basename(file_name))
             )
@@ -412,12 +415,12 @@ def get_solution_archives(env):
 def get_tests_names(env, with_check=True):
     result_names = set()
     if env.cwd.proj is not None:
-        tests_dir = os.path.join(env.cwd.proj.path, TESTS_DIR)
+        tests_dir = os.path.join(env.cwd.proj.path, logger.TESTS_DIR)
         items = os.listdir(tests_dir)  # list all dirs and files in tests dir
         for item in items:
             path = os.path.join(tests_dir, item)
             if is_testcase_dir(path, with_check=with_check):
                 result_names.add(item)
     else:
-        log("get tests names | cwd is not project root directory")
+        logger.log("get tests names | cwd is not project root directory")
     return list(result_names)
