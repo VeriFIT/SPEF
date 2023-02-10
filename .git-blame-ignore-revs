@@ -1,0 +1,5 @@
+# .git.blame.ignore.revs
+# Formatted the entire codebase to comply with PEP8
+5610b63dbd9d5d8d6b61242ec722615bf61ac5a3
+# Removed wildcard imports
+84cf63640204639fd2ae4fdcae64cadfb81805d1
